@@ -48,13 +48,8 @@ public:
 // Front-end: Define FSM Structure
 struct Parser_ : public msm::front::state_machine_def<Parser_>
 {
-    FSM_State_On_Entry( { std::cout << "Entering Parser\n"; } );
-    FSM_State_On_Exit ( { std::cout << "Exiting Parser\n"; } );
-
     // FSM States.
-    FSM_State( Start,
-            {std::cout << "Entering: Start\n";},
-            {std::cout << "Exiting:  Start\n";} );
+    FSM_State( Start, {}, {} );
 
     FSM_State( ReadPlus,
             {token.clear(); token.append( "plus" );},
