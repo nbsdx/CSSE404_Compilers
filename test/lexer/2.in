@@ -1,0 +1,19 @@
+// Simple test of every single keyword, in order
+IDs come first;
+then 12345567 // Integers
++ - * / < <= >= > == != && || !; // Are operated on...
+
+class public static extends void int boolean if else
+while return null true false this new // This is probably
+String main System.out.println        // Valid Java(tm)
+
+;
+.
+,
+=
+(
+)
+{
+}
+[
+]
