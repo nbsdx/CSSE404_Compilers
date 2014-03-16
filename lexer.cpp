@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <iostream>
 #include <boost/msm/back/state_machine.hpp>
@@ -79,7 +78,7 @@ struct Parser_ : public msm::front::state_machine_def<Parser_>
 
     // Transition Table for the State Machine.
     struct transition_table : mpl::vector<
-                              
+
         _row< Start,      read_plus, ReadPlus >, _row< Start,      read_minus, ReadMinus >, _row< Start,      read_number, ReadNumber >,
         _row< ReadPlus,   read_plus, ReadPlus >, _row< ReadPlus,   read_minus, ReadMinus >, _row< ReadPlus,   read_number, ReadNumber >,
         _row< ReadMinus,  read_plus, ReadPlus >, _row< ReadMinus,  read_minus, ReadMinus >, _row< ReadMinus,  read_number, ReadNumber >,
