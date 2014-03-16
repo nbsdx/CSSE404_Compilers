@@ -11,12 +11,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "token.cpp"
+
 // Namespaces
 namespace msm = boost::msm;
 namespace mpl = boost::mpl;
 
 // Globals
 std::string token;
+std::vector<Token> pgm;
 
 // Convience Macros
 #define FSM_State_On_Entry( body ) \
@@ -51,17 +54,18 @@ struct Parser_ : public msm::front::state_machine_def<Parser_>
     FSM_State( Start, {}, {} );
 
     FSM_State( ReadPlus,
-            {token.clear(); token.append( "plus" );},
-            {std::cout << token << std::endl;} );
+            {token.clear(); Token tok = Token(Operator, Plus); pgm.push_back(tok);},
+            {} );
 
     FSM_State( ReadMinus,
-            {token.clear(); token.append( "minus" );},
-            {std::cout << token << std::endl;} );
+            {token.clear(); Token tok = Token(Operator, Minus); pgm.push_back(tok);},
+            {} );
 
     struct ReadNumber_ : public msm::front::state_machine_def<ReadNumber_>
     {
         FSM_State_On_Entry( { token.clear(); } );
-        FSM_State_On_Exit ( { std::cout << token << std::endl; } );
+        FSM_State_On_Exit ( { int32_t val = atoi(token.c_str()); Token tok = Token(Integer, val); 
+                              pgm.push_back(tok);} );
 
         FSM_State( ReadNumber_Internal,
                 { token.append( 1, event.number ); },
@@ -92,27 +96,13 @@ bool is_plus( char c ) { return c == '+'; }
 bool is_minus( char c ) { return c == '-'; }
 bool is_number( char c ) { return c >= '0' && c <= '9'; }
 
-int main( int argc, char **argv )
-{
-    int fd;
-    char c;
 
-    // Argument validation
-    if( argc != 2 )
-    {
-        std::cout << "Please suppy the input file as arg 1.\n"; 
-        exit( 1 );
-    }
-
-    // File open
-    if( ( fd = open( argv[1], O_RDONLY ) ) == -1 )
-    {
-        std::cout << "Error opening file: " << strerror( errno ) << "\n";
-        exit( 1 );
-    }
+std::vector<Token> lex (int fd) {
+    pgm = std::vector<Token>();
 
     Parser p;
     p.start();
+    char c;
 
     // Process loop.
     while( read( fd, &c, 1 ) != 0 )
@@ -134,5 +124,6 @@ int main( int argc, char **argv )
 
     p.stop();
 
-    return 0;
+    return pgm;
 }
+

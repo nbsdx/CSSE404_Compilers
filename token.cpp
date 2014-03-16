@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <string.h>
 #include <string>
+#include <vector>
+#include <iostream>
 
 enum TokenType { ID, Integer, ReservedWord, Operator, Delimiter };
 enum RWord { Class, Public, Static, Extends, Void, Int, Bool, If, Else, While,
@@ -56,3 +58,11 @@ private:
     enum OperType op;
     enum DelimType dl;
 };
+
+void print_pgm (std::vector<Token> pgm) {
+    std::vector<Token>::iterator iter;
+    for (iter = pgm.begin(); iter != pgm.end(); iter++) {
+        std::string str = (*iter).print_repr();
+        std::cout << str;
+    }
+}
