@@ -1,0 +1,10 @@
+Tests beginning with 0 contain only integers, + and - operators.
+The output format is for the final Lexer, though.
+
+Tests beginning with 1 contain all possible reserved words and types, but no structure.
+
+Tests beginning with 2 contain structured code that should compile and run.
+
+Higher numbers should target edge cases and more complex code.
+
+Ideally we will be able to adapt some of this test bed for later milestones by adjusting the .out suffix.

@@ -1,0 +1,9 @@
+// Simple test of comments
+/* This should produce completely
+/* empty output.
+
+
+Yep! Totally empty.
+
+
+*/
