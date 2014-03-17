@@ -48,7 +48,7 @@ public:
             case Integer: sstm << "Integer, " << intval;
             case ReservedWord: sstm << "ReservedWord, " << rword_str(word);
             case Operator: sstm << "Operator, " << oper_str(op);
-            case Delimiter: sstm << "Delimiter, ";
+            case Delimiter: sstm << "Delimiter, "; sstm.put(delim_char(dl));
         }
         return sstm.str();
     }
@@ -72,7 +72,6 @@ private:
         }
         return sstm.str();
     }
-
 
     std::string rword_str(enum RWord w) {
         std::stringstream sstm;
@@ -100,6 +99,18 @@ private:
         return sstm.str();
     }
 
+    char delim_char(enum DelimType dl) {
+        switch(dl) {
+        // Semi, LParen, RParen, LBrace, RBrace, LSquare, RSquare 
+            case Semi:     return ';';
+            case LParen:   return '(';
+            case RParen:   return ')';
+            case LBrace:   return '{';
+            case RBrace:   return '}';
+            case LSquare:  return '[';
+            case RSquare:  return ']';
+        }
+    }
 
 };
 
