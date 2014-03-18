@@ -1,15 +1,16 @@
+CPP_FILES := $(wildcard src/lex/*.cpp)
+OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
+
 CC=g++
-CFLAGS="-I/usr/include/boost"
+CFLAGS=-I/usr/include/boost -MMD
 
-all: main
+main: $(OBJ_FILES)
+	$(CC) $(CFLAGS) -o $@ $^
 
-lexer: token.o lexer.cpp 
-	$(CC) $(CFLAGS) token.o -c lexer.cpp
+obj/%.o: src/lex/%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-token: token.cpp
-	$(CC) $(CFLAGS) -c token.cpp
-
-main: main.cpp lexer.o token.o
-	$(CC) main.cpp
 clean:
-	rm -rf *.o a.out
+	rm obj/* main
+
+-include $(OBJFILES:.o=.d)
