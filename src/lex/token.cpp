@@ -6,7 +6,13 @@ using namespace std;
 
 namespace lex 
 {
-    string Token::to_string() 
+    ostream& operator<<( ostream& os, const Token &tok )
+    {
+        os << tok.to_string();
+        return os;
+    }
+
+    string Token::to_string() const
     {
         switch(type) {
             case ID: 
@@ -20,6 +26,7 @@ namespace lex
             case Delimiter: 
                 return string("Delimiter, ").append( delim_to_string( dl ) );
         }
+        return string( "<<INVALID_TOKEN>>" );
     }
 
     string Token::rword_to_string( enum RWord r )
@@ -45,6 +52,7 @@ namespace lex
             case Main:      return string( "main" ); 
             case Println:   return string( "System.out.println" ); 
         }
+        return string( "<<INVALID_RWORD>>" );
     }
     
     string Token::delim_to_string( enum DelimType d )
@@ -59,6 +67,7 @@ namespace lex
             case RSquare:   return string( "]" );
             case Equal:     return string( "=" );
         }
+        return string( "<<INVALID_DELIM>>" );
     }
 
     string Token::operator_to_string( enum OperType o )
@@ -78,8 +87,9 @@ namespace lex
             case Or:        return string( "||" );
             case Not:       return string( "!" );
         }
+        return string( "<<INVALID_OPERATOR>>" );
     }
-
+/*
     void Token::display( vector<Token> vec )
     {
         vector<Token>::iterator i;
@@ -88,5 +98,5 @@ namespace lex
             cout << (*i).to_string() << endl;
         }
     }
-
+*/
 } // End Namespace lex

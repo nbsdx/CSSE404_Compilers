@@ -6,6 +6,7 @@
 #include <iostream>
 #include <boost/msm/back/state_machine.hpp>
 #include <boost/msm/front/state_machine_def.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -15,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "token.cpp"
+#include "token.h"
 
 namespace lex {
 
@@ -26,20 +27,24 @@ namespace msm = boost::msm;
 namespace mpl = boost::mpl;
 
 // Convience Macros
+#define UNUSED(expr) do { (void)(expr); } while (0)
+
 #define FSM_State_On_Entry( body ) \
     template <class Event, class FSM> \
     void on_entry( Event const &event, FSM &fsm ) \
-        body
+        { UNUSED(event); UNUSED(fsm); BOOST_PP_SEQ_ELEM( 0, body ) }
 
 #define FSM_State_On_Exit( body ) \
     template <class Event, class FSM> \
     void on_exit( Event const &event, FSM &fsm ) \
-        body
+        { UNUSED(event); UNUSED(fsm); BOOST_PP_SEQ_ELEM( 0, body ) }
 
-#define FSM_State( name, on_enter, on_exit ) \
-    struct name : public msm::front::state<> { \
-        FSM_State_On_Entry( on_enter ) \
-        FSM_State_On_Exit( on_exit ) \
+// DATA is of form (name) (on_entry) (on_exit) 
+// Where on_entry/exit are statements.
+#define FSM_State( DATA ) \
+    struct BOOST_PP_SEQ_ELEM( 0, DATA ) : public msm::front::state<> { \
+        FSM_State_On_Entry( BOOST_PP_SEQ_ELEM( 1, DATA ) ) \
+        FSM_State_On_Exit(  BOOST_PP_SEQ_ELEM( 2, DATA ) ) \
     };
 
 // Events
@@ -55,29 +60,55 @@ public:
 struct Parser_ : public msm::front::state_machine_def<Parser_>
 {
 private:
-    static vector<Token> pgm;
-    static string        token;
+    vector<Token> m_pgm;
+    string        m_token;
+
 public:
+
+    vector<Token> &pgm(){ return m_pgm; }
+    string &token(){ return m_token; }
+
     // FSM States.
-    FSM_State( Start, {}, {} );
+    FSM_State( (Start) (()) (()) );
 
-    FSM_State( ReadPlus,
-            {token.clear(); Token tok = Token(Token::Operator, Token::Plus); pgm.push_back(tok);},
-            {} );
+    FSM_State( (ReadPlus)
+               ((
+                 fsm.token().clear(); 
+                 Token tok = Token( Token::Operator, Token::Plus );
+                 fsm.pgm().push_back( tok );
+               ))
+               ((
+               )) );
 
-    FSM_State( ReadMinus,
-            {token.clear(); Token tok = Token(Token::Operator, Token::Minus); pgm.push_back(tok);},
-            {} );
+    FSM_State( (ReadMinus)
+               ((
+                 fsm.token().clear(); 
+                 Token tok = Token( Token::Operator, Token::Minus );
+                 fsm.pgm().push_back(tok);
+               ))
+               ((
+               )) );
 
     struct ReadNumber_ : public msm::front::state_machine_def<ReadNumber_>
     {
-        FSM_State_On_Entry( { token.clear(); } );
-        FSM_State_On_Exit ( { int32_t val = atoi(token.c_str()); Token tok = Token(Token::Integer, val); 
-                              pgm.push_back(tok);} );
+        string m_token;
+        public:
+        string &token(){ return m_token; }
 
-        FSM_State( ReadNumber_Internal,
-                { token.append( 1, event.number ); },
-                {} );
+        FSM_State_On_Entry( (
+                    m_token.clear();
+                    fsm.token().clear();
+                    ) );
+
+        FSM_State_On_Exit ( (
+                    int32_t val = atoi( m_token.c_str() ); 
+                    Token tok = Token( Token::Integer, val ); 
+                    fsm.pgm().push_back( tok );
+                    ) );
+
+        FSM_State( (ReadNumber_Internal)
+                   ((fsm.token().append( 1, event.number );))
+                   (()) );
 
         typedef ReadNumber_Internal initial_state;
 
@@ -97,7 +128,7 @@ public:
         _row< ReadNumber, read_plus, ReadPlus >, _row< ReadNumber, read_minus, ReadMinus >, _row< ReadNumber, read_number, ReadNumber > 
     >{};
 
-    inline vector<Token> const &get_program(){ return pgm; }
+    inline vector<Token> const &get_program(){ return m_pgm; }
 };
 
 typedef msm::back::state_machine<Parser_> Parser;

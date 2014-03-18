@@ -2,8 +2,12 @@
 #include <iostream>
 #include <unistd.h>
 #include <string>
+#include <vector>
 
 #include "lexer.h"
+#include "token.h"
+
+using namespace lex;
 
 int main( int argc, char **argv )
 {
@@ -23,8 +27,11 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
-    std::vector<lex::Token> pgm = lex::Lexer().lex( fd );
-    lex::Token::display( pgm );
+    std::vector<Token> pgm = Lexer().lex( fd );
+
+    std::vector<Token>::iterator i;
+    for( i = pgm.begin(); i != pgm.end(); ++i )
+        cout << (*i).to_string() << std::endl;
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H 1
 
+#include "token.h"
 #include "lexer.hpp"
 #include <sys/types.h>
 #include <fcntl.h>

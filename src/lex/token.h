@@ -35,11 +35,12 @@ public:
     static string operator_to_string( enum OperType );
 
     // Display Functions
-    string to_string();
-    
-    static void display( vector<Token> );
+    string to_string() const;
+  
+    friend ostream& operator<<(ostream& os, const Token& tok);
+//    static void display( vector<Token> );
 
-private:
+protected:
     Token();
     TokenType       type;
 

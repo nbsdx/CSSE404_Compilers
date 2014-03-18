@@ -34,6 +34,8 @@ vector<Token> Lexer::lex( int fd )
 
     p.stop();
 
+    cout << "Found " << p.get_program().size() << " Tokens." << endl;
+
     return p.get_program();
 }
 
