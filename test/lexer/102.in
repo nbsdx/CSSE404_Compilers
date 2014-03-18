@@ -1,0 +1,13 @@
+/* here's a bunch of
+ * Reserved Words * that probably shouldn't get
+ * lexed
+public class Test {
+*/// Wow, veyr broken 
+    int abc = 55 || -55;
+}
+
+names should s7ar7 w1th a l3tt3r
+
+if abcd efgh else pppp
+
+!q new

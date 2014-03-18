@@ -4,6 +4,8 @@ OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 CC=g++
 CFLAGS=-I/usr/include/boost -MMD
 
+all: main
+
 main: $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $@ $^
 
