@@ -3,7 +3,9 @@
 // NB: While = is a delimiter, it's handled in the operator function
 //     (since this simplifies the == case)
 #define OPERCHARS "+-/!=><&|"
+
 #define DELIMITERS ";[]{}(),."
+
 #define ISDIGIT(x) (x >= '0' && x <= '9')
 
 namespace lex {
@@ -29,14 +31,14 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         {
             read_name( fd );
         } 
-        else if (is_one(c, OPERCHARS)) 
-        {
-            read_operator(fd, &c);
-        } 
-        else if (is_one(c, DELIMITERS)) 
+        else if ( is_delim_char( c ) )
         {
             read_delimiter(fd, &c);
         }
+        else if ( is_op_char( c ) )
+        {
+            read_operator(fd, &c);
+        } 
         else 
         {
             cout << "Invalid char [" << c << "]. Ignoring.\n";
@@ -60,7 +62,7 @@ void Lexer::read_name( int fd )
     while( ( read( fd, &in, 1 ) ) != 0 )
     {
         // Break conditions:
-        if( !is_alpha( in ) )
+        if( !is_alpha( in ) && !ISDIGIT( in ) )
         {
             if( in == '.' ) // Thanks Sys.out.ptln....
             {
@@ -117,6 +119,7 @@ finalize:
     // Undo the last read.
     lseek( fd, -1, SEEK_CUR );
 
+    return;
 
     /**
      *  If this happens, then we tried to read a println and
@@ -135,7 +138,7 @@ cleanup:
     // There's something messed up with the is_one 
     // stuff that I think is breaking one of the 
     // testcases.... XXX
-    lseek( fd, -( strlen - first_p + 1 ), SEEK_CUR );
+    lseek( fd, -( strlen - first_p ), SEEK_CUR );
 
     goto finalize;
 }
@@ -168,19 +171,26 @@ void Lexer::read_operator(int fd, char *c) {
     // assert(c && is_one(OPERCHARS)
     int err;
     switch (*c) {
-        case '/': return read_comdiv(fd, c);
+        case '/': read_comdiv(fd, c);
+                  break;
         case '+': pgm.push_back( make_shared<Operator>( Operator::Plus) );
                   break;
         case '-': pgm.push_back( make_shared<Operator>( Operator::Minus ) );
                   break;
         case '*': pgm.push_back( make_shared<Operator>( Operator::Mult ));
                   break;
-        case '<': return read_twochar_operator(fd, '=', Operator::LT, Operator::LEq);
-        case '>': return read_twochar_operator(fd, '=', Operator::GT, Operator::GEq);
-        case '!': return read_twochar_operator(fd, '=', Operator::Not, Operator::NEqual);
-        case '&': return maybe_read_twochar(fd, '&', Operator::And);
-        case '|': return maybe_read_twochar(fd, '|', Operator::Or);
-        case '=': return read_equal_assign(fd);
+        case '<': read_twochar_operator(fd, '=', Operator::LT, Operator::LEq);
+                  break;
+        case '>': read_twochar_operator(fd, '=', Operator::GT, Operator::GEq);
+                  break;
+        case '!': read_twochar_operator(fd, '=', Operator::Not, Operator::NEqual);
+                  break;
+        case '&': maybe_read_twochar(fd, '&', Operator::And);
+                  break;
+        case '|': maybe_read_twochar(fd, '|', Operator::Or);
+                  break;
+        case '=': read_equal_assign(fd);
+                  break;
         default:  break; // assert(false);
     }
 }
@@ -281,8 +291,13 @@ void Lexer::read_int(int fd, char *c) {
 bool Lexer::is_one(char candidate, const char* group) {
     const char* g; 
     bool ret = false;
+
+    std::cout << "Checking if " << candidate << " is in " << group << std::endl;
+
     for (g = group; g != NULL; g++) {
+        std::cout << "Checking " << candidate << " against " << *g << std::endl;
         if (*g == candidate) {
+            std::cout << "Same.\n";
             ret = true;
             break;
         }
