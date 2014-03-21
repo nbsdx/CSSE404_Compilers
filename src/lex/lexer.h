@@ -22,15 +22,15 @@ private:
     char c;
     vector< shared_ptr<Token> > pgm;
     bool is_one(char candidate, const char* group);
-    int read_int(int fd, char *c);
-    int read_operator(int fd, char *c);
-    int read_comdiv(int fd, char *c);
-    int comm_line(int fd, char *c);
-    int comm_block(int fd, char *c);
-    int read_name(int fd);
+    void read_int(int fd, char *c);
+    void read_operator(int fd, char *c);
+    void read_comdiv(int fd, char *c);
+    void comm_line(int fd, char *c);
+    void comm_block(int fd, char *c);
+    void read_name(int fd);
 
     inline bool is_alpha( char c ){ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
-    int read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two);
+    void read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two);
 };
 
 } // End Namespace lex

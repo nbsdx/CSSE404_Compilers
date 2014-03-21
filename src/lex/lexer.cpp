@@ -4,11 +4,6 @@
 #define DELIMITERS ";[]{}()"
 #define ISDIGIT(x) (x >= '0' && x <= '9')
 
-// Is the char on top of the stream to be processed?
-#define CLEAN 0
-#define DIRTY 1
-#define EOF_T 2
-
 namespace lex {
 
 /**
@@ -18,45 +13,30 @@ namespace lex {
  */
 vector< shared_ptr<Token> > Lexer::lex( int fd )
 {
-    int status = CLEAN;
-    int err = 0;
-    while( status != EOF_T )
+    while(read( fd, &c, 1) != 0)
     {
-        if (status == CLEAN) 
-        {
-            err = read( fd, &c, 1 );
-            if (err == 0) {
-                status = EOF_T;
-                break;
-            }
-        }
-
-        status = CLEAN;
-
         if (c == ' ' || c == '\t' || c == '\n') 
         {
             // Whitespace - ignore
-            status = CLEAN;
         } 
         else if (ISDIGIT(c)) 
         {
             // Number function here
-            status = read_int(fd, &c);
+            read_int(fd, &c);
         } 
         else if ( is_alpha( c ) ) 
         {
             // Name function
-            status = read_name( fd );
+            read_name( fd );
         } 
         else if (is_one(c, OPERCHARS)) 
         {
             // Operator / comment function
-            status = read_operator(fd, &c);
+            read_operator(fd, &c);
         } 
         else if (is_one(c, DELIMITERS)) 
         {
             // Delimiter switch
-            status = CLEAN; // XXX: Temp, skip over them for now.
             cout << "Delimiter, " << c << std::endl;
         } 
         else 
@@ -69,14 +49,13 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
     return pgm;
 }
 
-int Lexer::read_name( int fd )
+void Lexer::read_name( int fd )
 {
     bool has_period = false;
     string token;
     ReservedWord::RWord rword;
     char in;
-    int ret = CLEAN;
-    
+
     // Go back 1 character... This is ghetto.
     lseek( fd, -1, SEEK_CUR );
 
@@ -120,7 +99,7 @@ int Lexer::read_name( int fd )
 
         token.append( 1, in );
     }
-    
+
     // God I wish we didn't have this shitty keyword. 
     // It makes everything more complicated. It should
     // probably just be parsed as a normal object, and 
@@ -130,17 +109,16 @@ int Lexer::read_name( int fd )
         if( token.compare( "System.out.println" ) != 0 )
             goto cleanup;
     }
-    
+
 finalize:
     if( ( rword = ReservedWord::from_string( token ) ) == ReservedWord::Invalid_RWord )
         pgm.push_back( make_shared<Identifier>( token ) );
     else
         pgm.push_back( make_shared<ReservedWord>( rword ) );
-    
+
     // Undo the last read.
     lseek( fd, -1, SEEK_CUR );
 
-    return ret;
 
     /**
      *  If this happens, then we tried to read a println and
@@ -160,11 +138,11 @@ cleanup:
     // stuff that I think is breaking one of the 
     // testcases.... XXX
     lseek( fd, -( strlen - first_p + 1 ), SEEK_CUR );
-    
+
     goto finalize;
 }
 
-int Lexer::read_operator(int fd, char *c) {
+void Lexer::read_operator(int fd, char *c) {
     // assert(c && is_one(OPERCHARS)
     int err;
     switch (*c) {
@@ -184,90 +162,80 @@ int Lexer::read_operator(int fd, char *c) {
         case '=': // TODO: == vs delimiter =
                   break;
     }
-    return CLEAN;
 }
 
-int Lexer::read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two) {
-    int ret;
+void Lexer::read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two) {
     char c;
     int err = read( fd, &c, 1);
-    if (err == 0) ret = EOF_T;
-    if (c != next) ret = DIRTY;
+    if (err != 0 && c != next) {
+        lseek( fd, -1, SEEK_CUR);
+    }
     if (c != next || err == 0) { // urgh
         pgm.push_back( make_shared<Operator>( one ));
     } else {
         pgm.push_back( make_shared<Operator>( two));
     }
-    return ret;
 }
 
-int Lexer::read_comdiv(int fd, char *c) {
+void Lexer::read_comdiv(int fd, char *c) {
     // assert (c && *c == '/')
-    int ret = CLEAN;
     int err = read( fd, c, 1 );
     if (err == 0) {
         // We have a div!
-        ret = EOF_T;
+        //
     } else if (*c == '/') {
         return comm_line(fd, c);
     } else if (*c == '*') {
         return comm_block(fd, c);
     }
     // In all other cases we have a Div operator
+    // (and we just ate another function's character)
+    lseek( fd, -1, SEEK_CUR);
     pgm.push_back( make_shared<Operator>( Operator::Div ) );
-    return ret;
 }
 
-int Lexer::comm_line(int fd, char *c) {
+void Lexer::comm_line(int fd, char *c) {
     int err;
-    int ret = CLEAN;
     while ((err = read( fd, c, 1 ))) {
         if (err == 0) {
-            ret = EOF_T;
             break;
         } else if (*c == '\n') {
             break;
         }
     }
-    return CLEAN;
 }
 
-int Lexer::comm_block(int fd, char *c) {
+void Lexer::comm_block(int fd, char *c) {
     int err;
-    int ret = CLEAN;
     char last = '\0';
     while ((err = read(fd, c, 1))) {
         if (err == 0) {
-            ret = EOF_T;
             break;
         } else if (last == '*' && *c == '/') {
             break;
         }
+        last = *c;
     }
-    return CLEAN;
 }
 
-int Lexer::read_int(int fd, char *c) {
+void Lexer::read_int(int fd, char *c) {
     // assert(c && ISDIGIT(*c)
     int err;
-    int ret = CLEAN;
     string num;
     num.append(1,*c);
     while(( err = read(fd, c, 1))){
         if (err == 0) {
-            ret = EOF_T;
             break;
         } else if (ISDIGIT(*c)) {
             num.append(1, *c);
         } else {
-            ret = DIRTY;
+            lseek( fd, -1, SEEK_CUR );
             break;
         }
     }
 
     // Form integer
     pgm.push_back( make_shared<Number>( stoi( num ) ) );
-    return ret;
 }
 
 // Accept a string literal (like a #define) and check char membership
