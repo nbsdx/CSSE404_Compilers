@@ -156,9 +156,8 @@ void Lexer::read_operator(int fd, char *c) {
         case '<': return read_twochar_operator(fd, '=', Operator::LT, Operator::LEq);
         case '>': return read_twochar_operator(fd, '=', Operator::GT, Operator::GEq);
         case '!': return read_twochar_operator(fd, '=', Operator::Not, Operator::NEqual);
-        case '&': break; //return read_twochar_operator(fd, '&', Token::BAnd, Token::And);
-        case '|': // TODO: As above for || or ERROR (boolops)
-                  break;
+        case '&': return maybe_read_twochar(fd, '&', Operator::And);
+        case '|': return maybe_read_twochar(fd, '|', Operator::Or);
         case '=': return read_equal_assign(fd);
     }
 }
@@ -184,6 +183,18 @@ void Lexer::read_equal_assign(int fd) {
         lseek( fd, -1, SEEK_CUR);
     } else {
         pgm.push_back( make_shared<Operator>( Operator::EqualEq ));
+    }
+}
+
+void Lexer::maybe_read_twochar(int fd, char next, Operator::Op just) {
+    char c;
+    int err = read( fd, &c, 1);
+    if (err != 0 && c != next) {
+        // TODO: Decide on plan for error handling
+        pgm.push_back( make_shared<Operator>( Operator::Invalid_Op ));
+        lseek( fd, -1, SEEK_CUR);
+    } else {
+        pgm.push_back( make_shared<Operator>( just ));
     }
 }
 

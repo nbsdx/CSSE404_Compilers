@@ -32,6 +32,7 @@ private:
 
     inline bool is_alpha( char c ){ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
     void read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two);
+    void maybe_read_twochar(int fd, char next, Operator::Op just);
 };
 
 } // End Namespace lex
