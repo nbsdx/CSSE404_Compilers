@@ -31,7 +31,12 @@ private:
     void read_name(int fd);
     void read_equal_assign(int fd);
 
-    inline bool is_alpha( char c ){ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+    inline bool is_alpha( char c )
+        { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+    inline bool is_op_char( char c )
+        { return std::string("+-/!=<>&|").find_first_of( c ) != string::npos; }
+    inline bool is_delim_char( char c )
+        { return std::string(";[]{}(),.").find_first_of( c ) != string::npos; }
     void read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two);
     void maybe_read_twochar(int fd, char next, Operator::Op just);
 };
