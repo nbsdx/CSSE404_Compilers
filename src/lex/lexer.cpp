@@ -174,10 +174,12 @@ int Lexer::read_int(int fd, char *c) {
     while(( err = read(fd, c, 1))){
         if (err == 0) {
             ret = EOF_T;
+            break;
         } else if (ISDIGIT(*c)) {
             num.append(1, *c);
         } else {
             ret = DIRTY;
+            break;
         }
     }
 
