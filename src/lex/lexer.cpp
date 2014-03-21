@@ -158,7 +158,7 @@ cleanup:
 
     token = token.substr( 0, first_p );
 
-    if( err != 0 )
+    //if( err != 0 )
         // This gets us to right after the '.'
         // The '.' rewound above.
         // There's something messed up with the is_one 
