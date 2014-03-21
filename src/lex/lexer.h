@@ -30,6 +30,7 @@ private:
     int read_name(int fd);
 
     inline bool is_alpha( char c ){ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+    int read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two);
 };
 
 } // End Namespace lex

@@ -25,8 +25,13 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         if (status == CLEAN) 
         {
             err = read( fd, &c, 1 );
-            if (err == 0) break;
-        } // Else reuse old c
+            if (err == 0) {
+                status = EOF_T;
+                break;
+            }
+        }
+
+        status = CLEAN;
 
         if (c == ' ' || c == '\t' || c == '\n') 
         {
@@ -162,16 +167,37 @@ cleanup:
 int Lexer::read_operator(int fd, char *c) {
     // assert(c && is_one(OPERCHARS)
     int err;
-    int ret = CLEAN;
     switch (*c) {
         case '/': return read_comdiv(fd, c);
-        case '+': pgm.push_back( make_shared<Operator>( Operator::Plus ) );
+        case '+': pgm.push_back( make_shared<Operator>( Operator::Plus) );
                   break;
         case '-': pgm.push_back( make_shared<Operator>( Operator::Minus ) );
                   break;
-
+        case '*': pgm.push_back( make_shared<Operator>( Operator::Mult ));
+                  break;
+        case '<': return read_twochar_operator(fd, '=', Operator::LT, Operator::LEq);
+        case '>': return read_twochar_operator(fd, '=', Operator::GT, Operator::GEq);
+        case '!': return read_twochar_operator(fd, '=', Operator::Not, Operator::NEqual);
+        case '&': break; //return read_twochar_operator(fd, '&', Token::BAnd, Token::And);
+        case '|': // TODO: As above for || or ERROR (boolops)
+                  break;
+        case '=': // TODO: == vs delimiter =
+                  break;
     }
+    return CLEAN;
+}
 
+int Lexer::read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two) {
+    int ret;
+    char c;
+    int err = read( fd, &c, 1);
+    if (err == 0) ret = EOF_T;
+    if (c != next) ret = DIRTY;
+    if (c != next || err == 0) { // urgh
+        pgm.push_back( make_shared<Operator>( one ));
+    } else {
+        pgm.push_back( make_shared<Operator>( two));
+    }
     return ret;
 }
 
