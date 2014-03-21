@@ -5,10 +5,10 @@
 class Trivial {
     public static void main (String[] args) {
         boolean taut = true;
-        int declared_int = 12345;
+        int declaredInt = 12345;
 
         while (taut) {
-            declared_int = declared_int + 1;
+            declaredInt = declaredInt + 1;
         }
 
         return 0;
