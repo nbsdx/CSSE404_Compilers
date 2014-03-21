@@ -3,6 +3,10 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <memory>
+
+#include <error.h>
+#include <string.h>
 
 #include "lexer.h"
 #include "token.h"
@@ -20,7 +24,6 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
-    std::cout << "LEXING";
     // File open
     if( ( fd = open( argv[1], O_RDONLY ) ) == -1 )
     {
@@ -28,13 +31,10 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
-    std::cout << "LEXING";
-    std::vector<Token> pgm = Lexer().lex( fd );
+    std::vector< shared_ptr<Token> > pgm = Lexer().lex( fd );
 
-    std::cout << "LEXING";
-    std::vector<Token>::iterator i;
-    for( i = pgm.begin(); i != pgm.end(); ++i )
-        cout << (*i).to_string() << std::endl;
+    for( auto token : pgm )
+        std::cout << token->format() << std::endl;
 
     return 0;
 }

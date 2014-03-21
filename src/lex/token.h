@@ -1,55 +1,126 @@
-#ifndef TOKEN_H
-#define TOKEN_H 1
+#ifndef SIMPLE_TOKEN_H
+#define SIMPLE_TOKEN_H 1
 
-#include <cstdlib>
-#include <vector>
 #include <string>
-#include <sys/types.h>
-
-using namespace std;
 
 namespace lex {
 
-/**
- *  Token class for the Lexer.
- */
+constexpr unsigned int _hash(const char* str, int h = 0)
+{
+    return !str[h] ? 5381 : (_hash(str, h+1)*33) ^ str[h];
+}
+
 class Token
 {
-public:
-    enum TokenType { ID, Integer, ReservedWord, Operator, Delimiter };
-    enum RWord { Class, Public, Static, Extends, Void, Int, Bool, If, Else, While,
-                 Return, Null, True, False, This, New, String, Main, Println };
-    enum OperType { Plus, Minus, Mult, Div, LT, LEq, GEq, GT, Eq, NEq, And, Or, Not };
-    enum DelimType { Semi, Equal, LParen, RParen, LBrace, RBrace, LSquare, RSquare };
-
-    /// Constructors 
-    Token( enum TokenType t, int32_t v )        : type(t), intval(v) {}
-    Token( enum TokenType t, enum RWord w )     : type(t), word(w) {}
-    Token( enum TokenType t, string s )         : type(t), name(s) {}
-    Token( enum TokenType t, enum OperType o )  : type(t), op(o) {}
-    Token( enum TokenType t, enum DelimType d ) : type(t), dl(d) {}
-
-    // Conveniece (spelling..) Functions
-    static string delim_to_string( enum DelimType );
-    static string rword_to_string( enum RWord );
-    static string operator_to_string( enum OperType );
-
-    // Display Functions
-    string to_string() const;
-  
-    friend ostream& operator<<(ostream& os, const Token& tok);
-//    static void display( vector<Token> );
-
-protected:
-    Token();
-    TokenType       type;
-    int32_t         intval;
-    string          name;
-    enum RWord      word;
-    enum OperType   op;
-    enum DelimType  dl;
+public: 
+    virtual const std::string format() const = 0;
 };
 
-} // End Namespace lex
+class ReservedWord : public Token
+{
+    ReservedWord();
 
-#endif
+public:
+
+    typedef enum 
+    {
+        Invalid_RWord = 0,
+        Class,  Public, Static, 
+        Extends,Void,   Int, 
+        Bool,   If,     Else, 
+        While,  Return, Null, 
+        True,   False,  This, 
+        New,    String, Main, 
+        Println
+    } RWord;
+
+    ReservedWord( RWord );
+    
+    static RWord from_string( const std::string & );
+    static const std::string to_string( RWord );
+    const std::string format() const;
+
+private:
+    RWord m_type;
+};
+
+class Operator : public Token
+{
+    Operator();
+
+public:
+
+    typedef enum 
+    {
+        Invalid_Op = 0,
+        Plus,   Minus,  Mult,
+        Div,    LT,     GT,
+        LEq,    GEq,    EqualEq,
+        NEqual, And,    Or,
+        Not
+    } Op;
+
+    Operator( Op );
+    
+    static Op from_string( const std::string & );
+    static const std::string to_string( Op );
+    const std::string format() const;
+
+private:
+    Op m_type;
+};
+
+class Delimiter : public Token
+{
+    Delimiter();
+
+public:
+
+    typedef enum 
+    {
+        Invalid_Delim = 0,
+        Semi,    Equal,   LParen,
+        RParen,  LBrace,  RBrace,
+        LSquare, RSquare, Comma,
+        Period
+    } Delim;
+
+    Delimiter( Delim );
+    
+    static Delim from_string( const std::string & );
+    static const std::string to_string( Delim );
+    const std::string format() const;
+
+private:
+    Delim m_type;
+};
+
+class Identifier : public Token
+{
+    Identifier();
+
+public:
+    Identifier( std::string );
+
+    const std::string format() const;
+
+private:
+    std::string m_id;
+};
+
+class Number : public Token
+{
+    Number();
+
+public:
+    Number( int32_t );
+
+    const std::string format() const;
+
+private:
+    int32_t m_value;
+};
+
+} // End Namespace <lex>
+
+#endif // SIMPLE_TOKEN_H
