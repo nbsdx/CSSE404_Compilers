@@ -43,7 +43,6 @@ public:
 protected:
     Token();
     TokenType       type;
-
     int32_t         intval;
     string          name;
     enum RWord      word;

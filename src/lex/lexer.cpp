@@ -47,8 +47,70 @@ vector<Token> Lexer::lex( int fd )
     return pgm;
 }
 
+int Lexer::read_operator(int fd, char *c) {
+    // assert(c && is_one(OPERCHARS)
+    int err;
+    int ret = CLEAN;
+    switch (*c) {
+        case '/': return read_comdiv(fd, c);
+        case '+': pgm.push_back(Token( Token::Operator, Token::Plus ));
+                  break;
+        case '-': pgm.push_back(Token( Token::Operator, Token::Minus ));
+                  break;
+
+    }
+
+    return ret;
+}
+
+int Lexer::read_comdiv(int fd, char *c) {
+    // assert (c && *c == '/')
+    int ret = CLEAN;
+    int err = read( fd, c, 1 );
+    if (err == 0) {
+        // We have a div!
+        ret = EOF_T;
+    } else if (*c == '/') {
+        return comm_line(fd, c);
+    } else if (*c == '*') {
+        return comm_block(fd, c);
+    }
+    // In all other cases we have a Div operator
+    pgm.push_back(Token( Token::Operator, Token::Div));
+    return ret;
+}
+
+int Lexer::comm_line(int fd, char *c) {
+    int err;
+    int ret = CLEAN;
+    while ((err = read( fd, c, 1 ))) {
+        if (err == 0) {
+            ret = EOF_T;
+            break;
+        } else if (*c == '\n') {
+            break;
+        }
+    }
+    return CLEAN;
+}
+
+int Lexer::comm_block(int fd, char *c) {
+    int err;
+    int ret = CLEAN;
+    char last = '\0';
+    while ((err = read(fd, c, 1))) {
+        if (err == 0) {
+            ret = EOF_T;
+            break;
+        } else if (last == '*' && *c == '/') {
+            break;
+        }
+    }
+    return CLEAN;
+}
+
 int Lexer::read_int(int fd, char *c) {
-    // assert(c)
+    // assert(c && ISDIGIT(*c)
     int err;
     int ret = CLEAN;
     string num;

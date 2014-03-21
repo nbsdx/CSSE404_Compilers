@@ -20,6 +20,10 @@ private:
     vector<Token> pgm;
     bool is_one(char candidate, const char* group);
     int read_int(int fd, char *c);
+    int read_operator(int fd, char *c);
+    int read_comdiv(int fd, char *c);
+    int comm_line(int fd, char *c);
+    int comm_block(int fd, char *c);
 };
 
 } // End Namespace lex
