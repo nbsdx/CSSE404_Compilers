@@ -19,7 +19,8 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
 {
     while(read( fd, &c, 1) != 0)
     {
-        if (c == ' ' || c == '\t' || c == '\n') 
+        //cout << c << std::endl;
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') 
         {
             // Whitespace - ignore
             continue;
@@ -47,8 +48,8 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         else 
         {
             // Fuck it, we're done.
+            cerr << "Unexpected char [" << c << "]. Terminating.\n";
             break;
-            cerr << "Unexpected char [" << c << "]. Ignoring.\n";
             // TODO: We should log invalid input.
         }
     }
@@ -312,11 +313,14 @@ void Lexer::read_comdiv(int fd, char *c) {
     {
         return comm_block( fd, c );
     } 
-    else 
+    else
+    {
+        pgm.push_back( make_shared<Operator>( Operator::Div ) );
+    }
+    if (err != 0) 
     {
         // (and we just ate another function's character)
         lseek( fd, -1, SEEK_CUR );
-        pgm.push_back( make_shared<Operator>( Operator::Div ) );
     }
 }
 
@@ -327,7 +331,7 @@ void Lexer::comm_line(int fd, char *c) {
     {
         if (err == 0)
             break;
-        else if (*c == '\n')
+        else if (*c == '\n' || *c == '\r')
             break;
     }
 }
