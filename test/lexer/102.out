@@ -3,6 +3,8 @@ ID, abc
 Delimiter, =
 Integer, 55
 Operator, ||
+Integer, 55
+Delimiter, ;
 Delimiter, }
 ID, names
 ID, should

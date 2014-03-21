@@ -119,7 +119,7 @@ void Lexer::read_name( int fd )
 
         if( token.compare( "System.out.println" ) == 0 )
         {
-            read( fd, &in, 1 );
+            err = read( fd, &in, 1 );
             break;
         }
     }
