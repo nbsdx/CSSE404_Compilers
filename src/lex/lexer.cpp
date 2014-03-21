@@ -18,6 +18,7 @@ namespace lex {
  */
 vector<Token> Lexer::lex( int fd )
 {
+
     int status = CLEAN;
     int err = 0;
     while( status != EOF_T )
@@ -25,11 +26,10 @@ vector<Token> Lexer::lex( int fd )
         if (status == CLEAN) {
             err = read( fd, &c, 1 );
             if (err == 0) break;
-        }
+        } // Else reuse old c
 
         if (c == ' ' || c == '\t' || c == '\n') {
             // Whitespace - ignore
-            break;
         } else if (ISDIGIT(c)) {
             // Number function here
             status = read_int(fd, &c);
@@ -37,6 +37,7 @@ vector<Token> Lexer::lex( int fd )
             // Name function
         } else if (is_one(c, OPERCHARS)) {
             // Operator / comment function
+            status = read_operator(fd, &c);
         } else if (is_one(c, DELIMITERS)) {
             // Delimiter switch
         } else {
@@ -115,9 +116,7 @@ int Lexer::read_int(int fd, char *c) {
     int ret = CLEAN;
     string num;
     num.append(1,*c);
-
-    while( true ) {
-        err = read(fd, c, 1);
+    while(( err = read(fd, c, 1))){
         if (err == 0) {
             ret = EOF_T;
         } else if (ISDIGIT(*c)) {
@@ -135,7 +134,7 @@ int Lexer::read_int(int fd, char *c) {
 }
 
 // Accept a string literal (like a #define) and check char membership
-bool is_one(char candidate, const char* group) {
+bool Lexer::is_one(char candidate, const char* group) {
     const char* g; 
     bool ret = false;
     for (g = group; g != NULL; g++) {
