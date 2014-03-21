@@ -39,6 +39,7 @@ ReservedWord, main
 ReservedWord, System.out.println
 Delimiter, ;
 Delimiter, .
+Delimiter, ,
 Delimiter, =
 Delimiter, (
 Delimiter, )

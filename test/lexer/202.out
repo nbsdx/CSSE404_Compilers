@@ -17,7 +17,6 @@ Delimiter, )
 Delimiter, {
 ReservedWord, return
 Integer, 1
-Delimiter, ;
 Delimiter, }
 ReservedWord, else
 Delimiter, {
@@ -46,7 +45,7 @@ Delimiter, )
 Delimiter, {
 ReservedWord, int
 ID, var
-Operator, =
+Delimiter, =
 ID, func
 Delimiter, (
 Integer, 123
@@ -56,7 +55,7 @@ ReservedWord, if
 Delimiter, (
 Delimiter, (
 ID, var
-Operator, >
+Operator, ==
 Integer, 1
 Delimiter, )
 Operator, ==
@@ -76,7 +75,7 @@ ID, var
 Delimiter, )
 Delimiter, ;
 ID, var
-Operator, =
+Delimiter, =
 ID, var
 Operator, -
 Integer, 1

@@ -3,6 +3,7 @@ ID, abc
 Delimiter, =
 Integer, 55
 Operator, ||
+Operator, -
 Integer, 55
 Delimiter, ;
 Delimiter, }
