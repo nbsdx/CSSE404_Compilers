@@ -1,4 +1,5 @@
 #include "token.h"
+#include <iostream>
 
 namespace lex {
 
@@ -10,6 +11,8 @@ namespace lex {
 ReservedWord::ReservedWord( RWord r )
 {
     this->m_type = r;
+
+//    std::cout << format() << std::endl;
 }
 
 ReservedWord::RWord ReservedWord::from_string( const std::string &str )
@@ -77,6 +80,7 @@ const std::string ReservedWord::format() const
 Operator::Operator( Op o )
 {
     this->m_type = o;
+//    std::cout << format() << std::endl;
 }
 
 Operator::Op Operator::from_string( const std::string &str )
@@ -132,6 +136,7 @@ const std::string Operator::format() const
 Delimiter::Delimiter( Delim d )
 {
     this->m_type = d;
+//    std::cout << format() << std::endl;
 }
 
 Delimiter::Delim Delimiter::from_string( const std::string &str )
@@ -181,6 +186,7 @@ const std::string Delimiter::format() const
 Identifier::Identifier( std::string s )
 {
     this->m_id = s;
+//    std::cout << format() << std::endl;
 }
 
 const std::string Identifier::format() const
@@ -194,6 +200,7 @@ const std::string Identifier::format() const
 Number::Number( int32_t value )
 {
     this->m_value = value;
+//    std::cout << format() << std::endl;
 }
 
 const std::string Number::format() const

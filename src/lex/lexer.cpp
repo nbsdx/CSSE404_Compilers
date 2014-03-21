@@ -22,26 +22,33 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         if (c == ' ' || c == '\t' || c == '\n') 
         {
             // Whitespace - ignore
+            continue;
         } 
         else if (ISDIGIT(c)) 
         {
             read_int(fd, &c);
+            continue;
         } 
         else if ( is_alpha( c ) ) 
         {
             read_name( fd );
+            continue;
         } 
         else if ( is_delim_char( c ) )
         {
             read_delimiter(fd, &c);
+            continue;
         }
         else if ( is_op_char( c ) )
         {
             read_operator(fd, &c);
+            continue;
         } 
         else 
         {
-            cout << "Invalid char [" << c << "]. Ignoring.\n";
+            // Fuck it, we're done.
+            break;
+            cerr << "Unexpected char [" << c << "]. Ignoring.\n";
             // TODO: We should log invalid input.
         }
     }
@@ -55,14 +62,16 @@ void Lexer::read_name( int fd )
     string token;
     ReservedWord::RWord rword;
     char in;
+    int err;
 
     // Go back 1 character... This is ghetto.
     lseek( fd, -1, SEEK_CUR );
 
-    while( ( read( fd, &in, 1 ) ) != 0 )
+    while( ( err = read( fd, &in, 1 ) ) != 0 )
     {
         // Break conditions:
-        if( !is_alpha( in ) && !ISDIGIT( in ) )
+        if( !is_alpha( in ) && 
+            !ISDIGIT( in ) )
         {
             if( in == '.' ) // Thanks Sys.out.ptln....
             {
@@ -94,10 +103,24 @@ void Lexer::read_name( int fd )
                         break; // Don't need to explicitly state.
                 }
             }
+
+            // Fix for Test Case A7-03. It turns "m_name" into:
+            // ID, m
+            // ID, name
+            // so we want to consume the _; do this by setting err to 0.
+            if( in == '_' )
+                err = 0;
+
             break;
         }
 
         token.append( 1, in );
+
+        if( token.compare( "System.out.println" ) == 0 )
+        {
+            read( fd, &in, 1 );
+            break;
+        }
     }
 
     // God I wish we didn't have this shitty keyword. 
@@ -116,8 +139,9 @@ finalize:
     else
         pgm.push_back( make_shared<ReservedWord>( rword ) );
 
-    // Undo the last read.
-    lseek( fd, -1, SEEK_CUR );
+    if( err != 0 )
+        // Undo the last read.
+        lseek( fd, -1, SEEK_CUR );
 
     return;
 
@@ -133,18 +157,20 @@ cleanup:
 
     token = token.substr( 0, first_p );
 
-    // This gets us to right after the '.'
-    // The '.' rewound above.
-    // There's something messed up with the is_one 
-    // stuff that I think is breaking one of the 
-    // testcases.... XXX
-    lseek( fd, -( strlen - first_p ), SEEK_CUR );
+    if( err != 0 )
+        // This gets us to right after the '.'
+        // The '.' rewound above.
+        // There's something messed up with the is_one 
+        // stuff that I think is breaking one of the 
+        // testcases.... XXX
+        lseek( fd, -( strlen - first_p ), SEEK_CUR );
 
     goto finalize;
 }
 
 void Lexer::read_delimiter(int fd, char *c) {
-    switch (*c) {
+    switch (*c) 
+    {
         case ';': pgm.push_back( make_shared<Delimiter>( Delimiter::Semi ));
                   break;
         case '[': pgm.push_back( make_shared<Delimiter>( Delimiter::LSquare ));
@@ -163,7 +189,8 @@ void Lexer::read_delimiter(int fd, char *c) {
                   break;
         case '.': pgm.push_back( make_shared<Delimiter>( Delimiter::Period ));
                   break;
-        default:  break; // assert(false);
+        default:  cerr << "Encounted Unexpected Delimiter " << *c << std::endl;
+                  break; // assert(false);
     }
 }
 
@@ -185,84 +212,135 @@ void Lexer::read_operator(int fd, char *c) {
                   break;
         case '!': read_twochar_operator(fd, '=', Operator::Not, Operator::NEqual);
                   break;
-        case '&': maybe_read_twochar(fd, '&', Operator::And);
+        case '&': {
+                    char c1 = *c;
+                    char c2;
+
+                    if( read( fd, &c2, 1 ) != 0 )
+                    {
+                        if( c2 == '&' )
+                            pgm.push_back( make_shared<Operator>( Operator::And ) );
+                        else
+                        {
+                            cerr << "Encountered Unexpected character following a &." << endl;
+                            lseek( fd, -1, SEEK_CUR );
+                        }
+                    }
+                  }
                   break;
-        case '|': maybe_read_twochar(fd, '|', Operator::Or);
+        case '|': {
+                    char c1 = *c;
+                    char c2;
+
+                    if( read( fd, &c2, 1 ) != 0 )
+                    {
+                        if( c2 == '|' )
+                            pgm.push_back( make_shared<Operator>( Operator::Or ) );
+                        else
+                        {
+                            cerr << "Encountered Unexpected character following a |." << endl;
+                            lseek( fd, -1, SEEK_CUR );
+                        }
+                    }
+                  }
                   break;
         case '=': read_equal_assign(fd);
                   break;
-        default:  break; // assert(false);
+        default:  cerr << "Encounted Unexpected Operator " << *c << std::endl;
+                  break;
     }
 }
 
 void Lexer::read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two) {
     char c;
-    int err = read( fd, &c, 1);
-    if (err != 0 && c != next) {
-        lseek( fd, -1, SEEK_CUR);
-    }
-    if (c != next || err == 0) { // urgh
+    int err = read( fd, &c, 1 );
+
+    if( err == 0 )
+        pgm.push_back( make_shared<Operator>( one ) );
+    else if( c != next ) 
+    {
+        // Oops, read too much.
+        lseek( fd, -1, SEEK_CUR );
         pgm.push_back( make_shared<Operator>( one ));
-    } else {
+    } 
+    else 
+    {
         pgm.push_back( make_shared<Operator>( two));
     }
 }
 
-void Lexer::read_equal_assign(int fd) {
+void Lexer::read_equal_assign( int fd ) {
     char c;
     int err = read( fd, &c, 1 );
-    if (err == 0 || c != '=') {
-        pgm.push_back( make_shared<Delimiter>( Delimiter::Equal ));
-        lseek( fd, -1, SEEK_CUR);
-    } else {
-        pgm.push_back( make_shared<Operator>( Operator::EqualEq ));
+    if (err == 0 || c != '=') 
+    {
+        // Opps, not a ==, just a =.
+        lseek( fd, -1, SEEK_CUR );
+        pgm.push_back( make_shared<Delimiter>( Delimiter::Equal ) );
+    }
+    else 
+    {
+        pgm.push_back( make_shared<Operator>( Operator::EqualEq ) );
     }
 }
-
-void Lexer::maybe_read_twochar(int fd, char next, Operator::Op just) {
+/*
+void Lexer::maybe_read_twochar( int fd, char next, Operator::Op just ) {
     char c;
     int err = read( fd, &c, 1);
-    if (err != 0 && c != next) {
+    if (err != 0 && c != next) 
+    {
         // TODO: Decide on plan for error handling
-        pgm.push_back( make_shared<Operator>( Operator::Invalid_Op ));
         lseek( fd, -1, SEEK_CUR);
-    } else {
+        pgm.push_back( make_shared<Operator>( Operator::Invalid_Op ));
+    } 
+    else 
+    {
         pgm.push_back( make_shared<Operator>( just ));
     }
 }
-
+*/
 void Lexer::read_comdiv(int fd, char *c) {
     // assert (c && *c == '/')
+    
     int err = read( fd, c, 1 );
-    if (err != 0 && *c == '/') {
-        return comm_line(fd, c);
-    } else if (err != 0 && *c == '*') {
-        return comm_block(fd, c);
-    } else {
+
+    if (err != 0 && *c == '/') 
+    {
+        return comm_line( fd, c );
+    } 
+    else if (err != 0 && *c == '*') 
+    {
+        return comm_block( fd, c );
+    } 
+    else 
+    {
         // (and we just ate another function's character)
-        lseek( fd, -1, SEEK_CUR);
+        lseek( fd, -1, SEEK_CUR );
         pgm.push_back( make_shared<Operator>( Operator::Div ) );
     }
 }
 
 void Lexer::comm_line(int fd, char *c) {
     int err;
-    while ((err = read( fd, c, 1 ))) {
-        if (err == 0) {
+
+    while ((err = read( fd, c, 1 ))) 
+    {
+        if (err == 0)
             break;
-        } else if (*c == '\n') {
+        else if (*c == '\n')
             break;
-        }
     }
 }
 
 void Lexer::comm_block(int fd, char *c) {
     int err;
     char last = '\0';
-    while (read(fd, c, 1) != 0) {
-        if (last == '*' && *c == '/') {
+    
+    while (read(fd, c, 1) != 0) 
+    {
+        if (last == '*' && *c == '/')
             break;
-        }
+
         last = *c;
     }
 }
@@ -272,17 +350,26 @@ void Lexer::read_int(int fd, char *c) {
     int err;
     string num;
     num.append(1,*c);
-    while(( err = read(fd, c, 1))){
-        if (err == 0) {
+
+    // If the first character is 0, then the
+    // 0 is it's own Integer.
+    if( *c == '0' )
+        goto make_token;
+
+    while(( err = read(fd, c, 1)))
+    {
+        if (err == 0)
             break;
-        } else if (ISDIGIT(*c)) {
+        else if (ISDIGIT(*c))
             num.append(1, *c);
-        } else {
+        else
+        {
             lseek( fd, -1, SEEK_CUR );
             break;
         }
     }
 
+make_token:
     // Form integer
     pgm.push_back( make_shared<Number>( stoi( num ) ) );
 }
@@ -292,12 +379,8 @@ bool Lexer::is_one(char candidate, const char* group) {
     const char* g; 
     bool ret = false;
 
-    std::cout << "Checking if " << candidate << " is in " << group << std::endl;
-
     for (g = group; g != NULL; g++) {
-        std::cout << "Checking " << candidate << " against " << *g << std::endl;
         if (*g == candidate) {
-            std::cout << "Same.\n";
             ret = true;
             break;
         }
