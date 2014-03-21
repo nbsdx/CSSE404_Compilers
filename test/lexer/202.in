@@ -1,0 +1,38 @@
+
+/* More structured code tests. Intermixed comments and functions. Weird formatting */
+// Random Comment.
+
+class Class
+
+
+{
+    int func( int input ) {
+        if( input <= 0 )
+        {
+            return 1
+        }
+        else
+        {
+            return input * func( input - 2 );
+        }
+    }
+
+    public static 
+    void main(
+
+
+                String[] args) 
+    {
+        
+        int var = func( 123 );
+
+        if( ( var == 1 ) == true )
+        {
+            while( var > 1 )
+            {
+                System.out.println( var );
+                var = var - 1;
+            }
+        }
+    }
+}
