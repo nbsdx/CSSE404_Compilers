@@ -1,5 +1,6 @@
 Integer, 100
 Operator, +
+Integer, 200
 Delimiter, ;
 Integer, 300
 Operator, -
@@ -24,9 +25,8 @@ Operator, <
 Integer, 90
 Operator, <
 Integer, 100
-Operator, <
-Integer, 100
 Operator, <=
+Integer, 100
 Delimiter, ;
 Delimiter, ;
 Delimiter, ;
