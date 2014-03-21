@@ -1,6 +1,6 @@
 #include "lexer.h"
 
-#define OPERCHARS "+-/!=><"
+#define OPERCHARS "+-/!=><&|"
 #define DELIMITERS ";[]{}()"
 #define ISDIGIT(x) (x >= '0' && x <= '9')
 
@@ -159,8 +159,7 @@ void Lexer::read_operator(int fd, char *c) {
         case '&': break; //return read_twochar_operator(fd, '&', Token::BAnd, Token::And);
         case '|': // TODO: As above for || or ERROR (boolops)
                   break;
-        case '=': // TODO: == vs delimiter =
-                  break;
+        case '=': return read_equal_assign(fd);
     }
 }
 
@@ -174,6 +173,17 @@ void Lexer::read_twochar_operator(int fd, char next, Operator::Op one, Operator:
         pgm.push_back( make_shared<Operator>( one ));
     } else {
         pgm.push_back( make_shared<Operator>( two));
+    }
+}
+
+void Lexer::read_equal_assign(int fd) {
+    char c;
+    int err = read( fd, &c, 1 );
+    if (err == 0 || c != '=') {
+        pgm.push_back( make_shared<Delimiter>( Delimiter::Equal ));
+        lseek( fd, -1, SEEK_CUR);
+    } else {
+        pgm.push_back( make_shared<Operator>( Operator::EqualEq ));
     }
 }
 

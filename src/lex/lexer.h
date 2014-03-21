@@ -28,6 +28,7 @@ private:
     void comm_line(int fd, char *c);
     void comm_block(int fd, char *c);
     void read_name(int fd);
+    void read_equal_assign(int fd);
 
     inline bool is_alpha( char c ){ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
     void read_twochar_operator(int fd, char next, Operator::Op one, Operator::Op two);
