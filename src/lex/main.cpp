@@ -20,7 +20,6 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
-    std::cout << "LEXING";
     // File open
     if( ( fd = open( argv[1], O_RDONLY ) ) == -1 )
     {
@@ -28,10 +27,8 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
-    std::cout << "LEXING";
     std::vector<Token> pgm = Lexer().lex( fd );
 
-    std::cout << "LEXING";
     std::vector<Token>::iterator i;
     for( i = pgm.begin(); i != pgm.end(); ++i )
         cout << (*i).to_string() << std::endl;
