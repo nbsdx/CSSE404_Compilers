@@ -1,102 +1,204 @@
 #include "token.h"
-#include <iostream>
-#include <string>
 
-using namespace std;
+namespace lex {
 
-namespace lex 
+/**
+ *
+ *  Token Class Functions.
+ *
+ */
+ReservedWord::ReservedWord( RWord r )
 {
-    ostream& operator<<( ostream& os, const Token &tok )
-    {
-        os << tok.to_string();
-        return os;
-    }
+    this->m_type = r;
+}
 
-    string Token::to_string() const
+ReservedWord::RWord ReservedWord::from_string( const std::string &str )
+{
+    switch( _hash( str.c_str() ) )
     {
-        switch(type) {
-            case ID: 
-                return string("ID, ").append( name );
-            case Integer: 
-                return string("Integer, ").append( std::to_string( intval ) );
-            case ReservedWord: 
-                return string("ReservedWord, ").append( rword_to_string( word ) );
-            case Operator: 
-                return string("Operator, ").append( operator_to_string( op ) );
-            case Delimiter: 
-                return string("Delimiter, ").append( delim_to_string( dl ) );
-        }
-        return string( "<<INVALID_TOKEN>>" );
+		case _hash( "class" ):  return ReservedWord::Class;
+		case _hash( "public" ): return ReservedWord::Public;
+		case _hash( "static" ): return ReservedWord::Static;
+		case _hash( "extends" ):return ReservedWord::Extends;
+		case _hash( "void" ):   return ReservedWord::Void;
+		case _hash( "int" ):    return ReservedWord::Int;
+		case _hash( "boolean" ):return ReservedWord::Bool;
+		case _hash( "if" ):     return ReservedWord::If;
+		case _hash( "else" ):   return ReservedWord::Else;
+		case _hash( "while" ):  return ReservedWord::While;
+		case _hash( "return" ): return ReservedWord::Return;
+		case _hash( "null" ):   return ReservedWord::Null;
+		case _hash( "true" ):   return ReservedWord::True;
+		case _hash( "false" ):  return ReservedWord::False;
+		case _hash( "this" ):   return ReservedWord::This;
+		case _hash( "new" ):    return ReservedWord::New;
+		case _hash( "String" ): return ReservedWord::String;
+		case _hash( "main" ):   return ReservedWord::Main;
+		case _hash( "System.out.println" ): return ReservedWord::Println;
+        default: return ReservedWord::Invalid_RWord;
     }
+}
 
-    string Token::rword_to_string( enum RWord r )
+const std::string ReservedWord::to_string( ReservedWord::RWord r )
+{
+    switch( r )
     {
-        switch( r ) {
-            case Class:     return string( "class" ); 
-            case Public:    return string( "public" ); 
-            case Static:    return string( "static" ); 
-            case Extends:   return string( "extends" ); 
-            case Void:      return string( "void" ); 
-            case Int:       return string( "int" ); 
-            case Bool:      return string( "boolean" ); 
-            case If:        return string( "if" ); 
-            case Else:      return string( "else" ); 
-            case While:     return string( "while" ); 
-            case Return:    return string( "return" ); 
-            case Null:      return string( "null" ); 
-            case True:      return string( "true" ); 
-            case False:     return string( "false" ); 
-            case This:      return string( "this" ); 
-            case New:       return string( "new" ); 
-            case String:    return string( "String" ); 
-            case Main:      return string( "main" ); 
-            case Println:   return string( "System.out.println" ); 
-        }
-        return string( "<<INVALID_RWORD>>" );
+		case ReservedWord::Class: return  std::string( "class" );
+		case ReservedWord::Public: return std::string( "public" );
+		case ReservedWord::Static: return std::string( "static" );
+		case ReservedWord::Extends: return std::string( "extends" );
+		case ReservedWord::Void: return   std::string( "void" );
+		case ReservedWord::Int: return    std::string( "int" );
+		case ReservedWord::Bool: return   std::string( "boolean" );
+		case ReservedWord::If: return     std::string( "if" );
+		case ReservedWord::Else: return   std::string( "else" );
+		case ReservedWord::While: return  std::string( "while" );
+		case ReservedWord::Return: return std::string( "return" );
+		case ReservedWord::Null: return   std::string( "null" );
+		case ReservedWord::True: return   std::string( "true" );
+		case ReservedWord::False: return  std::string( "false" );
+		case ReservedWord::This: return   std::string( "this" );
+		case ReservedWord::New: return    std::string( "new" );
+		case ReservedWord::String: return std::string( "String" );
+		case ReservedWord::Main: return   std::string( "main" );
+		case ReservedWord::Println: return std::string( "System.out.println" );
+        default: return std::string( "Unknown RWord." );
     }
-    
-    string Token::delim_to_string( enum DelimType d )
-    {
-        switch( d ) {
-            case Semi:      return string( ";" );
-            case LParen:    return string( "(" );
-            case RParen:    return string( ")" );
-            case LBrace:    return string( "{" );
-            case RBrace:    return string( "}" );
-            case LSquare:   return string( "[" );
-            case RSquare:   return string( "]" );
-            case Equal:     return string( "=" );
-        }
-        return string( "<<INVALID_DELIM>>" );
-    }
+}
 
-    string Token::operator_to_string( enum OperType o )
+const std::string ReservedWord::format() const
+{
+    return std::string( "ReservedWord, " ).append( to_string( this->m_type ) );
+}
+
+/**
+ *  Operator Class functions
+ */
+Operator::Operator( Op o )
+{
+    this->m_type = o;
+}
+
+Operator::Op Operator::from_string( const std::string &str )
+{
+    switch( _hash( str.c_str() ) )
     {
-        switch( o ) {
-            case Plus:      return string( "+" );
-            case Minus:     return string( "-" );
-            case Mult:      return string( "*" );
-            case Div:       return string( "/" );
-            case LT:        return string( "<" );
-            case LEq:       return string( "<=" );
-            case GEq:       return string( ">=" );
-            case GT:        return string( ">" );
-            case Eq:        return string( "==" );
-            case NEq:       return string( "!=" );
-            case And:       return string( "&&" );
-            case Or:        return string( "||" );
-            case Not:       return string( "!" );
-        }
-        return string( "<<INVALID_OPERATOR>>" );
+        case _hash( "+" ): return Operator::Plus;
+        case _hash( "-" ): return Operator::Minus;
+        case _hash( "*" ): return Operator::Mult;
+        case _hash( "/" ): return Operator::Div;
+        case _hash( "<" ): return Operator::LT;
+        case _hash( ">" ): return Operator::GT;
+        case _hash( "<=" ): return Operator::LEq;
+        case _hash( ">=" ): return Operator::GEq;
+        case _hash( "==" ): return Operator::EqualEq;
+        case _hash( "!=" ): return Operator::NEqual;
+        case _hash( "&&" ): return Operator::And;
+        case _hash( "||" ): return Operator::Or;
+        case _hash( "!" ): return Operator::Not;
+        default: return Operator::Invalid_Op;
     }
-/*
-    void Token::display( vector<Token> vec )
+}
+
+const std::string Operator::to_string( Operator::Op o )
+{
+    switch( o )
     {
-        vector<Token>::iterator i;
-        for( i = vec.begin(); i != vec.end(); ++i )
-        {
-            cout << (*i).to_string() << endl;
-        }
+        case Operator::Plus:    return std::string( "+" ); 
+        case Operator::Minus:   return std::string( "-" ); 
+		case Operator::Mult:    return std::string( "*" ); 
+		case Operator::Div:     return std::string( "/" ); 
+		case Operator::LT:      return std::string( "<" ); 
+		case Operator::GT:      return std::string( ">" ); 
+		case Operator::LEq:     return std::string( "<=" );
+		case Operator::GEq:     return std::string( ">=" );
+		case Operator::EqualEq: return std::string( "==" );
+		case Operator::NEqual:  return std::string( "!=" );
+		case Operator::And:     return std::string( "&&" );
+		case Operator::Or:      return std::string( "||" );
+		case Operator::Not:     return std::string( "!" );
+        default:                return std::string( "Unknown Operator" );
     }
-*/
-} // End Namespace lex
+}
+
+const std::string Operator::format() const
+{
+    return std::string( "Operator, " ).append( to_string( this->m_type ) );
+}
+
+/**
+ *  Delimiter Class Functions
+ */
+Delimiter::Delimiter( Delim d )
+{
+    this->m_type = d;
+}
+
+Delimiter::Delim Delimiter::from_string( const std::string &str )
+{
+    switch( _hash( str.c_str() ) )
+    {
+        case _hash( ";" ): return Delimiter::Semi;
+        case _hash( "=" ): return Delimiter::Equal;
+        case _hash( "(" ): return Delimiter::LParen;
+        case _hash( ")" ): return Delimiter::RParen;
+        case _hash( "{" ): return Delimiter::LBrace;
+        case _hash( "}" ): return Delimiter::RBrace;
+        case _hash( "[" ): return Delimiter::LSquare;
+        case _hash( "]" ): return Delimiter::RSquare;
+        case _hash( "," ): return Delimiter::Comma;
+        case _hash( "." ): return Delimiter::Period;
+        default:           return Delimiter::Invalid_Delim;
+    }
+}
+
+const std::string Delimiter::to_string( Delimiter::Delim d )
+{
+    switch( d )
+    {
+        case Delimiter::Semi:    return std::string( ";" );
+        case Delimiter::Equal:   return std::string( "=" );
+        case Delimiter::LParen:  return std::string( "(" );
+        case Delimiter::RParen:  return std::string( ")" );
+        case Delimiter::LBrace:  return std::string( "{" );
+        case Delimiter::RBrace:  return std::string( "}" );
+        case Delimiter::LSquare: return std::string( "[" );
+        case Delimiter::RSquare: return std::string( "]" );
+        case Delimiter::Comma:   return std::string( "," );
+        case Delimiter::Period:  return std::string( "." );
+        case Delimiter::Invalid_Delim: return std::string( "Unknown Delimiter" );
+    }
+}
+
+const std::string Delimiter::format() const
+{
+    return std::string( "Delimiter, " ).append( to_string( this->m_type ) );
+}
+
+/**
+ *  Identifier Class Functions
+ */
+Identifier::Identifier( std::string s )
+{
+    this->m_id = s;
+}
+
+const std::string Identifier::format() const
+{
+    return std::string( "ID, " ).append( this->m_id );
+}
+
+/**
+ *  Number Class Functions
+ */
+Number::Number( int32_t value )
+{
+    this->m_value = value;
+}
+
+const std::string Number::format() const
+{
+    return std::string( "Integer, " ).append( std::to_string( this->m_value ) );
+}
+
+} // End Namespace <lex>

@@ -7,23 +7,29 @@
 #include <unistd.h>
 #include <iostream>
 #include <vector>
+#include <memory>
+
+using namespace std;
 
 namespace lex {
 
 class Lexer
 {
 public:
-    vector<Token> lex( int fd );
+    vector< shared_ptr<Token> > lex( int fd );
 protected:
 private:
     char c;
-    vector<Token> pgm;
+    vector< shared_ptr<Token> > pgm;
     bool is_one(char candidate, const char* group);
     int read_int(int fd, char *c);
     int read_operator(int fd, char *c);
     int read_comdiv(int fd, char *c);
     int comm_line(int fd, char *c);
     int comm_block(int fd, char *c);
+    int read_name(int fd);
+
+    inline bool is_alpha( char c ){ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
     int read_twochar_operator(int fd, char next, Token::OperType one, Token::OperType two);
 };
 

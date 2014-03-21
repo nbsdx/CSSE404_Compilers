@@ -16,14 +16,14 @@ namespace lex {
  *  Read one char from the stream, then dispatch another function
  *  that can complete the appropriate token.
  */
-vector<Token> Lexer::lex( int fd )
+vector< shared_ptr<Token> > Lexer::lex( int fd )
 {
-
     int status = CLEAN;
     int err = 0;
     while( status != EOF_T )
     {
-        if (status == CLEAN) {
+        if (status == CLEAN) 
+        {
             err = read( fd, &c, 1 );
             if (err == 0) {
                 status = EOF_T;
@@ -31,38 +31,90 @@ vector<Token> Lexer::lex( int fd )
             }
         }
 
-        // Else reuse old c
-        status = CLEAN;
-
-        if (c == ' ' || c == '\t' || c == '\n') {
+        if (c == ' ' || c == '\t' || c == '\n') 
+        {
             // Whitespace - ignore
-        } else if (ISDIGIT(c)) {
+        } 
+        else if (ISDIGIT(c)) 
+        {
             // Number function here
             status = read_int(fd, &c);
-        } else if (c >= 'a' && c <= 'Z') {
+        } 
+        else if ( is_alpha( c ) ) 
+        {
             // Name function
-        } else if (is_one(c, OPERCHARS)) {
+            status = read_name( fd );
+        } 
+        else if (is_one(c, OPERCHARS)) 
+        {
             // Operator / comment function
             status = read_operator(fd, &c);
-        } else if (is_one(c, DELIMITERS)) {
+        } 
+        else if (is_one(c, DELIMITERS)) 
+        {
             // Delimiter switch
-        } else {
-            cout << "Invalid char [" << c << "]. Exiting\n";
+        } 
+        else 
+        {
+            cout << "Invalid char [" << c << "]. Ignoring.\n";
+            // TODO: We should log invalid input.
         }
     }
 
     return pgm;
 }
 
+int Lexer::read_name( int fd )
+{
+    string token;
+    ReservedWord::RWord rword;
+    char in;
+    int ret = CLEAN;
+    
+    // Go back 1 character... This is ghetto.
+    lseek( fd, -1, SEEK_CUR );
+
+    while( ( read( fd, &in, 1 ) ) != 0 )
+    {
+        // Break conditions:
+        if( !is_alpha( in ) )
+        {
+            if( in == '.' ) // Thanks Sys.out.ptln....
+            {
+                // check the string is System or System.out
+                if( token.compare( "System" )     == 0 ||
+                    token.compare( "System.out" ) == 0 )
+                {
+                    token.append( 1, in );
+                    continue;
+                }
+            }
+            break;
+        }
+
+        token.append( 1, in );
+    }
+    
+    if( ( rword = ReservedWord::from_string( token ) ) == ReservedWord::Invalid_RWord )
+        pgm.push_back( make_shared<Identifier>( token ) );
+    else
+        pgm.push_back( make_shared<ReservedWord>( rword ) );
+    
+    // Undo the last read.
+    lseek( fd, -1, SEEK_CUR );
+
+    return ret;
+}
+
 int Lexer::read_operator(int fd, char *c) {
     // assert(c && is_one(OPERCHARS)
     int err;
     int ret = CLEAN;
-    char fst = *c;
-    switch (fst) {
-        case '+': pgm.push_back(Token( Token::Operator, Token::Plus ));
+    switch (*c) {
+        case '/': return read_comdiv(fd, c);
+        case '+': pgm.push_back( make_shared<Operator>( Operator::Plus ) );
                   break;
-        case '-': pgm.push_back(Token( Token::Operator, Token::Minus ));
+        case '-': pgm.push_back( make_shared<Operator>( Operator::Minus ) );
                   break;
         case '*': pgm.push_back(Token( Token::Operator, Token::Mult ));
                   break;
@@ -107,7 +159,7 @@ int Lexer::read_comdiv(int fd, char *c) {
         return comm_block(fd, c);
     }
     // In all other cases we have a Div operator
-    pgm.push_back(Token( Token::Operator, Token::Div));
+    pgm.push_back( make_shared<Operator>( Operator::Div ) );
     return ret;
 }
 
@@ -158,10 +210,9 @@ int Lexer::read_int(int fd, char *c) {
         }
     }
 
+    std::cout << "Converting int:" << num << std::endl;
     // Form integer
-    int32_t read = atoi(num.c_str());
-    Token tok = Token( Token::Integer, read );
-    pgm.push_back(tok);
+    pgm.push_back( make_shared<Number>( stoi( num ) ) );
     return ret;
 }
 
