@@ -31,6 +31,7 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         if (c == ' ' || c == '\t' || c == '\n') 
         {
             // Whitespace - ignore
+            status = CLEAN;
         } 
         else if (ISDIGIT(c)) 
         {
@@ -50,6 +51,8 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         else if (is_one(c, DELIMITERS)) 
         {
             // Delimiter switch
+            status = CLEAN; // XXX: Temp, skip over them for now.
+            cout << "Delimiter, " << c << std::endl;
         } 
         else 
         {
@@ -63,6 +66,7 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
 
 int Lexer::read_name( int fd )
 {
+    bool has_period = false;
     string token;
     ReservedWord::RWord rword;
     char in;
@@ -79,11 +83,31 @@ int Lexer::read_name( int fd )
             if( in == '.' ) // Thanks Sys.out.ptln....
             {
                 // check the string is System or System.out
-                if( token.compare( "System" )     == 0 ||
+                if( token.compare( "System" ) == 0  || 
                     token.compare( "System.out" ) == 0 )
                 {
                     token.append( 1, in );
+                    has_period = true;
                     continue;
+                }
+                else if( token.compare( "System.out.println" ) == 0 )
+                {
+                    // No stupid stuff. Just leave. We have it.
+                    // This is to deal with the case of something like
+                    // System.out.println.why.is.this.here
+                    break;
+                }
+                else
+                {
+                    // Now we have to break it up, rewind to the 
+                    // first . and clean up.
+                    // If this is the first period that we've seen,
+                    // we can just break, and it will be fine. 
+                    // Otherwise we have to rewind our input.
+                    if( has_period )
+                        goto cleanup;
+                    else 
+                        break; // Don't need to explicitly state.
                 }
             }
             break;
@@ -92,6 +116,17 @@ int Lexer::read_name( int fd )
         token.append( 1, in );
     }
     
+    // God I wish we didn't have this shitty keyword. 
+    // It makes everything more complicated. It should
+    // probably just be parsed as a normal object, and 
+    // the AST and parser can deal with it....
+    if( has_period )
+    {
+        if( token.compare( "System.out.println" ) != 0 )
+            goto cleanup;
+    }
+    
+finalize:
     if( ( rword = ReservedWord::from_string( token ) ) == ReservedWord::Invalid_RWord )
         pgm.push_back( make_shared<Identifier>( token ) );
     else
@@ -101,6 +136,27 @@ int Lexer::read_name( int fd )
     lseek( fd, -1, SEEK_CUR );
 
     return ret;
+
+    /**
+     *  If this happens, then we tried to read a println and
+     *  it wasn't actually a println. We need to figure out
+     *  where the first '.' is, and then rewind that much, 
+     *  but still add whatever was before it (System) as an ID.
+     */
+cleanup:
+    int strlen = token.length();
+    int first_p = token.find_first_of( '.' );
+
+    token = token.substr( 0, first_p );
+
+    // This gets us to right after the '.'
+    // The '.' rewound above.
+    // There's something messed up with the is_one 
+    // stuff that I think is breaking one of the 
+    // testcases.... XXX
+    lseek( fd, -( strlen - first_p + 1 ), SEEK_CUR );
+    
+    goto finalize;
 }
 
 int Lexer::read_operator(int fd, char *c) {
@@ -183,7 +239,6 @@ int Lexer::read_int(int fd, char *c) {
         }
     }
 
-    std::cout << "Converting int:" << num << std::endl;
     // Form integer
     pgm.push_back( make_shared<Number>( stoi( num ) ) );
     return ret;
