@@ -5,7 +5,6 @@
 #include <vector>
 #include <memory>
 
-#include <error.h>
 #include <string.h>
 
 #include "lexer.h"
