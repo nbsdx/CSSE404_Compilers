@@ -19,7 +19,7 @@ private:
     char c;
     vector<Token> pgm;
     bool is_one(char candidate, const char* group);
-    void read_int(int fd, char *c);
+    int read_int(int fd, char *c);
 };
 
 } // End Namespace lex

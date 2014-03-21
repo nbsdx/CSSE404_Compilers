@@ -4,6 +4,11 @@
 #define DELIMITERS ";[]{}()"
 #define ISDIGIT(x) (x >= '0' && x <= '9')
 
+// Is the char on top of the stream to be processed?
+#define CLEAN 0
+#define DIRTY 1
+#define EOF_T 2
+
 namespace lex {
 
 /**
@@ -13,14 +18,21 @@ namespace lex {
  */
 vector<Token> Lexer::lex( int fd )
 {
-    // Process loop.
-    while( read( fd, &c, 1 ) != 0 )
+    int status = CLEAN;
+    int err = 0;
+    while( status != EOF_T )
     {
+        if (status == CLEAN) {
+            err = read( fd, &c, 1 );
+            if (err == 0) break;
+        }
+
         if (c == ' ' || c == '\t' || c == '\n') {
             // Whitespace - ignore
             break;
         } else if (ISDIGIT(c)) {
             // Number function here
+            status = read_int(fd, &c);
         } else if (c >= 'a' && c <= 'Z') {
             // Name function
         } else if (is_one(c, OPERCHARS)) {
@@ -35,22 +47,29 @@ vector<Token> Lexer::lex( int fd )
     return pgm;
 }
 
-void Lexer::read_int(int fd, char *c) {
-    if (!c) return; // oh no
+int Lexer::read_int(int fd, char *c) {
+    // assert(c)
+    int err;
+    int ret = CLEAN;
     string num;
     num.append(1,*c);
 
-    while( read(fd, c, 1) != 0) {
-        if (ISDIGIT(*c)) {
+    while( true ) {
+        err = read(fd, c, 1);
+        if (err == 0) {
+            ret = EOF_T;
+        } else if (ISDIGIT(*c)) {
             num.append(1, *c);
+        } else {
+            ret = DIRTY;
         }
     }
-    // shift read head
 
     // Form integer
     int32_t read = atoi(num.c_str());
     Token tok = Token( Token::Integer, read );
     pgm.push_back(tok);
+    return ret;
 }
 
 // Accept a string literal (like a #define) and check char membership
