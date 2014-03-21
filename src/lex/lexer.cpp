@@ -1,7 +1,9 @@
 #include "lexer.h"
 
+// NB: While = is a delimiter, it's handled in the operator function
+//     (since this simplifies the == case)
 #define OPERCHARS "+-/!=><&|"
-#define DELIMITERS ";[]{}()"
+#define DELIMITERS ";[]{}(),."
 #define ISDIGIT(x) (x >= '0' && x <= '9')
 
 namespace lex {
@@ -21,24 +23,20 @@ vector< shared_ptr<Token> > Lexer::lex( int fd )
         } 
         else if (ISDIGIT(c)) 
         {
-            // Number function here
             read_int(fd, &c);
         } 
         else if ( is_alpha( c ) ) 
         {
-            // Name function
             read_name( fd );
         } 
         else if (is_one(c, OPERCHARS)) 
         {
-            // Operator / comment function
             read_operator(fd, &c);
         } 
         else if (is_one(c, DELIMITERS)) 
         {
-            // Delimiter switch
-            cout << "Delimiter, " << c << std::endl;
-        } 
+            read_delimiter(fd, &c);
+        }
         else 
         {
             cout << "Invalid char [" << c << "]. Ignoring.\n";
@@ -142,6 +140,30 @@ cleanup:
     goto finalize;
 }
 
+void Lexer::read_delimiter(int fd, char *c) {
+    switch (*c) {
+        case ';': pgm.push_back( make_shared<Delimiter>( Delimiter::Semi ));
+                  break;
+        case '[': pgm.push_back( make_shared<Delimiter>( Delimiter::LSquare ));
+                  break;
+        case ']': pgm.push_back( make_shared<Delimiter>( Delimiter::RSquare ));
+                  break;
+        case '(': pgm.push_back( make_shared<Delimiter>( Delimiter::LParen ));
+                  break;
+        case ')': pgm.push_back( make_shared<Delimiter>( Delimiter::RParen ));
+                  break;
+        case '{': pgm.push_back( make_shared<Delimiter>( Delimiter::LBrace ));
+                  break;
+        case '}': pgm.push_back( make_shared<Delimiter>( Delimiter::RBrace ));
+                  break;
+        case ',': pgm.push_back( make_shared<Delimiter>( Delimiter::Comma ));
+                  break;
+        case '.': pgm.push_back( make_shared<Delimiter>( Delimiter::Period ));
+                  break;
+        default:  break; // assert(false);
+    }
+}
+
 void Lexer::read_operator(int fd, char *c) {
     // assert(c && is_one(OPERCHARS)
     int err;
@@ -159,6 +181,7 @@ void Lexer::read_operator(int fd, char *c) {
         case '&': return maybe_read_twochar(fd, '&', Operator::And);
         case '|': return maybe_read_twochar(fd, '|', Operator::Or);
         case '=': return read_equal_assign(fd);
+        default:  break; // assert(false);
     }
 }
 
@@ -201,18 +224,15 @@ void Lexer::maybe_read_twochar(int fd, char next, Operator::Op just) {
 void Lexer::read_comdiv(int fd, char *c) {
     // assert (c && *c == '/')
     int err = read( fd, c, 1 );
-    if (err == 0) {
-        // We have a div!
-        //
-    } else if (*c == '/') {
+    if (err != 0 && *c == '/') {
         return comm_line(fd, c);
-    } else if (*c == '*') {
+    } else if (err != 0 && *c == '*') {
         return comm_block(fd, c);
+    } else {
+        // (and we just ate another function's character)
+        lseek( fd, -1, SEEK_CUR);
+        pgm.push_back( make_shared<Operator>( Operator::Div ) );
     }
-    // In all other cases we have a Div operator
-    // (and we just ate another function's character)
-    lseek( fd, -1, SEEK_CUR);
-    pgm.push_back( make_shared<Operator>( Operator::Div ) );
 }
 
 void Lexer::comm_line(int fd, char *c) {
@@ -229,10 +249,8 @@ void Lexer::comm_line(int fd, char *c) {
 void Lexer::comm_block(int fd, char *c) {
     int err;
     char last = '\0';
-    while ((err = read(fd, c, 1))) {
-        if (err == 0) {
-            break;
-        } else if (last == '*' && *c == '/') {
+    while (read(fd, c, 1) != 0) {
+        if (last == '*' && *c == '/') {
             break;
         }
         last = *c;

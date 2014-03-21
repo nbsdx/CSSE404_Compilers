@@ -23,6 +23,7 @@ private:
     vector< shared_ptr<Token> > pgm;
     bool is_one(char candidate, const char* group);
     void read_int(int fd, char *c);
+    void read_delimiter(int fd, char *c);
     void read_operator(int fd, char *c);
     void read_comdiv(int fd, char *c);
     void comm_line(int fd, char *c);
