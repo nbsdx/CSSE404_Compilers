@@ -24,6 +24,7 @@ private:
     int read_comdiv(int fd, char *c);
     int comm_line(int fd, char *c);
     int comm_block(int fd, char *c);
+    int read_twochar_operator(int fd, char next, Token::OperType one, Token::OperType two);
 };
 
 } // End Namespace lex

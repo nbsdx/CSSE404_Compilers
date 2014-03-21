@@ -58,15 +58,39 @@ int Lexer::read_operator(int fd, char *c) {
     // assert(c && is_one(OPERCHARS)
     int err;
     int ret = CLEAN;
-    switch (*c) {
-        case '/': return read_comdiv(fd, c);
+    char fst = *c;
+    switch (fst) {
         case '+': pgm.push_back(Token( Token::Operator, Token::Plus ));
                   break;
         case '-': pgm.push_back(Token( Token::Operator, Token::Minus ));
                   break;
-
+        case '*': pgm.push_back(Token( Token::Operator, Token::Mult ));
+                  break;
+        case '/': return read_comdiv(fd, c);
+        case '<': return read_twochar_operator(fd, '=', Token::LT, Token::LEq);
+        case '>': return read_twochar_operator(fd, '=', Token::GT, Token::GEq);
+        case '!': return read_twochar_operator(fd, '=', Token::Not, Token::NEq);
+        case '&': break; //return read_twochar_operator(fd, '&', Token::BAnd, Token::And);
+        case '|': // TODO: As above for || or ERROR (boolops)
+                  break;
+        case '=': // TODO: == vs delimiter =
+                  break;
     }
 
+    return ret;
+}
+
+int Lexer::read_twochar_operator(int fd, char next, Token::OperType one, Token::OperType two) {
+    int ret;
+    char c;
+    int err = read( fd, &c, 1);
+    if (err == 0) ret = EOF_T;
+    if (c != next) ret = DIRTY;
+    if (c != next || err == 0) { // urgh
+        pgm.push_back(Token( Token::Operator, one));
+    } else {
+        pgm.push_back(Token( Token::Operator, two));
+    }
     return ret;
 }
 
