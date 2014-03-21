@@ -29,11 +29,10 @@ vector<Token> Lexer::lex( int fd )
                 status = EOF_T;
                 break;
             }
-        } // Else reuse old c
+        }
 
+        // Else reuse old c
         status = CLEAN;
-
-        cout << "Lexing: " << c << "\n";
 
         if (c == ' ' || c == '\t' || c == '\n') {
             // Whitespace - ignore
@@ -123,7 +122,6 @@ int Lexer::read_int(int fd, char *c) {
     int ret = CLEAN;
     string num;
     num.append(1,*c);
-    cout << "Reading number: " << num << "\n";
     while(( err = read(fd, c, 1))){
         if (err == 0) {
             ret = EOF_T;
@@ -138,7 +136,6 @@ int Lexer::read_int(int fd, char *c) {
 
     // Form integer
     int32_t read = atoi(num.c_str());
-    cout << "Read int: " << read << "\n";
     Token tok = Token( Token::Integer, read );
     pgm.push_back(tok);
     return ret;
