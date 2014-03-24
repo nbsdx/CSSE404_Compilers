@@ -1,0 +1,17 @@
+\documentclass{report}
+\usepackage{fullpage}
+\usepackage{syntax}
+
+\begin{document}
+
+\setlength{\grammarparsep}{12pt} % HAlignment
+\setlength{\grammarindent}{12em} % Vertical Spacing
+
+\begin{grammar}
+
+<program> ::= <statement-list>
+<statement> ::= <ident> `=' <expr>
+<statement-list> :: <statement>; <statement-list> | <statement>
+
+\end{grammar}
+\end{document}
