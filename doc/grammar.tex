@@ -1,5 +1,5 @@
 \documentclass{report}
-\usepackage{fullpage}
+\usepackage[margin=0.5in]{geometry}
 \usepackage{syntax}
 
 \begin{document}
@@ -9,9 +9,38 @@
 
 \begin{grammar}
 
-<program> ::= <statement-list>
-<statement> ::= <ident> `=' <expr>
-<statement-list> :: <statement>; <statement-list> | <statement>
+<Program> ::= <MainClassDecl> \{<ClassDecl>\}
+
+<MainClassDecl> ::= `class' ID `\{' `public' `static' `void' `main' `(' `String' `[' `]' ID `)' `\{' \{<Stmt>\} `\}' `\}'
+
+<ClassDecl> ::= `class' ID [ `extends' ID ] `\{' \{ <ClassVarDecl> \} \{ <MethodDecl> \} `\}'
+
+<ClassVarDecl> ::= <Type> ID `;'
+
+<MethodDecl> ::= `public' <Type> ID `(' [ <Formal> \{ `,' <Formal> \} ] `)' `\{' \{ <Stmt> \} `return' <Expr> `;' `\}'
+
+<Formal> ::= <Type> ID
+
+<Type> ::= `int' | `boolean' | ID
+
+<Stmt> ::= <Type> ID `=' <Expr>
+\alt `\{' \{<Stmt>\} `\}'
+\alt `if' `(' <Expr> `)' `else' <Stmt>
+\alt `while' `(' <Expr> `)' <Stmt>
+\alt `System.out.println' `(' <Expr> `)' `;'
+\alt ID `=' <Expr> `;'
+
+<Expr> ::= <Expr> ( `+' | `-' | `*' | `/' | `<' | `<=' | `>=' | `>' | `==' | `!=' | `&&' | `||' ) <Expr> 
+\alt ( `-' | `!' ) <Expr>
+\alt <Expr> `.' ID `(' [ <Expr> \{ `,' <Expr> \} ] `)'
+\alt <Expr> `new' ID `(' `)'
+\alt ID
+\alt `this'
+\alt `Integer'
+\alt `null'
+\alt `true'
+\alt `false'
+\alt `(' <Expr> `)'
 
 \end{grammar}
 \end{document}
