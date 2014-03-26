@@ -30,17 +30,38 @@
 \alt `System.out.println' `(' <Expr> `)' `;'
 \alt ID `=' <Expr> `;'
 
-<Expr> ::= <Expr> ( `+' | `-' | `*' | `/' | `<' | `<=' | `>=' | `>' | `==' | `!=' | `&&' | `||' ) <Expr> 
-\alt ( `-' | `!' ) <Expr>
-\alt <Expr> `.' ID `(' [ <Expr> \{ `,' <Expr> \} ] `)'
-\alt <Expr> `new' ID `(' `)'
-\alt ID
+<Expr> ::= <EvalExpr>
+
+% Level 6
+<EvalExpr> ::= <AdditiveExpr> ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AdditiveExpr>
+\alt <AdditiveExpr>
+
+% Level 5
+<AdditiveExpr> ::= <MultiplicitiveExpr> ( `+' | `-' ) <MultiplicitiveExpr> 
+\alt <MultiplicitiveExpr>
+
+% Level 4
+<MultiplicitiveExpr> ::= <LogicalExpr> ( `*' | `/' ) <LogicalExpr>
+\alt <LogicalExpr>
+
+% Level 3
+<LogicalExpr> ::= <NegationExpr> ( `&&' | `||' ) <NegationExpr> 
+\alt <NegationExpr>
+
+% Level 2
+<NegationExpr> ::= ( `-' | `!' ) <Constant>
+\alt <Constant>
+
+% Level 1
+<Constant> ::= ID
 \alt `this'
 \alt `Integer'
 \alt `null'
 \alt `true'
 \alt `false'
 \alt `(' <Expr> `)'
+\alt <Expr> `.' ID `(' [ <Expr> \{ `,' <Expr> \} ] `)'
+\alt <Expr> `new' ID `(' `)'
 
 \end{grammar}
 \end{document}
