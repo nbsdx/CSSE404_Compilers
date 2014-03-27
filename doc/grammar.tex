@@ -1,6 +1,8 @@
 \documentclass{report}
-\usepackage[margin=0.5in]{geometry}
 \usepackage{syntax}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{multicol}
+\usepackage{changepage,titlesec}
 
 \begin{document}
 
@@ -76,4 +78,95 @@
 \alt `(' <Expr> `)'
 
 \end{grammar}
+
+% Formatting for First/Follow Set pages.
+
+\titleformat{\section}[block]{\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}[block]{}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}[block]{}{\thesubsubsection}{1em}{}
+\titlespacing*{\subsection} {2em}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+\titlespacing*{\subsubsection} {3em}{1.5ex plus .2ex}{*0}
+
+\newpage
+
+\section*{First Sets}
+
+\begin{multicols}{3}
+
+\subsection*{MainClassDecl}
+\subsubsection*{class}
+\ 
+
+\subsection*{ClassDecl}
+\subsubsection*{class}
+\ 
+
+\subsection*{ClassExtention}
+\subsubsection*{extends}
+\subsubsection*{$\varepsilon$}
+\ 
+
+\subsection*{ClassDecls}
+\subsubsection*{class}
+\subsubsection*{$\varepsilon$}
+\ 
+
+\subsection*{ClassVarDecls}
+\subsubsection*{boolean}
+\subsubsection*{int}
+\subsubsection*{ID}
+\subsubsection*{$\varepsilon$}
+\ 
+
+\subsection*{MethodDecl}
+\subsubsection*{public}
+\ 
+
+\subsection*{MethodDecls}
+\subsubsection*{public}
+\subsubsection*{$\varepsilon$}
+\ 
+
+\subsection*{MethodParams}
+\subsubsection*{boolean}
+\subsubsection*{int}
+\subsubsection*{ID}
+\subsubsection*{$\varepsilon$}
+\ 
+
+\subsection*{MethodParams'}
+\subsubsection*{,}
+\subsubsection*{$\varepsilon$}
+\ 
+
+\subsection*{Type}
+\subsubsection*{int}
+\subsubsection*{boolean}
+\subsubsection*{ID}
+\ 
+
+\subsection*{Stmt}
+\subsubsection*{\{ }
+\subsubsection*{if}
+\subsubsection*{while}
+\subsubsection*{System.out.println}
+\subsubsection*{ID}
+\subsubsection*{int}
+\subsubsection*{boolean}
+\ 
+
+\end{multicols}
+
+\newpage
+
+\section*{Follow Sets}
+
+\begin{multicols}{3}
+
+\subsection*{Not-Terminal}
+\subsubsection*{Terminal}
+
+\end{multicols}
+
+
 \end{document}
