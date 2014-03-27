@@ -89,5 +89,8 @@ Literal -> new ID ( )
 DotExpr -> . ID ( ExprLst ) DotExpr 
 DotExpr -> EPSILON
 
-ExprLst -> Expr ExprLst
+ExprLst -> Expr ExprLst'
 ExprLst -> EPSILON
+
+ExprLst' -> , ExprLst
+ExprLst' -> EPSILON
