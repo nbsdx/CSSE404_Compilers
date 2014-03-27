@@ -32,7 +32,7 @@ Type -> boolean
 Type -> int
 Type -> ID
 
-Stmt -> Type ID = Expr
+Stmt -> Type ID = Expr ;
 Stmt -> { StmtLst } 
 Stmt -> if ( Expr ) else Stmt
 Stmt -> while ( Expr ) Stmt
