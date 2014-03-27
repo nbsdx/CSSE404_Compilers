@@ -8,67 +8,63 @@
 
 \begin{document}
 
-\setlength{\grammarparsep}{8pt} % HAlignment
+\setlength{\grammarparsep}{4pt} % HAlignment
 \setlength{\grammarindent}{12em} % Vertical Spacing
 
 \begin{grammar}
 
-<Program> ::= <MainClassDecl> \{<ClassDecl>\}
+<Program> ::= <MainClassDecl> <ClassDecls>
 
-<MainClassDecl> ::= `class' ID `\{' `public' `static' `void' `main' `(' `String' `[' `]' ID `)' `\{' \{<Stmt>\} `\}' `\}'
+<MainClassDecl> ::= `class' ID `\{' `public' `static' `void' `main' `(' `String' `[' `]' ID `)' `\{' <StmtLst> `\}' `\}'
 
-<ClassDecl> ::= `class' ID [ `extends' ID ] `\{' \{ <ClassVarDecl> \} \{ <MethodDecl> \} `\}'
+<ClassDecl> ::= `class' ID <ClassExtention> `\{' <ClassVarDecls> <MethodDecls> `\}'
 
 <ClassVarDecl> ::= <Type> ID `;'
 
-<MethodDecl> ::= `public' <Type> ID `(' [ <Formal> \{ `,' <Formal> \} ] `)' `\{' \{ <Stmt> \} `return' <Expr> `;' `\}'
+<ClassVarDecls> ::= <ClassVarDecl> <ClassVarDecls> | $\varepsilon$
+
+<MethodDecl> ::= `public' <Type> ID `(' <MethodParams> `)' `\{' <StmtLst> `return' <Expr> `;' `\}'
+
+<MethodDecls> ::= <MethodDecl> <MethodDecls> | $\varepsilon$
+
+<MethodParams> ::= <Formal> <MethodParams'> | $\varepsilon$
+
+<MethodParams'> ::= `,' <Formal> <MethodParams'> | $\varepsilon$
 
 <Formal> ::= <Type> ID
 
 <Type> ::= `int' | `boolean' | ID
 
 <Stmt> ::= <Type> ID `=' <Expr> `;'
-\alt `\{' \{<Stmt>\} `\}'
+\alt `\{' <StmtLst> `\}'
 \alt `if' `(' <Expr> `)' <Stmt> `else' <Stmt>
 \alt `while' `(' <Expr> `)' <Stmt>
 \alt `System.out.println' `(' <Expr> `)' `;'
 \alt ID `=' <Expr> `;'
 
+<StmtLst> ::= <Stmt> <StmtLst> | $\varepsilon$
+
 <Expr> ::= <BoolExpr>
 
 <BoolExpr> ::= <CompExpr> <BoolExpr'>
 
-<BoolExpr'> ::= ( `&&' | `||' ) <CompExpr> <BoolExpr'>
-\alt $\varepsilon$
+<BoolExpr'> ::= ( `&&' | `||' ) <CompExpr> <BoolExpr'> | $\varepsilon$
 
-% Level 6
 <CompExpr> ::= <AddExpr> <CompExpr'>
 
-<CompExpr'> ::= ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AddExpr>
-\alt $\varepsilon$
+<CompExpr'> ::= ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AddExpr> | $\varepsilon$
 
-% Level 5
 <AddExpr> ::= <MultExpr> <AddExpr'>
 
-<AddExpr'> ::= ( `+' | `-' ) <MultExpr> <AddExpr'>
-\alt $\varepsilon$
+<AddExpr'> ::= ( `+' | `-' ) <MultExpr> <AddExpr'> | $\varepsilon$
 
-
-% Level 4
 <MultExpr> ::= <NegationExpr> <MultExpr'>
 
-<MultExpr'> ::= ( `*' | `/' ) <NegationExpr> <MultExpr'>
-\alt $\varepsilon$
+<MultExpr'> ::= ( `*' | `/' ) <NegationExpr> <MultExpr'> | $\varepsilon$
 
-% Level 2
-<NegationExpr> ::= ( `-' | `!' ) <Constant>
-\alt <Constant>
+<NegationExpr> ::= ( `-' | `!' ) <Constant> | <Constant>
 
-% Level 1
-<DotExpr> ::= <Literal> <DotExpr'>
-
-<DotExpr'> ::= `.' ID `(' [ <Expr> \{ `,' <Expr> \} ] `)'
-\alt $\varepsilon$
+<Constant> ::= <Literal> <DotExpr>
 
 <Literal> ::= ID
 \alt `this'
@@ -78,6 +74,12 @@
 \alt `false'
 \alt `new' ID `(' `)'
 \alt `(' <Expr> `)'
+
+<DotExpr> ::= `.' ID `(' <ExprLst> `)' <DotExpr> | $\varepsilon$
+
+<ExprLst> ::= <Expr> <ExprLst'> | $\varepsilon$
+
+<ExprLst'> ::= `,' <ExprLst> | $\varepsilon$
 
 \end{grammar}
 
