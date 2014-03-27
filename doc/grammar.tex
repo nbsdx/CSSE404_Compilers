@@ -38,20 +38,22 @@
 \alt $\varepsilon$
 
 % Level 6
-<CompExpr> ::= <AdditiveExpr> ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AdditiveExpr>
-\alt <AdditiveExpr>
+<CompExpr> ::= <AddExpr> <CompExpr'>
+
+<CompExpr'> ::= ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AddExpr>
+\alt $\varepsilon$
 
 % Level 5
-<AdditiveExpr> ::= <MultiplicitiveExpr> <AdditiveExpr'>
+<AddExpr> ::= <MultExpr> <AddExpr'>
 
-<AdditiveExpr'> ::= ( `+' | `-' ) <MultiplicitiveExpr> <AdditiveExpr'>
+<AddExpr'> ::= ( `+' | `-' ) <MultExpr> <AddExpr'>
 \alt $\varepsilon$
 
 
 % Level 4
-<MultiplicitiveExpr> ::= <NegationExpr> <MultiplicitiveExpr'>
+<MultExpr> ::= <NegationExpr> <MultExpr'>
 
-<MultiplicitiveExpr'> ::= ( `*' | `/' ) <NegationExpr> <MultiplicitiveExpr'>
+<MultExpr'> ::= ( `*' | `/' ) <NegationExpr> <MultExpr'>
 \alt $\varepsilon$
 
 % Level 2
@@ -59,15 +61,19 @@
 \alt <Constant>
 
 % Level 1
-<Constant> ::= ID
+<DotExpr> ::= <Literal> <DotExpr'>
+
+<DotExpr'> ::= `.' ID `(' [ <Expr> \{ `,' <Expr> \} ] `)'
+\alt $\varepsilon$
+
+<Literal> ::= ID
 \alt `this'
 \alt `Integer'
 \alt `null'
 \alt `true'
 \alt `false'
-\alt `(' <Expr> `)'
-\alt <Expr> `.' ID `(' [ <Expr> \{ `,' <Expr> \} ] `)'
 \alt `new' ID `(' `)'
+\alt `(' <Expr> `)'
 
 \end{grammar}
 \end{document}
