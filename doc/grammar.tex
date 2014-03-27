@@ -96,40 +96,28 @@
 
 \textbf{Non-Terminal} & \textbf{First Set} & \textbf{Follow Set} \\
 \hline
-\textbf{MainClassDecl} & class \\ 
-\textbf{ClassDecl} & class \\ 
-\textbf{ClassVarDecl} & boolean, int, ID \\
-\textbf{MethodDecl} & public \\
-\textbf{Formal} & boolean, int, ID \\ 
-\textbf{Type} & boolean, int, ID \\
-\textbf{Stmt} & \{, if, while, System.out.println, ID, int, boolean \\
-\textbf{Expr} & -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{BoolExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{BoolExpr'} & \&\&, II, $\varepsilon$, -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{CompExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{CompExpr'} & <, <=, >=, >, ==, !=, $\varepsilon$ \\
-\textbf{AddExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{AddExpr'} & +, -, $\varepsilon$ \\
-\textbf{MultExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{MultExpr'} & *, /, $\varepsilon$ \\
-\textbf{NegExpr} &  -, !, ID, this, Integer, null, true, false, (, new \\
-\textbf{DotExpr} & ID, this, Integer, null, true, false, (, new \\
-\textbf{DotExpr'} & ., $\varepsilon$ \\
-\textbf{Literal} & ID, this, Integer, null, true, false, (, new \\
+\textbf{Program} & class & \$ \\[1ex]
+\textbf{MainClassDecl} & class & class, \$\\[1ex]
+\textbf{ClassDecl} & class & class, \$\\[1ex] 
+\textbf{ClassVarDecl} & boolean, int, ID & boolean, int, ID, extends, public \\[1ex]
+\textbf{MethodDecl} & public & public, \}\\[1ex]
+\textbf{Formal} & boolean, int, ID & , , |\\[1ex] 
+\textbf{Type} & boolean, int, ID \\[1ex]
+\textbf{Stmt} & \{, if, while, System.out.println, ID, int, boolean \\[1ex]
+\textbf{Expr} & -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{BoolExpr} & -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{BoolExpr'} & \&\&, II, $\varepsilon$, -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{CompExpr} & -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{CompExpr'} & <, <=, >=, >, ==, !=, $\varepsilon$ \\[1ex]
+\textbf{AddExpr} & -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{AddExpr'} & +, -, $\varepsilon$ \\[1ex]
+\textbf{MultExpr} & -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{MultExpr'} & *, /, $\varepsilon$ \\[1ex]
+\textbf{NegExpr} &  -, !, ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{DotExpr} & ID, this, Integer, null, true, false, (, new \\[1ex]
+\textbf{DotExpr'} & ., $\varepsilon$ \\[1ex]
+\textbf{Literal} & ID, this, Integer, null, true, false, (, new \\[1ex]
 
 
 \end{tabularx}
-
-\newpage
-
-\section*{Follow Sets}
-
-\begin{multicols}{3}
-
-\subsection*{Not-Terminal}
-\subsubsection*{Terminal}
-
-\end{multicols}
-
-
 \end{document}
