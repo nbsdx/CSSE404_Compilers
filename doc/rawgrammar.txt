@@ -1,0 +1,93 @@
+Program -> MainClassDecl ClassDecls
+
+MainClassDecl -> class ID { public static void main ( String [ ] ID ) { StmtLst } }
+
+ClassDecl -> class ID ClassExtention { ClassVarDecls MethodDecls } ClassDecls
+
+ClassExtention -> extends ID 
+ClassExtention -> EPSILON
+
+ClassDecls -> ClassDecl ClassDecls
+ClassDecls -> EPSILON
+
+ClassVarDecl -> Type ID ;
+
+ClassVarDecls -> ClassVarDecl ClassVarDecls
+ClassVarDecls -> EPSILON
+
+MethodDecl -> public Type ID ( MethodParams ) { StmtLst return Expr ; } 
+
+MethodDecls -> MethodDecl MethodDecls 
+MethodDecls -> EPSILON
+
+MethodParams -> Formal MethodParams' 
+MethodParams -> EPSILON
+
+MethodParams' -> , Formal MethodParams' 
+MethodParams' -> EPSILON
+
+Formal -> Type ID
+
+Type -> boolean
+Type -> int
+Type -> ID
+
+Stmt -> Type ID = Expr ;
+Stmt -> { StmtLst } 
+Stmt -> if ( Expr ) else Stmt
+Stmt -> while ( Expr ) Stmt
+Stmt -> System.out.println ( Expr ) ; 
+Stmt -> ID = Expr ;
+
+StmtLst -> Stmt StmtLst | EPSILON
+
+Expr -> BoolExpr
+
+BoolExpr -> CompExpr BoolExpr'
+
+BoolExpr' -> && CompExpr BoolExpr'
+BoolExpr' -> || CompExpr BoolExpr'
+BoolExpr' -> EPSILON
+
+CompExpr -> AdditiveExpr CompExpr'
+
+CompExpr' -> >  AdditiveExpr 
+CompExpr' -> >= AdditiveExpr
+CompExpr' -> <= AdditiveExpr
+CompExpr' -> <  AdditiveExpr
+CompExpr' -> == AdditiveExpr
+CompExpr' -> != AdditiveExpr
+CompExpr' -> EPSILON
+
+AdditiveExpr -> MultiplicitiveExpr AdditiveExpr'
+
+AdditiveExpr' -> + MultiplicitiveExpr AdditiveExpr' 
+AdditiveExpr' -> - MultiplicitiveExpr AdditiveExpr'
+AdditiveExpr' -> EPSILON
+
+MultiplicitiveExpr -> NegationExpr MultiplicitiveExpr'
+
+MultiplicitiveExpr' -> * NegationExpr MultiplicitiveExpr'
+MultiplicitiveExpr' -> / NegationExpr MultiplicitiveExpr'
+MultiplicitiveExpr' -> EPSILON
+
+NegationExpr -> - Constant
+NegationExpr -> ! Constant
+NegationExpr -> Constant
+
+Constant -> Literal DotExpr
+
+Literal -> ID
+Literal -> this
+Literal -> Integer
+Literal -> null
+Literal -> true
+Literal -> false
+Literal -> ( Expr )
+Literal -> new ID ( )
+
+DotExpr -> . ID ( ExprLst ) DotExpr 
+DotExpr -> EPSILON
+
+ExprLst -> Expr ExprLst
+ExprLst -> EPSILON
