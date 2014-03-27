@@ -4,7 +4,7 @@
 
 \begin{document}
 
-\setlength{\grammarparsep}{12pt} % HAlignment
+\setlength{\grammarparsep}{8pt} % HAlignment
 \setlength{\grammarindent}{12em} % Vertical Spacing
 
 \begin{grammar}
@@ -30,23 +30,29 @@
 \alt `System.out.println' `(' <Expr> `)' `;'
 \alt ID `=' <Expr> `;'
 
-<Expr> ::= <EvalExpr>
+<Expr> ::= <BoolExpr>
+
+<BoolExpr> ::= <CompExpr> <BoolExpr'>
+
+<BoolExpr'> ::= ( `&&' | `||' ) <CompExpr> <BoolExpr'>
+\alt $\varepsilon$
 
 % Level 6
-<EvalExpr> ::= <AdditiveExpr> ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AdditiveExpr>
+<CompExpr> ::= <AdditiveExpr> ( `<' | `<=' | `>=' | `>' | `==' | `!=' ) <AdditiveExpr>
 \alt <AdditiveExpr>
 
 % Level 5
-<AdditiveExpr> ::= <MultiplicitiveExpr> ( `+' | `-' ) <MultiplicitiveExpr> 
-\alt <MultiplicitiveExpr>
+<AdditiveExpr> ::= <MultiplicitiveExpr> <AdditiveExpr'>
+
+<AdditiveExpr'> ::= ( `+' | `-' ) <MultiplicitiveExpr> <AdditiveExpr'>
+\alt $\varepsilon$
+
 
 % Level 4
-<MultiplicitiveExpr> ::= <LogicalExpr> ( `*' | `/' ) <LogicalExpr>
-\alt <LogicalExpr>
+<MultiplicitiveExpr> ::= <NegationExpr> <MultiplicitiveExpr'>
 
-% Level 3
-<LogicalExpr> ::= <NegationExpr> ( `&&' | `||' ) <NegationExpr> 
-\alt <NegationExpr>
+<MultiplicitiveExpr'> ::= ( `*' | `/' ) <NegationExpr> <MultiplicitiveExpr'>
+\alt $\varepsilon$
 
 % Level 2
 <NegationExpr> ::= ( `-' | `!' ) <Constant>
