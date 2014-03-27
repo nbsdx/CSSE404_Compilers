@@ -1,8 +1,10 @@
 \documentclass{report}
+\usepackage[T1]{fontenc}
 \usepackage{syntax}
 \usepackage[margin=0.5in]{geometry}
 \usepackage{multicol}
 \usepackage{changepage,titlesec}
+\usepackage{tabularx}
 
 \begin{document}
 
@@ -89,73 +91,34 @@
 
 \newpage
 
-\section*{First Sets}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}%
+\begin{tabularx}{\textwidth}{ r | R | R }
 
-\begin{multicols}{3}
+\textbf{Non-Terminal} & \textbf{First Set} & \textbf{Follow Set} \\
+\hline
+\textbf{MainClassDecl} & class \\ 
+\textbf{ClassDecl} & class \\ 
+\textbf{ClassVarDecl} & boolean, int, ID \\
+\textbf{MethodDecl} & public \\
+\textbf{Formal} & boolean, int, ID \\ 
+\textbf{Type} & boolean, int, ID \\
+\textbf{Stmt} & \{, if, while, System.out.println, ID, int, boolean \\
+\textbf{Expr} & -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{BoolExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{BoolExpr'} & \&\&, II, $\varepsilon$, -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{CompExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{CompExpr'} & <, <=, >=, >, ==, !=, $\varepsilon$ \\
+\textbf{AddExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{AddExpr'} & +, -, $\varepsilon$ \\
+\textbf{MultExpr} & -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{MultExpr'} & *, /, $\varepsilon$ \\
+\textbf{NegExpr} &  -, !, ID, this, Integer, null, true, false, (, new \\
+\textbf{DotExpr} & ID, this, Integer, null, true, false, (, new \\
+\textbf{DotExpr'} & ., $\varepsilon$ \\
+\textbf{Literal} & ID, this, Integer, null, true, false, (, new \\
 
-\subsection*{MainClassDecl}
-\subsubsection*{class}
-\ 
 
-\subsection*{ClassDecl}
-\subsubsection*{class}
-\ 
-
-\subsection*{ClassExtention}
-\subsubsection*{extends}
-\subsubsection*{$\varepsilon$}
-\ 
-
-\subsection*{ClassDecls}
-\subsubsection*{class}
-\subsubsection*{$\varepsilon$}
-\ 
-
-\subsection*{ClassVarDecls}
-\subsubsection*{boolean}
-\subsubsection*{int}
-\subsubsection*{ID}
-\subsubsection*{$\varepsilon$}
-\ 
-
-\subsection*{MethodDecl}
-\subsubsection*{public}
-\ 
-
-\subsection*{MethodDecls}
-\subsubsection*{public}
-\subsubsection*{$\varepsilon$}
-\ 
-
-\subsection*{MethodParams}
-\subsubsection*{boolean}
-\subsubsection*{int}
-\subsubsection*{ID}
-\subsubsection*{$\varepsilon$}
-\ 
-
-\subsection*{MethodParams'}
-\subsubsection*{,}
-\subsubsection*{$\varepsilon$}
-\ 
-
-\subsection*{Type}
-\subsubsection*{int}
-\subsubsection*{boolean}
-\subsubsection*{ID}
-\ 
-
-\subsection*{Stmt}
-\subsubsection*{\{ }
-\subsubsection*{if}
-\subsubsection*{while}
-\subsubsection*{System.out.println}
-\subsubsection*{ID}
-\subsubsection*{int}
-\subsubsection*{boolean}
-\ 
-
-\end{multicols}
+\end{tabularx}
 
 \newpage
 
