@@ -8,12 +8,9 @@ namespace lex {
  *  Token Class Functions.
  *
  */
-ReservedWord::ReservedWord( RWord r )
-{
-    this->m_type = r;
-
-//    std::cout << format() << std::endl;
-}
+ReservedWord::ReservedWord( RWord r, int32_t ln, int32_t pos ) :
+    Token( ln, pos ),
+    m_type( r ){}
 
 ReservedWord::RWord ReservedWord::from_string( const std::string &str )
 {
@@ -77,11 +74,9 @@ const std::string ReservedWord::format() const
 /**
  *  Operator Class functions
  */
-Operator::Operator( Op o )
-{
-    this->m_type = o;
-//    std::cout << format() << std::endl;
-}
+Operator::Operator( Op o, int32_t ln, int32_t pos ) : 
+    Token( ln, pos ),
+    m_type( o ){}
 
 Operator::Op Operator::from_string( const std::string &str )
 {
@@ -133,11 +128,9 @@ const std::string Operator::format() const
 /**
  *  Delimiter Class Functions
  */
-Delimiter::Delimiter( Delim d )
-{
-    this->m_type = d;
-//    std::cout << format() << std::endl;
-}
+Delimiter::Delimiter( Delim d, int32_t ln, int32_t pos ) : 
+    Token( ln, pos ),
+    m_type( d ){}
 
 Delimiter::Delim Delimiter::from_string( const std::string &str )
 {
@@ -183,11 +176,9 @@ const std::string Delimiter::format() const
 /**
  *  Identifier Class Functions
  */
-Identifier::Identifier( std::string s )
-{
-    this->m_id = s;
-//    std::cout << format() << std::endl;
-}
+Identifier::Identifier( std::string s, int32_t ln, int32_t pos ) : 
+    Token( ln, pos ),
+    m_id( s ) {}
 
 const std::string Identifier::format() const
 {
@@ -197,11 +188,9 @@ const std::string Identifier::format() const
 /**
  *  Number Class Functions
  */
-Number::Number( int32_t value )
-{
-    this->m_value = value;
-//    std::cout << format() << std::endl;
-}
+Number::Number( int32_t value, int32_t ln, int32_t pos) :
+    Token( ln, pos ),
+    m_value( value ){}
 
 const std::string Number::format() const
 {
