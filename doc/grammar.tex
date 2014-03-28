@@ -29,6 +29,8 @@
 
 <ClassExtension> ::= `extends' ID | $\varepsilon$
 
+<ClassDecls> ::= <ClassDecl> <ClassDecls> | $\varepsilon$
+
 <ClassVarDecl> ::= <Type> ID `;'
 
 <ClassVarDecls> ::= <ClassVarDecl> <ClassVarDecls> | $\varepsilon$
@@ -127,6 +129,11 @@
 \textbf{ClassExtension}
 & $\varepsilon$, extends
 & \{
+\\[1ex]
+
+\textbf{ClassDecls}
+& $\varepsilon$, class
+& class, \$
 \\[1ex]
 
 \textbf{ClassVarDecl} 
