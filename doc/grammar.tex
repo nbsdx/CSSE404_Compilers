@@ -99,17 +99,47 @@
 
 \textbf{Non-Terminal} & \textbf{First Set} & \textbf{Follow Set} \\
 \hline
-\textbf{Program} & class & \$ \\[1ex]
-\textbf{MainClassDecl} & class & class, \$\\[1ex]
-\textbf{ClassDecl} & class & class, \$\\[1ex] 
+
+\textbf{Program} 
+& class 
+& \$ 
+\\[1ex]
+
+\textbf{MainClassDecl} 
+& class 
+& class, \$
+\\[1ex]
+
+\textbf{ClassDecl} 
+& class 
+& class, \$
+\\[1ex] 
+
 \textbf{ClassVarDecl} 
 & boolean, int, ID 
 & boolean, int, ID, extends, public 
 \\[1ex]
 
+\textbf{ClassVarDecls}
+& $\varepsilon$, boolean, int, ID
+&
+\\[1ex]
+
 \textbf{MethodDecl} 
 & public 
 & public, \}
+\\[1ex]
+
+\textbf{MethodDecls}
+& $\varepsilon$, public
+\\[1ex]
+
+\textbf{MethodParams}
+& $\varepsilon$, boolean, int, ID
+\\[1ex]
+
+\textbf{MethodParams'}
+& $\varepsilon$, ,
 \\[1ex]
 
 \textbf{Formal} 
@@ -127,6 +157,10 @@
 & \{, if, while, System.out.println, ID, boolean, int, \}, return 
 \\[1ex]
 
+\textbf{StmtList}
+& $\varepsilon$, \{, if, while, System.out.println, ID, int, boolean 
+\\[1ex]
+
 \textbf{Expr} 
 & -, !, ID, this, Integer, null, true, false, (, new 
 & , , ), ; 
@@ -138,7 +172,7 @@
 \\[1ex]
 
 \textbf{BoolExpr'} 
-& \&\&, II, $\varepsilon$, -, !, ID, this, Integer, null, true, false, (, new 
+& $\varepsilon$, \&\&, ||, -, !, ID, this, Integer, null, true, false, (, new 
 & , , ), ; 
 \\[1ex]
 
@@ -148,7 +182,7 @@
 \\[1ex]
 
 \textbf{CompExpr'} 
-& <, <=, >=, >, ==, !=, $\varepsilon$ 
+& $\varepsilon$, <, <=, >=, >, ==, !=
 & \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ; 
 \\[1ex]
 
@@ -158,7 +192,7 @@
 \\[1ex]
 
 \textbf{AddExpr'} 
-& +, -, $\varepsilon$ 
+& $\varepsilon$, +, -
 & >, >=, <=, <, ==, !=, \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ; 
 \\[1ex]
 
@@ -168,7 +202,7 @@
 \\[1ex]
 
 \textbf{MultExpr'} 
-& *, /, $\varepsilon$ 
+& $\varepsilon$, *, /
 &  +, -, >, >=, <=, <, ==, !=, \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ;  
 \\[1ex]
 
@@ -177,19 +211,24 @@
 &  *, /, +, -, >, >=, <=, <, ==, !=, \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ; 
 \\[1ex]
 
+\textbf{Constant}
+& ID, this, Integer, null, true, false, (, new
+\\[1ex]
+
+\textbf{Literal}
+& ID, this, Integer, null, true, false, (, new
+\\[1ex]
+
 \textbf{DotExpr} 
-& ID, this, Integer, null, true, false, (, new 
-&  ., *, /, +, -, >, >=, <=, <, ==, !=, \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ; 
+& $\varepsilon$, .
 \\[1ex]
 
-\textbf{DotExpr'} 
-& ., $\varepsilon$ 
-& *, /, +, -, >, >=, <=, <, ==, !=, \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ; 
+\textbf{ExprLst}
+& $\varepsilon$, -, !, ID, this, Integer, null, true, false, (, new
 \\[1ex]
 
-\textbf{Literal} 
-& ID, this, Integer, null, true, false, (, new 
-& *, /, +, -, >, >=, <=, <, ==, !=, \&\&, II, -, !, ID, this, Integer, null, true, false, (, new, , , ), ; 
+\textbf{ExprLst'}
+& $\varepsilon$, , 
 \\[1ex]
 
 \hline
