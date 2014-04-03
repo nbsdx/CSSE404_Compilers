@@ -10,6 +10,10 @@ class Main {
                 System.out.println(last);
                 System.out.println(i);
             }
+            // Added required else
+            else {
+                i = i;
+            }
             last = i;
         }
     }
