@@ -7,6 +7,7 @@ class TestFile {
         int a = 1000;
         int nfib = Fib.fib(a);
         System.out.println(nfib);
+        // No return statement allowed
     }
 }
 
@@ -24,6 +25,7 @@ class Fib {
     boolean notused;
 }
 
+// Just some garbage to make this a more useful test
 class Unused extends Fib {
     public boolean toggleFlag () {
         notused = !notused;
@@ -31,7 +33,7 @@ class Unused extends Fib {
     }
 
     public int getFibNumber (int n) {
-        int nfib = fib(n);
+        int nfib = Fib.fib(n);
         return unused + nfib;
     }
 }
