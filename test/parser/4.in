@@ -7,7 +7,11 @@ class Main extends System {
 
         i = SubMain.add1(i);
 
-        // void fn not permitted to return
+        // Needs else
+        if( i == 5 )
+            i = 4;
+
+        // main fn not permitted to return
         return i;
     }
 }
