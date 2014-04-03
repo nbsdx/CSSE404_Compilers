@@ -1,5 +1,6 @@
 /*
  * This one just bruteforces primes
+ * This should be a valid MJ program
  */
 
 // MainClassDecl always comes first and has only one method
