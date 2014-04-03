@@ -6,25 +6,25 @@
 
 using namespace std;
 
-typedef pair<string, vector<string>> Production;
-
 int main()
 {
+    // Initialize our Transition Table.
     TransitionTable tt;
-    vector<string>::iterator it;
+    vector<shared_ptr<Token>>::iterator it;
 
-    cout << tt.getNextProdIndex( 28, "Integer" ) << endl;
+    // Test some transitions
+    cout << tt.getNextProdIndex( 29, "Integer" ) << endl;
     cout << tt.getNextProdIndex( 17, "int" ) << endl;
     cout << tt.getNextProdIndex( 17, "boolean" ) << endl;
     cout << tt.getNextProdIndex( 17, "ID" ) << endl << endl;
 
-    Production prod;
-    prod = tt.getProduction( 10 );
+    // Get a production to test.
+    Production prod = tt.getProduction( 10 );
     
-    cout << "Prod: [" << prod.first << "]" << endl;
-    for( it = prod.second.begin(); it != prod.second.end(); ++it )
+    cout << "Prod: [" << prod.lhs << "]" << endl;
+    for( it = prod.rhs->begin(); it != prod.rhs->end(); ++it )
     {
-        cout << (*it) << " ";
+        cout << (*it)->format() << endl;
     }
     cout << endl;
 

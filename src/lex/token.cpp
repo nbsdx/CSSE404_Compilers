@@ -1,5 +1,6 @@
 #include "token.h"
 #include <iostream>
+#include <sstream>
 
 namespace lex {
 
@@ -196,5 +197,45 @@ const std::string Number::format() const
 {
     return std::string( "Integer, " ).append( std::to_string( this->m_value ) );
 }
+
+
+
+/**
+ *
+ *  TOKEN FACTORY
+ *
+ */
+
+std::shared_ptr<Token> TokenFactory::FromString( const std::string &str )
+{
+    ReservedWord::RWord rword;
+    Operator::Op op;
+    Delimiter::Delim delim;
+
+    if( ( rword = ReservedWord::from_string( str ) ) != ReservedWord::Invalid_RWord )
+    {
+        return std::make_shared<ReservedWord>( rword, 0, 0 );
+    }
+    else if( ( op = Operator::from_string( str ) ) != Operator::Invalid_Op )
+    {
+        return std::make_shared<Operator>( op, 0, 0 );
+    }
+    else if( ( delim = Delimiter::from_string( str ) ) != Delimiter::Invalid_Delim )
+    {
+        return std::make_shared<Delimiter>( delim, 0, 0 );
+    }
+    else
+    {
+        std::istringstream iss( str );
+        int i;
+        iss >> std::ws >> i >> std::ws;
+        if( !iss.eof() )
+            return std::make_shared<Identifier>( str, 0, 0 );
+
+        return std::make_shared<Number>( i, 0, 0 );
+    }
+}
+
+
 
 } // End Namespace <lex>

@@ -104,13 +104,34 @@ file_template = """
 #include <vector>
 #include <utility>
 #include <map>
+#include <memory>
+
+#include "../lex/token.h"
 
 using namespace std;
+using namespace lex;
+
+struct Production
+{
+    string
+            lhs;
+    shared_ptr<vector<shared_ptr<Token>>>
+            rhs;
+
+    Production( string lhs,
+                shared_ptr<vector<shared_ptr<Token>>> rhs )
+    {
+        this->lhs = lhs;
+        this->rhs = rhs;
+    }
+
+    Production(){}
+};
 
 class TransitionTable
 {
-    vector< pair< string, vector< string > > > productions;
-    map< int, map< string, int > > table;
+    vector< Production > productions;
+    vector< map< string, int > > table;
 
     int indexOf( const vector<string> &vec, const string& value ) {
         vector<string>::const_iterator it;
@@ -128,7 +149,7 @@ class TransitionTable
 public:
     TransitionTable()
     {
-        vector<string> tvec;
+        shared_ptr<vector<shared_ptr<Token>>> tvec;
         map<string, int> tmap;
         // Production creation goes here.
 %s
@@ -137,7 +158,7 @@ public:
 %s
     }
 
-    pair< string, vector< string > > getProduction( int i ){
+    const Production &getProduction( int i ){
         return productions.at( i );
     }
 
@@ -168,11 +189,11 @@ index = 0
 for g in groups:
     for p in g.prods:
         productions += ( "\t// Production: %d\n" % index )
+        productions += ( "\t\ttvec = shared_ptr<vector<shared_ptr<Token>>>( new vector<shared_ptr<Token>>() );\n" )
         for t in p.rhs:
-            productions += ( "\t\ttvec.push_back( \"%s\" );\n" % t )
-        productions += ( "\t\tproductions.push_back( make_pair( \"%s\", tvec ) );\n" % g.name )
+            productions += ( "\t\ttvec->push_back( TokenFactory::FromString( \"%s\" ) );\n" % t )
+        productions += ( "\t\tproductions.push_back( Production( \"%s\", tvec ) );\n" % g.name )
         index = index + 1
-    productions += ( "\t\ttvec.clear();\n" )
 
 # Build the actual transition table.
 table = ""
@@ -184,7 +205,7 @@ for g in groups:
     for tok in g.dest:
         table += ( "\t\ttmap[\"%s\"] = %d;\n" % ( tok, g.dest[tok] ) )
     for p in g.prods:
-        table += ( "\t\ttable[%d] = tmap;\n" % index )
+        table += ( "\t\ttable.push_back( tmap );\n" )
         index = index + 1
     table += "\t\ttmap.clear();\n"
     index_ = index_ + 1

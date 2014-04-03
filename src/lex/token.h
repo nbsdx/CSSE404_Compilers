@@ -2,6 +2,7 @@
 #define SIMPLE_TOKEN_H 1
 
 #include <string>
+#include <memory>
 
 namespace lex {
 
@@ -156,6 +157,18 @@ private:
     std::string m_error_line;
     std::string m_errmsg;
 
+};
+
+
+/**
+ *  Token Factory.
+ */
+class TokenFactory
+{
+    TokenFactory(){}
+
+public:
+    static std::shared_ptr<Token> FromString( const std::string & );
 };
 
 } // End Namespace <lex>
