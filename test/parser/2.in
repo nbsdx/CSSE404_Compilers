@@ -32,12 +32,21 @@ class Primes {
                 if (mod == 0) {
                     flag = true;
                 }
+                // Added required else.
+                else {
+                    flag = flag;
+                }
+                
                 j = j - 1;
             }
 
             if (!flag) {
                 count = count + 1;
                 System.out.println(i);
+            }
+            // Added required else.
+            else {
+                count = count;
             }
 
             i = i + 1;
