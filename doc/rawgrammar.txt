@@ -2,7 +2,7 @@ Program -> MainClassDecl ClassDecls
 
 MainClassDecl -> class ID { public static void main ( String [ ] ID ) { StmtLst } }
 
-ClassDecl -> class ID ClassExtention { ClassVarDecls MethodDecls } ClassDecls
+ClassDecl -> class ID ClassExtention { ClassVarDecls MethodDecls }
 
 ClassExtention -> extends ID 
 ClassExtention -> EPSILON
@@ -34,7 +34,7 @@ Type -> ID
 
 Stmt -> Type ID = Expr ;
 Stmt -> { StmtLst } 
-Stmt -> if ( Expr ) else Stmt
+Stmt -> if ( Expr ) Stmt else Stmt
 Stmt -> while ( Expr ) Stmt
 Stmt -> System.out.println ( Expr ) ; 
 Stmt -> ID = Expr ;
