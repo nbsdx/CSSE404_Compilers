@@ -39,7 +39,8 @@ Stmt -> while ( Expr ) Stmt
 Stmt -> System.out.println ( Expr ) ; 
 Stmt -> ID = Expr ;
 
-StmtLst -> Stmt StmtLst | EPSILON
+StmtLst -> Stmt StmtLst
+StmtLst -> EPSILON
 
 Expr -> BoolExpr
 
