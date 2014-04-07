@@ -2,14 +2,14 @@ CPP_FILES := $(wildcard src/lex/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
 CC=g++
-CFLAGS=-I/usr/include/boost -MMD -std=c++11
+CFLAGS=-I/usr/include/boost -MMD -std=c++11 -Wall
 
 all: main
 
 main: $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $@ $^
 
-obj/%.o: src/lex/%.cpp
+obj/%.o: src/lex/%.cpp src/
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

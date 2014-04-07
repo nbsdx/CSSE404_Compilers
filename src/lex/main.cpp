@@ -5,10 +5,7 @@
 #include <vector>
 #include <memory>
 
-#include <string.h>
-
 #include "lexer.h"
-#include "token.h"
 
 using namespace lex;
 
@@ -26,14 +23,31 @@ int main( int argc, char **argv )
     // File open
     if( ( fd = open( argv[1], O_RDONLY ) ) == -1 )
     {
-        std::cout << "Error opening file: " << strerror( errno ) << "\n";
+        std::cout << "Error opening file" << std::endl; //<< strerror( errno ) << "\n";
         exit( 1 );
     }
 
-    std::vector< shared_ptr<Token> > pgm = Lexer().lex( fd );
+    std::vector<BasicToken*> pgm = Lexer().lex( fd );
 
-    for( auto token : pgm )
-        std::cout << token->format() << std::endl;
+//    std::cout << std::endl;
 
+    for( BasicToken *token : pgm )
+    {
+
+        if( dynamic_cast<ReservedWord*>( token ) )
+            std::cout << "ReservedWord, ";
+        else if( dynamic_cast<Operator*>( token ) )
+            std::cout << "Operator, ";
+        else if( dynamic_cast<Delimiter*>( token ) )
+            std::cout << "Delimiter, ";
+        else if( dynamic_cast<Identifier*>( token ) )
+            std::cout << "ID, ";
+        else if( dynamic_cast<Number*>( token ) )
+            std::cout << "Integer, ";
+        else
+            std::cout << "ERROR: ";
+
+        std::cout << token->raw() << std::endl;
+    }
     return 0;
 }

@@ -1,13 +1,13 @@
 #ifndef LEXER_H
 #define LEXER_H 1
 
-#include "token.h"
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
 #include <vector>
 #include <memory>
+#include "token.h"
 
 using namespace std;
 
@@ -16,11 +16,11 @@ namespace lex {
 class Lexer
 {
 public:
-    vector< shared_ptr<Token> > lex( int fd );
+    vector<BasicToken*> lex( int fd );
 protected:
 private:
     char c;
-    vector< shared_ptr<Token> > pgm;
+    vector<BasicToken*> pgm;
 
     uint32_t linenumber;
     uint32_t position;
@@ -43,8 +43,8 @@ private:
     void read_equal_assign( int fd );
     void read_twochar_operator( int fd, 
                                 char next, 
-                                Operator::Op one, 
-                                Operator::Op two );
+                                Operators one, 
+                                Operators two );
 
     inline bool is_alpha( char c )
         { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
