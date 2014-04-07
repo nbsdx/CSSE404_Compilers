@@ -109,28 +109,44 @@ file_template = """
 #include "../lex/token.h"
 
 using namespace std;
-using namespace lex;
 
 struct Production
 {
     string
             lhs;
-    shared_ptr<vector<shared_ptr<Token>>>
+    vector<vector<BasicToken*>>
             rhs;
+    int
+            g_id;
 
     Production( string lhs,
-                shared_ptr<vector<shared_ptr<Token>>> rhs )
+                vector<vector<BasicToken*>> rhs,
+                int g_id )
     {
         this->lhs = lhs;
         this->rhs = rhs;
+        this->g_id = g_id;
     }
 
     Production(){}
 };
 
+struct NonTerminal : BasicToken
+{
+    NonTerminal( const string &str ) : BasicToken( str ) {}
+    ~NonTerminal() {}
+};
+
+struct Epsilon : BasicToken
+{
+    Epsilon() : BasicToken( "" ) {}
+    ~Epsilon() {}
+};
+
 class TransitionTable
 {
     vector< Production > productions;
+    vector< string >     prod_names;
     vector< map< string, int > > table;
 
     int indexOf( const vector<string> &vec, const string& value ) {
@@ -149,7 +165,7 @@ class TransitionTable
 public:
     TransitionTable()
     {
-        shared_ptr<vector<shared_ptr<Token>>> tvec;
+        vector<vector<BasicToken*>> tvec;
         map<string, int> tmap;
         // Production creation goes here.
 %s
@@ -158,8 +174,31 @@ public:
 %s
     }
 
-    const Production &getProduction( int i ){
+    bool is_production( const string &str )
+    {
+        for( string p : prod_names )
+            if( p.compare( str ) == 0 )
+                return true;
+        return false;
+    }
+
+    const Production &getProductionByGroup( int i ){
         return productions.at( i );
+    }
+
+    vector<BasicToken*> getRHSById( int i ){
+        int index = 0;
+        for( Production p : productions )
+        {
+            for( vector<BasicToken*> v : p.rhs )
+            {
+                if( index == i )
+                    return v;
+                ++index;
+            }
+        }
+
+        throw "No Such Element";
     }
 
     /**
@@ -176,24 +215,74 @@ public:
         else
             return table[curProd][nonTerminal];
     }
+
+private:
+    BasicToken* FromString( const string &str )
+    {
+        // First, check if it's the name of a NonTerminal
+        if( str.compare( "EPSILON" ) == 0 )
+        {
+            return new Epsilon();
+        }
+        if( str.compare( "ID" ) == 0 )
+        {
+            return new Identifier( 0, 0, Identifiers::Valid_Identifier, "" );
+        }
+        else if( str.compare( "Number" ) == 0 )
+        {
+            return new Number( 0, 0, Numbers::Valid_Number, 0 );
+        }
+        else if( is_production( str ) )
+        {
+            return new NonTerminal( str );
+        }
+        else
+        {
+            BasicToken *tok = LexerTokenFactory::FromString( str );
+            if( tok == nullptr )
+                cout << "Unable to parse Token: " << str << endl;
+            return tok;
+        }
+    }
 };
 
 #endif
 
 """
 
+
+
+# Remove ' from the production names.
+def fix_name( NT ):
+    return NT.replace( '\'', '_' )
+
 # Build the operations to fill the productions variable.
 productions = ""
 index = 0
 
+productions += ("\t\tprod_names.push_back( \"%s\" );\n" * len(groups)) % tuple([fix_name(g.name) for g in groups])
+
 for g in groups:
+
+    productions += ( "\t// Production: %d\n" % index )
+    productions += ( "\t\ttvec = {\n" )
+
+    # This generates something like:
+    # vector<vector<BasicToken*>> t =
+    #   { { PTF::FS( %s ), PTS::FS( %s ) }, ... };
+
     for p in g.prods:
-        productions += ( "\t// Production: %d\n" % index )
-        productions += ( "\t\ttvec = shared_ptr<vector<shared_ptr<Token>>>( new vector<shared_ptr<Token>>() );\n" )
-        for t in p.rhs:
-            productions += ( "\t\ttvec->push_back( TokenFactory::FromString( \"%s\" ) );\n" % t )
-        productions += ( "\t\tproductions.push_back( Production( \"%s\", tvec ) );\n" % g.name )
+
+        productions += ( "\t\t\t{ " )
+        productions += ( ( "this->FromString( \"%s\" ), " * len(p.rhs) ) % tuple([fix_name(x) for x in p.rhs]))
+        productions += ( " },\n" )
+
         index = index + 1
+
+    productions += ( "\t\t};\n " )
+
+    productions += ( "\t\tproductions.push_back( Production( \"%s\", tvec, %d ) );\n" % ( fix_name(g.name ), index - 1 ) )
+    productions += ( "\t\ttvec.clear();\n" )
 
 # Build the actual transition table.
 table = ""
@@ -213,6 +302,72 @@ for g in groups:
 outfile = open( "tt.hpp", "w+" )
 outfile.write( ( file_template % (productions, table) ) )
 outfile.close()
+
+#print (file_template % (productions, table))
+
+exit()
+
+"""
+typedef enum {
+    Invalid_Token,
+    Program,
+    MainClassDefinition,
+    ClassDefinition,
+
+    LexerTokenDelim,
+    LexerTokenOp,
+    LexerTokenNumber,
+    LexerTokenIdentifier,
+    LexerTokenRWord
+} PTokenType;
+
+"""
+
+token_file_template = """
+    // Enum stuff
+    enum Types {
+        %s
+    };
+
+    typedef enum Types TokenTypes;
+
+    // Generated Classes
+    %s
+
+"""
+
+token_class_template = """
+    struct %s : Production
+    {
+        static const vector<vector<BasicToken*>> tokens;
+    };
+    const vector<vector<BasicToken*>> %s::tokens = {
+        %s
+    };
+"""
+
+enum_body = ""
+token_class_body = ""
+
+# Iterate over NTs, and fill out enum.
+for g in groups:
+    enum_body += fix_name( g.name ) + ",\n"
+enum_body = enum_body[:-2]
+
+for g in groups:
+    prod_str = ""
+    for p in g.prods:
+        # This needs to generate correct toke types for literals
+        prod_str += ("{" + "ProductionTokenFactory::FromString( %s ), " * len( p.rhs ) + " },\n") % tuple( [fix_name(x) for x in p.rhs] )
+
+    token_class_body += token_class_template % ( fix_name(g.name), fix_name(g.name), prod_str )
+
+print token_class_body
+
+
+# Iterate over NTs again, and
+
+# Generate an enum entry for each
 
 # Debug - output rules.
 #for g in groups:

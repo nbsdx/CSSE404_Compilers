@@ -264,6 +264,32 @@ typedef LexerToken<Delimiters, string> Delimiter;
 typedef LexerToken<Operators, string> Operator;
 typedef LexerToken<Numbers, int32_t> Number;
 
+class LexerTokenFactory
+{
+public:
+    static BasicToken* FromString( const string &str )
+    {
+        ReservedWords r;
+        Delimiters d;
+        Operators o;
+        Identifiers i;
+        Numbers n;
+
+        if( ( r = Util::RWord_FromString( str ) ) != ReservedWords::Invalid_RWord )
+            return new ReservedWord( 0, 0, r );
+        else if( ( d = Util::Delimiter_FromString( str ) ) != Delimiters::Invalid_Delim )
+            return new Delimiter( 0, 0, d );
+        else if( ( o = Util::Operator_FromString( str ) ) != Operators::Invalid_Op )
+            return new Operator( 0, 0, o );
+        else if( ( i = Util::Identifier_FromString( str ) ) != Identifiers::Invalid_Identifier )
+            return new Identifier( 0, 0, i, str );
+        else if( ( n = Util::Number_FromString( str ) ) != Numbers::Invalid_Number )
+            return new Number( 0, 0, n, atoi( str.c_str() ) );
+        else
+            return nullptr;
+    }
+
+};
 
 /**
  *  LexerToken Factory.
