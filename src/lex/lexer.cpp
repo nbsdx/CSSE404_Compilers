@@ -13,6 +13,8 @@ char Lexer::read_one( int fd )
     int err;
     char input;
 
+    file_mutex.lock();
+
     err = read( fd, &input, 1 );
 
     if( err != 0 )
@@ -21,9 +23,9 @@ char Lexer::read_one( int fd )
         // I don't know why, but characters
         // are skipped without this stuff...
         // TODO: Fix this.
-        cout.setstate( std::ios::failbit );
-        cout << input;
-        cout.clear();
+//        cout.setstate( std::ios::failbit );
+//        cout << input;
+//        cout.clear();
 
         ++this->position;
         
@@ -34,8 +36,12 @@ char Lexer::read_one( int fd )
             this->position = 0;
         }
 
+        file_mutex.unlock();
+
         return input;
     }
+
+    file_mutex.unlock();
 
     return 0;
 }
@@ -45,8 +51,10 @@ void Lexer::backup( int fd, int amount )
     // Tries to fix position as much as possible...
     // TODO: Do this one char at a time to check for 
     // rewinding over newlines.
+    file_mutex.lock();
     lseek( fd, amount, SEEK_CUR );
     position += amount;
+    file_mutex.unlock();
 }
 
 /**

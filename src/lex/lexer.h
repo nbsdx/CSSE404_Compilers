@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include "token.h"
 
 using namespace std;
@@ -21,6 +22,7 @@ protected:
 private:
     char c;
     vector<BasicToken*> pgm;
+    mutex file_mutex;
 
     uint32_t linenumber;
     uint32_t position;
