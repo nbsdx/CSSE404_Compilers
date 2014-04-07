@@ -1,0 +1,25 @@
+/** This one needs syntax errors and should not pass */
+
+// Can't have extension on Main class
+class Main extends System {
+    public static void main (String[] args) {
+        int i = 41;
+
+        i = SubMain.add1(i);
+
+        // Needs else
+        if( i == 5 )
+            i = 4;
+
+        // main fn not permitted to return
+        return i;
+    }
+}
+
+// Nothing strictly wrong about this class
+class SubMain extends Main {
+    int somefield;
+    public int add1 (int num) {
+        return num + 1;
+    }
+}

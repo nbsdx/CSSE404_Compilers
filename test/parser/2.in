@@ -1,0 +1,65 @@
+/*
+ * This one just bruteforces primes
+ * This should be a valid MJ program
+ */
+
+// MainClassDecl always comes first and has only one method
+class Main {
+    public static void main (String[] args) {
+        int numprimes = ArgtoI.atoi(5);
+        numprimes = Primes.grind(numprimes);
+    }
+}
+
+// Well a real atoi isn't possible without strings, chars or arrays
+class ArgtoI {
+    int value;
+    public int atoi (int nope) {
+        value = value + 42;
+        return value;
+    }
+}
+
+class Primes {
+    public int grind (int num) {
+        int i = 1;
+        int count = 0;
+        while (count != num) {
+            boolean flag = false;
+            int j = i - 1;
+            while (j > 1) {
+                int mod = Primes.modulo(num, j);
+                if (mod == 0) {
+                    flag = true;
+                }
+                // Added required else.
+                else {
+                    flag = flag;
+                }
+                
+                j = j - 1;
+            }
+
+            if (!flag) {
+                count = count + 1;
+                System.out.println(i);
+            }
+            // Added required else.
+            else {
+                count = count;
+            }
+
+            i = i + 1;
+        }
+
+    }
+
+    public int modulo (int num, int modulus) {
+        int i = num;
+        while (i > 0) {
+            i = i - modulus;
+        }
+        return i + modulus;
+    }
+
+}

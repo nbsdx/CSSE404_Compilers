@@ -1,0 +1,43 @@
+/**
+ *  This needs to be a valid piece of MiniJava.
+ *  I guess it's just a normal old fibonacci spitter
+ */
+class TestFile {
+    public static void main (String[] args) {
+        int a = 1000;
+        int nfib = Fib.fib(a);
+        System.out.println(nfib);
+        // No return statement allowed
+    }
+}
+
+class Fib {
+    int unused;
+    public int fib (int n) {
+        int ret = 0;
+        if (n == 1) {
+            ret = 1;
+        }
+        // Changed this to just be "else" 
+        // from "else if (n != 0)" as per 
+        // the MiniJAVA syntax definition
+        else{
+            ret = Fib.fib(n - 1);
+        }
+        return ret;
+    }
+    boolean notused;
+}
+
+// Just some garbage to make this a more useful test
+class Unused extends Fib {
+    public boolean toggleFlag () {
+        notused = !notused;
+        return notused;
+    }
+
+    public int getFibNumber (int n) {
+        int nfib = Fib.fib(n);
+        return unused + nfib;
+    }
+}
