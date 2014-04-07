@@ -169,7 +169,7 @@ finalize:
         pgm.push_back( new ReservedWord( linenumber, position, rword ) );
 //        pgm.push_back( make_shared<ReservedWord>( rword, linenumber, position ) );
 
-    if( err != 0 )
+    if( in != 0 )
         // Undo the last read.
         backup( fd, -1 );
 
