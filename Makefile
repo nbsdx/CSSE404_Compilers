@@ -11,7 +11,7 @@ all: main
 main: $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $@ $^
 
-obj/main.o: src/parse/main.cpp obj/token.o obj/lexer.o obj/AST.o
+obj/main.o: src/parse/main.cpp src/parse/tt.hpp obj/token.o obj/lexer.o obj/AST.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/AST.o: src/parse/AST.cpp src/parse/AST.h obj/token.o

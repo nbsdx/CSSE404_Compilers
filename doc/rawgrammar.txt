@@ -27,17 +27,20 @@ MethodParams' -> , Formal MethodParams'
 MethodParams' -> EPSILON
 
 Formal -> Type ID
+Formal -> ID ID
 
 Type -> boolean
 Type -> int
-Type -> ID
 
 Stmt -> Type ID = Expr ;
+Stmt -> ID StmtRHS ;
 Stmt -> { StmtLst } 
 Stmt -> if ( Expr ) Stmt else Stmt
 Stmt -> while ( Expr ) Stmt
 Stmt -> System.out.println ( Expr ) ; 
-Stmt -> ID = Expr ;
+
+StmtRHS -> = Expr
+StmtRHS -> ID = Expr
 
 StmtLst -> Stmt StmtLst
 StmtLst -> EPSILON
@@ -47,34 +50,34 @@ Expr -> BoolExpr
 BoolExpr -> CompExpr BoolExpr'
 
 BoolExpr' -> && CompExpr BoolExpr'
-BoolExpr' -> || CompExpr BoolExpr'
+BoolExpr' -> @@ CompExpr BoolExpr'
 BoolExpr' -> EPSILON
 
-CompExpr -> AdditiveExpr CompExpr'
+CompExpr -> AddExpr CompExpr'
 
-CompExpr' -> >  AdditiveExpr 
-CompExpr' -> >= AdditiveExpr
-CompExpr' -> <= AdditiveExpr
-CompExpr' -> <  AdditiveExpr
-CompExpr' -> == AdditiveExpr
-CompExpr' -> != AdditiveExpr
+CompExpr' -> >  AddExpr 
+CompExpr' -> >= AddExpr
+CompExpr' -> <= AddExpr
+CompExpr' -> <  AddExpr
+CompExpr' -> == AddExpr
+CompExpr' -> != AddExpr
 CompExpr' -> EPSILON
 
-AdditiveExpr -> MultiplicitiveExpr AdditiveExpr'
+AddExpr -> MultExpr AddExpr'
 
-AdditiveExpr' -> + MultiplicitiveExpr AdditiveExpr' 
-AdditiveExpr' -> - MultiplicitiveExpr AdditiveExpr'
-AdditiveExpr' -> EPSILON
+AddExpr' -> + MultExpr AddExpr' 
+AddExpr' -> - MultExpr AddExpr'
+AddExpr' -> EPSILON
 
-MultiplicitiveExpr -> NegationExpr MultiplicitiveExpr'
+MultExpr -> NegExpr MultExpr'
 
-MultiplicitiveExpr' -> * NegationExpr MultiplicitiveExpr'
-MultiplicitiveExpr' -> / NegationExpr MultiplicitiveExpr'
-MultiplicitiveExpr' -> EPSILON
+MultExpr' -> * NegExpr MultExpr'
+MultExpr' -> / NegExpr MultExpr'
+MultExpr' -> EPSILON
 
-NegationExpr -> - Constant
-NegationExpr -> ! Constant
-NegationExpr -> Constant
+NegExpr -> - Constant
+NegExpr -> ! Constant
+NegExpr -> Constant
 
 Constant -> Literal DotExpr
 

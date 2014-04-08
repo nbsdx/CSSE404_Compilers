@@ -70,7 +70,7 @@ i_row = 0
 for row in table[2:]:
 
     # Get useful numbers.
-    nrow = [-1 if x==69 or x==70 else x-1 for x in row][1:]
+    nrow = [-1 if x==71 or x==72 else x-1 for x in row][1:]
 
 #    print "PARSING ROW FOR PROD: [" + groups[i_row].name + "]"
 
