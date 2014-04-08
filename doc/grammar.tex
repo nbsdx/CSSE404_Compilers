@@ -46,11 +46,9 @@
 
 <Formal> ::= <Type> ID
 
-<Type> ::= <BuiltInType> | <UserType>
+<Type> ::= <BuiltInType> | ID
 
 <BuiltInType> ::= `int' | `boolean'
-
-<UserType> ::= ID
 
 <Stmt> ::= <BuiltInType> ID = <Expr> ';'
 \alt ID <StmtRHS> `;'
@@ -58,7 +56,6 @@
 \alt `if' `(' <Expr> `)' <Stmt> `else' <Stmt>
 \alt `while' `(' <Expr> `)' <Stmt>
 \alt `System.out.println' `(' <Expr> `)' `;'
-%\alt ID `=' <Expr> `;'
 
 <StmtRHS> ::= '=' <Expr>
 \alt ID '=' <Expr>

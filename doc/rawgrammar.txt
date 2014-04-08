@@ -29,12 +29,10 @@ MethodParams' -> EPSILON
 Formal -> Type ID
 
 Type -> BuiltInType
-Type -> UserType
+Type -> ID
 
 BuiltInType -> boolean
 BuiltInType -> int
-
-UserType -> ID
 
 Stmt -> BuiltInType ID = Expr ;
 Stmt -> ID StmtRHS ;

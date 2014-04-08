@@ -14,6 +14,7 @@ class TestFile {
 class Fib {
     int unused;
     boolean notused;
+    Fib fibvar;
     public int fib (int n) {
         int ret = 0;
         if (n == 1) {
@@ -26,6 +27,9 @@ class Fib {
             ret = Fib.fib(n - 1);
         }
         return ret;
+    }
+    public Fib abcde () {
+        return fibb;
     }
 }
 
