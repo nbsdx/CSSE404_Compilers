@@ -11,12 +11,6 @@
 
 using namespace std;
 
-struct EndOfStack : BasicToken
-{
-    EndOfStack() : BasicToken( "$$" ) {}
-    ~EndOfStack() {}
-};
-
 bool match( BasicToken *t1, BasicToken *t2 )
 {
     // Edge case - should never happen.
@@ -39,35 +33,6 @@ bool match( BasicToken *t1, BasicToken *t2 )
         return true;
 
     return false;
-}
-
-void print_token( BasicToken *token )
-{
-    if( dynamic_cast<ReservedWord*>( token ) )
-        std::cout << "ReservedWord, ";
-    else if( dynamic_cast<Operator*>( token ) )
-        std::cout << "Operator, ";
-    else if( dynamic_cast<Delimiter*>( token ) )
-        std::cout << "Delimiter, ";
-    else if( dynamic_cast<Identifier*>( token ) )
-        std::cout << "ID, ";
-    else if( dynamic_cast<Number*>( token ) )
-        std::cout << "Integer, ";
-    else if( dynamic_cast<NonTerminal*>( token ) )
-        std::cout << "NonTerminal, ";
-    else if( dynamic_cast<EndOfFileToken*>( token ) )
-        std::cout << "EndOfFile, ";
-    else if( dynamic_cast<EndOfStack*>( token ) )
-        std::cout << "EndOfStack, ";
-    else if( dynamic_cast<Epsilon*>( token ) )
-    {
-        std::cout << "Epsilon\n";
-        return;
-    }
-    else
-        std::cout << "ERROR: " << typeid( *token ).name() << " ";
-    
-    std::cout << "[" << token->raw() << "]"  << std::endl;
 }
 
 int main( int argc, char **argv )
@@ -135,6 +100,7 @@ int main( int argc, char **argv )
         if( dynamic_cast<Epsilon*>( symbols.top() ) )
         {
             symbols.pop();
+            BasicToken *nt = symbols.top();
             //tree.pop();
             //symbols.push(new Separator() );
         }
@@ -161,7 +127,8 @@ int main( int argc, char **argv )
             } else {
                 RTree *sub = tree.top();
                 tree.pop();
-                tree.top()->insertSubT( sub );
+                if (!sub->isLeaf() && sub->degree() > 0)
+                  tree.top()->insertSubT( sub );
             }
         }
         else if( match( symbols.top(), pgm[0] ) )

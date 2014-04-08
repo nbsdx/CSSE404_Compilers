@@ -3,6 +3,40 @@
 
 namespace Util {
 
+void print_token( BasicToken *token )
+{
+    if( dynamic_cast<ReservedWord*>( token ) )
+        std::cout << "ReservedWord ";
+    else if( dynamic_cast<Operator*>( token ) )
+        std::cout << "Operator ";
+    else if( dynamic_cast<Delimiter*>( token ) )
+        std::cout << "Delimiter ";
+    else if( dynamic_cast<Identifier*>( token ) )
+        std::cout << "ID ";
+    else if( dynamic_cast<Number*>( token ) )
+        std::cout << "Integer ";
+    else if( dynamic_cast<NonTerminal*>( token ) )
+    {
+        //std::cout << "NonTerminal, ";
+        std::cout << token->raw();
+        return;
+    }
+    else if( dynamic_cast<EndOfFileToken*>( token ) )
+        std::cout << "EndOfFile ";
+    else if( dynamic_cast<EndOfStack*>( token ) )
+        std::cout << "EndOfStack ";
+    else if( dynamic_cast<Epsilon*>( token ) )
+    {
+        std::cout << "Epsilon\n";
+        return;
+    }
+    else
+        std::cout << "ERROR: " << typeid( *token ).name() << " ";
+
+    std::cout << "[" << token->raw() << "]";
+}
+
+
 ReservedWords RWord_FromString( const std::string &str )
 {
     switch( _hash( str.c_str() ) )

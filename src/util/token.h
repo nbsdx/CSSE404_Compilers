@@ -53,6 +53,7 @@ typedef enum Numbers_ {
 // Mark this shit as exterm
 namespace Util {
 
+
 extern ReservedWords RWord_FromString( const std::string &str );
 
 extern Operators Operator_FromString( const std::string &str );
@@ -97,6 +98,31 @@ protected:
 
     std::string m_raw;
 };
+
+struct NonTerminal : BasicToken
+{
+    NonTerminal( const string &str ) : BasicToken( str ){}
+    ~NonTerminal() {}
+};
+
+struct Epsilon : BasicToken
+{
+    Epsilon() : BasicToken( "" ) {}
+    ~Epsilon() {}
+};
+
+struct Separator : BasicToken
+{
+    Separator() : BasicToken ( "" ) {}
+    ~Separator() {}
+};
+
+struct EndOfStack : BasicToken
+{
+    EndOfStack() : BasicToken( "$$" ) {}
+    ~EndOfStack() {}
+};
+
 
 template
 <typename TokenType, typename ValueType>
@@ -309,5 +335,9 @@ public:
     static shared_ptr<LexerToken> FromString( const string & );
 };
 */
+
+namespace Util {
+    extern void print_token( BasicToken *token );
+}
 
 #endif // SIMPLE_TOKEN_H

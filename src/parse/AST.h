@@ -13,9 +13,12 @@ public:
 
     std::string printVal ();
 
+    int degree ();
+
 protected:
     void printBranch (int depth);
 private:
+    int cnt;
     BasicToken *val;
     bool leaf;
     vector <RTree*> branches;

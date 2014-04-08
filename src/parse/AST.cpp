@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "../lex/token.h"
 #include "AST.h"
 #include "tt.hpp"
 
@@ -9,6 +10,7 @@ RTree::RTree(BasicToken* bt)
     if (nt) this->leaf = false;
     else this->leaf = true;
     this->val = bt;
+    this->cnt = 0;
 }
 
 bool RTree::isLeaf () 
@@ -19,8 +21,10 @@ bool RTree::isLeaf ()
 void RTree::insertSubT (RTree *t) 
 {
     assert (!leaf);
-    if (t)
+    if (t) {
         branches.push_back( t );
+        cnt++;
+    }
 }
 
 void RTree::printT () 
@@ -40,7 +44,9 @@ void RTree::printBranch (int depth) {
     {
         cout << "  "; // lol
     }
-    cout << "(" << this->val->raw() << " ";
+    cout << "(";
+    Util::print_token(this->val);
+    cout << " ";
     for (RTree *t : branches)
     {
         cout << "\n";
@@ -51,4 +57,8 @@ void RTree::printBranch (int depth) {
 
 string RTree::printVal () {
     return this->val->raw();
+}
+
+int RTree::degree () {
+    return this->cnt;
 }

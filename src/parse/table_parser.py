@@ -131,24 +131,6 @@ struct Production
     Production(){}
 };
 
-struct NonTerminal : BasicToken
-{
-    NonTerminal( const string &str ) : BasicToken( str ){}
-    ~NonTerminal() {}
-};
-
-struct Epsilon : BasicToken
-{
-    Epsilon() : BasicToken( "" ) {}
-    ~Epsilon() {}
-};
-
-struct Separator : BasicToken
-{
-    Separator() : BasicToken ( "" ) {}
-    ~Separator() {}
-};
-
 class TransitionTable
 {
     vector< Production > productions;
