@@ -38,7 +38,7 @@ void RTree::printT ()
 void RTree::printBranch (int depth) {
     for (int i = 0; i < depth; i++) 
     {
-        cout << " "; // lol
+        cout << "    "; // lol
     }
     cout << "(" << this->val->raw() << " ";
     for (RTree *t : branches)
