@@ -133,7 +133,7 @@ struct Production
 
 struct NonTerminal : BasicToken
 {
-    NonTerminal( const string &str ) : BasicToken( str ) {}
+    NonTerminal( const string &str ) : BasicToken( str ){}
     ~NonTerminal() {}
 };
 
@@ -186,6 +186,32 @@ public:
         return productions.at( i );
     }
 
+    int prodIdToGroupId( int i )
+    {
+        int index = 0;
+        int group_ID = 0;
+        for( Production p : productions )
+        {
+            for( vector<BasicToken*> v : p.rhs )
+            {
+                if( index == i )
+                    return group_ID;
+                ++index;
+            }
+        }
+    }
+
+    int prodGroupId( const string &name )
+    {
+        int group_ID = 0;
+        for( Production p : productions )
+        {
+            if( p.lhs.compare( name ) == 0 )
+                return group_ID;
+            ++group_ID;
+        }
+    }
+
     vector<BasicToken*> getRHSById( int i ){
         int index = 0;
         for( Production p : productions )
@@ -209,11 +235,11 @@ public:
 
             TODO: Fix this.
     */
-    int getNextProdIndex( int curProd, const string &nonTerminal ) {
-        if( table[curProd].count( nonTerminal ) == 0 )
+    int getNextProdIndex( int curProdGroup, const string &nonTerminal ) {
+        if( table[curProdGroup].count( nonTerminal ) == 0 )
             return -1;
         else
-            return table[curProd][nonTerminal];
+            return table[curProdGroup][nonTerminal];
     }
 
 private:
@@ -228,7 +254,11 @@ private:
         {
             return new Identifier( 0, 0, Identifiers::Valid_Identifier, "" );
         }
-        else if( str.compare( "Number" ) == 0 )
+        if( str.compare( "$" ) == 0 )
+        {
+            return new EndOfFileToken();
+        }
+        else if( str.compare( "Integer" ) == 0 )
         {
             return new Number( 0, 0, Numbers::Valid_Number, 0 );
         }
@@ -293,8 +323,10 @@ for g in groups:
     table += ( "\t// Table: %d\n" % index_ )
     for tok in g.dest:
         table += ( "\t\ttmap[\"%s\"] = %d;\n" % ( tok, g.dest[tok] ) )
+
+    table += ( "\t\ttable.push_back( tmap );\n" )
+
     for p in g.prods:
-        table += ( "\t\ttable.push_back( tmap );\n" )
         index = index + 1
     table += "\t\ttmap.clear();\n"
     index_ = index_ + 1
@@ -306,64 +338,6 @@ outfile.close()
 #print (file_template % (productions, table))
 
 exit()
-
-"""
-typedef enum {
-    Invalid_Token,
-    Program,
-    MainClassDefinition,
-    ClassDefinition,
-
-    LexerTokenDelim,
-    LexerTokenOp,
-    LexerTokenNumber,
-    LexerTokenIdentifier,
-    LexerTokenRWord
-} PTokenType;
-
-"""
-
-token_file_template = """
-    // Enum stuff
-    enum Types {
-        %s
-    };
-
-    typedef enum Types TokenTypes;
-
-    // Generated Classes
-    %s
-
-"""
-
-token_class_template = """
-    struct %s : Production
-    {
-        static const vector<vector<BasicToken*>> tokens;
-    };
-    const vector<vector<BasicToken*>> %s::tokens = {
-        %s
-    };
-"""
-
-enum_body = ""
-token_class_body = ""
-
-# Iterate over NTs, and fill out enum.
-for g in groups:
-    enum_body += fix_name( g.name ) + ",\n"
-enum_body = enum_body[:-2]
-
-for g in groups:
-    prod_str = ""
-    for p in g.prods:
-        # This needs to generate correct toke types for literals
-        prod_str += ("{" + "ProductionTokenFactory::FromString( %s ), " * len( p.rhs ) + " },\n") % tuple( [fix_name(x) for x in p.rhs] )
-
-    token_class_body += token_class_template % ( fix_name(g.name), fix_name(g.name), prod_str )
-
-print token_class_body
-
 
 # Iterate over NTs again, and
 

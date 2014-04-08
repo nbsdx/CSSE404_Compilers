@@ -264,6 +264,12 @@ typedef LexerToken<Delimiters, string> Delimiter;
 typedef LexerToken<Operators, string> Operator;
 typedef LexerToken<Numbers, int32_t> Number;
 
+struct EndOfFileToken : BasicToken
+{
+    EndOfFileToken() : BasicToken( "$" ) {}
+    ~EndOfFileToken() {}
+};
+
 class LexerTokenFactory
 {
 public:

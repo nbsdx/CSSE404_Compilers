@@ -13,6 +13,7 @@ class TestFile {
 
 class Fib {
     int unused;
+    boolean notused;
     public int fib (int n) {
         int ret = 0;
         if (n == 1) {
@@ -26,7 +27,6 @@ class Fib {
         }
         return ret;
     }
-    boolean notused;
 }
 
 // Just some garbage to make this a more useful test

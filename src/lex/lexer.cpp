@@ -101,6 +101,8 @@ vector<BasicToken*> Lexer::lex( int fd )
         }
     }
 
+    pgm.push_back( new EndOfFileToken() );
+
     return pgm;
 }
 
