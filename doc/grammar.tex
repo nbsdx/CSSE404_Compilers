@@ -44,11 +44,15 @@
 
 <MethodParams'> ::= `,' <Formal> <MethodParams'> | $\varepsilon$
 
-<Formal> ::= <Type> ID | ID ID
+<Formal> ::= <Type> ID
 
-<Type> ::= `int' | `boolean'
+<Type> ::= <BuiltInType> | <UserType>
 
-<Stmt> ::= <Type> ID = <Expr> ';'
+<BuiltInType> ::= `int' | `boolean'
+
+<UserType> ::= ID
+
+<Stmt> ::= <BuiltInType> ID = <Expr> ';'
 \alt ID <StmtRHS> `;'
 \alt `\{' <StmtLst> `\}'
 \alt `if' `(' <Expr> `)' <Stmt> `else' <Stmt>
