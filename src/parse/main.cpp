@@ -35,6 +35,32 @@ bool match( BasicToken *t1, BasicToken *t2 )
     return false;
 }
 
+// Make Messages more visible:
+enum Color {
+    None = 0,
+    Black, Red, Green, Yellow, Blue, Magenta, Cyan, White
+};
+
+string set_color( Color fg = None, Color bg = None )
+{
+    char num_s[3];
+    string s = "\033[";
+    if( !fg && !bg )
+        s += "0";
+
+    if( fg )
+    {
+        s += to_string( 29 + fg );
+        if( bg ) 
+            s += ";";
+    }
+
+    if( bg )
+        s += to_string( 39 + bg );
+
+    return s + "m";
+};
+
 int main( int argc, char **argv )
 {
     // Initialize our Transition Table.
@@ -161,7 +187,6 @@ int main( int argc, char **argv )
                 symbols.push( sep );
 
                 int prod_group_id = tt.prodGroupId( nt->raw() );
-                //cout << "ProdGroupID:  " << prod_group_id << endl;
 
                 int next_prod_index;
 
@@ -185,11 +210,43 @@ int main( int argc, char **argv )
             }
             else
             {
-                cout << "Error parsing Token: " << pgm.front()->raw() << endl;
-                cout << "\tExpected: " << symbols.top()->raw() << endl;
+                ReservedWord *rw;
+                Operator *op;
+                Delimiter *d;
+                Identifier *id;
+                Number *num;
+
+                BasicToken *token = pgm[0];
+                
+                cerr << set_color( Red );
+                cerr << "Syntax Error: "; 
+                if( rw = dynamic_cast<ReservedWord*>( token ) )
+                    cerr << "Line " << rw->line() << " column: " << rw->pos() << endl;
+                else if( op = dynamic_cast<Operator*>( token ) )
+                    cerr << "Line " << op->line() << " column: " << op->pos() << endl;
+                else if( d = dynamic_cast<Delimiter*>( token ) )
+                    cerr << "Line " << d->line() << " column: " << d->pos() << endl;
+                else if( id = dynamic_cast<Identifier*>( token ) )
+                    cerr << "Line " << id->line() << " column: " << id->pos() << endl;
+                else if( num = dynamic_cast<Number*>( token ) )
+                    cerr << "Line " << num->line() << " column: " << num->pos() << endl;
+                
+                cerr << set_color() << "Found:    " << set_color( Blue ) << pgm.front()->raw() << endl;
+                cerr << set_color() << "Expected: " << set_color( Green ) << symbols.top()->raw() << endl;
+                cerr << set_color();
                 exit( 1 );
             }
         }
+    }
+
+    // Empty stack, and end of file.
+    if( dynamic_cast<EndOfFileToken*>( pgm[0] ) )
+    {
+        cerr << set_color( Cyan ) << "No Errors" << set_color() << endl;
+    }
+    else
+    {
+        cerr << set_color( Red ) << "Error: Could not consume all input tokens" << set_color() << endl;
     }
 
     root->printT();

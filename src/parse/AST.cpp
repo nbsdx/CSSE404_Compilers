@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "../lex/token.h"
+#include "../util/token.h"
 #include "AST.h"
 #include "tt.hpp"
 

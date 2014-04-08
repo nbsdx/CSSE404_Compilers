@@ -51,7 +51,7 @@ class Primes {
 
             i = i + 1;
         }
-        return i;
+        return count;
     }
 
     public int modulo (int num, int modulus) {
