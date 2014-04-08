@@ -106,29 +106,29 @@ int main( int argc, char **argv )
         }
         else if( dynamic_cast<EndOfFileToken*>( symbols.top() ) )
         {
-            cout << "Finished!" << endl;
+            //cout << "Finished!" << endl;
             pgm.erase( pgm.begin() );
             symbols.pop();
         }
         else if( dynamic_cast<EndOfStack*>( symbols.top() ) )
         {
-            cout << "Hit bottom of stack." << endl;
+            //cout << "Hit bottom of stack." << endl;
             symbols.pop();
         }
         else if ( dynamic_cast<Separator*>( symbols.top() ) )
         {
             symbols.pop();
-            cout << "Merging trees - hit separator\n";
-            cout << "tstack size - " << tree.size() << "\n";
-            cout << "Stack top - " << tree.top()->printVal() << "\n";
-            if (tree.size() == 1) {
-                // Hit bottom of stack
-                //tree.top()->printT();
-            } else {
+            //cout << "Merging trees - hit separator\n";
+            //cout << "tstack size - " << tree.size() << "\n";
+            //cout << "Stack top - " << tree.top()->printVal() << "\n";
+            if (tree.size() > 1) {
                 RTree *sub = tree.top();
                 tree.pop();
+
+                // The below is invariant for non-epsilon branches
+                // (We don't want those polluting the AST)
                 if (!sub->isLeaf() && sub->degree() > 0)
-                  tree.top()->insertSubT( sub );
+                    tree.top()->insertSubT( sub );
             }
         }
         else if( match( symbols.top(), pgm[0] ) )
@@ -156,6 +156,7 @@ int main( int argc, char **argv )
                 //cout << "Split NT: "; print_token( nt );
                 symbols.pop(); // Dispose of expanded NonTerminal
 
+                // The Separator token is used to trigger a subtree merge
                 Separator *sep = new Separator();
                 symbols.push( sep );
 
