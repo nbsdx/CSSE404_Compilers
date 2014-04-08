@@ -43,7 +43,7 @@ enum Color {
 
 string set_color( Color fg = None, Color bg = None )
 {
-    char num_s[3];
+    //char num_s[3];
     string s = "\033[";
     if( !fg && !bg )
         s += "0";
@@ -126,9 +126,6 @@ int main( int argc, char **argv )
         if( dynamic_cast<Epsilon*>( symbols.top() ) )
         {
             symbols.pop();
-            BasicToken *nt = symbols.top();
-            //tree.pop();
-            //symbols.push(new Separator() );
         }
         else if( dynamic_cast<EndOfFileToken*>( symbols.top() ) )
         {
@@ -220,15 +217,15 @@ int main( int argc, char **argv )
                 
                 cerr << set_color( Red );
                 cerr << "Syntax Error: "; 
-                if( rw = dynamic_cast<ReservedWord*>( token ) )
+                if(( rw = dynamic_cast<ReservedWord*>( token ) ))
                     cerr << "Line " << rw->line() << " column: " << rw->pos() << endl;
-                else if( op = dynamic_cast<Operator*>( token ) )
+                else if(( op = dynamic_cast<Operator*>( token ) ))
                     cerr << "Line " << op->line() << " column: " << op->pos() << endl;
-                else if( d = dynamic_cast<Delimiter*>( token ) )
+                else if(( d = dynamic_cast<Delimiter*>( token ) ))
                     cerr << "Line " << d->line() << " column: " << d->pos() << endl;
-                else if( id = dynamic_cast<Identifier*>( token ) )
+                else if(( id = dynamic_cast<Identifier*>( token ) ))
                     cerr << "Line " << id->line() << " column: " << id->pos() << endl;
-                else if( num = dynamic_cast<Number*>( token ) )
+                else if(( num = dynamic_cast<Number*>( token ) ))
                     cerr << "Line " << num->line() << " column: " << num->pos() << endl;
                 
                 cerr << set_color() << "Found:    " << set_color( Blue ) << pgm.front()->raw() << endl;

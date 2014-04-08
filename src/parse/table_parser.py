@@ -106,7 +106,7 @@ file_template = """
 #include <map>
 #include <memory>
 
-#include "../lex/token.h"
+#include "../util/token.h"
 
 using namespace std;
 
@@ -187,6 +187,7 @@ public:
                 ++index;
             }
         }
+        return -1;
     }
 
     int prodGroupId( const string &name )
@@ -198,6 +199,7 @@ public:
                 return group_ID;
             ++group_ID;
         }
+        return -1;
     }
 
     vector<BasicToken*> getRHSById( int i ){

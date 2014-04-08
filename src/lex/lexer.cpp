@@ -114,7 +114,6 @@ void Lexer::read_name( int fd, char c )
     string token;
     ReservedWords rword;
     char in;
-    int err;
     int ln, pos;
 
     token.append( 1, c );
@@ -244,7 +243,7 @@ void Lexer::read_delimiter( int fd, char c )
 void Lexer::read_operator( int fd, char c )
 {
     // assert(c && is_one(OPERCHARS)
-    int err;
+    //int err;
     switch( c ) 
     {
         case '/': read_comdiv( fd );
@@ -262,7 +261,7 @@ void Lexer::read_operator( int fd, char c )
         case '!': read_twochar_operator( fd, '=', Operators::Not, Operators::NEqual );
                   break;
         case '&': {
-                    char c1 = c;
+                    //char c1 = c;
                     char c2;
 
                     if( ( c2 = read_one( fd ) ) != 0 )
@@ -278,7 +277,7 @@ void Lexer::read_operator( int fd, char c )
                   }
                   break;
         case '|': {
-                    char c1 = c;
+                    //char c1 = c;
                     char c2;
 
                     if( ( c2 = read_one( fd ) ) != 0 )
@@ -392,10 +391,9 @@ void Lexer::comm_line( int fd )
 
 void Lexer::comm_block( int fd )
 {
-    int err;
     char cur = 0;
     char last = '\0';
-    
+
     while( ( cur = read_one( fd ) ) != 0 )
     {
         if( last == '*' && cur == '/' )
@@ -407,7 +405,6 @@ void Lexer::comm_block( int fd )
 
 void Lexer::read_int( int fd, char c )
 {
-    int err;
     string num;
     int ln  = linenumber;
     int pos = position-1;
