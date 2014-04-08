@@ -4,8 +4,10 @@
 #include <vector>
 #include <stack>
 #include <unistd.h>
+
 #include "tt.hpp"
 #include "../lex/lexer.h"
+#include "AST.h"
 
 using namespace std;
 
@@ -86,14 +88,14 @@ int main( int argc, char **argv )
         std::cout << "Error opening file\n";
         exit( 1 );
     }
-    
+
     // Lexer Output.
     vector<BasicToken*> pgm = lex::Lexer().lex( fd );
 
-    for( BasicToken *token : pgm )
-    {
-        print_token( token );
-    }
+    //for( BasicToken *token : pgm )
+    //{
+    //    print_token( token );
+    //}
 
     // Stack of Symbols.
     stack<BasicToken*>  symbols;
@@ -108,17 +110,25 @@ int main( int argc, char **argv )
     // Push the Start State.
     for( rit = temp.rbegin() ; rit != temp.rend() ; ++rit )
     {
-        cout << "Pushing: "; print_token( *rit );
+        //cout << "Pushing: "; print_token( *rit );
         symbols.push( *rit );
     }
-    
+
     curProdGroup = 1;
+
+    // AST root
+    RTree *root = new RTree( new NonTerminal("Program") );
+
+    stack<RTree*> tree;
+    tree.push(root);
 
     // Loop
     while( symbols.size() > 0 )
     {
-        cout << "Testing: "; print_token( symbols.top() );
-        cout << "Against: "; print_token( pgm[0] );
+        //assert(!tree.empty());
+
+        //cout << "Testing: "; print_token( symbols.top() );
+        //cout << "Against: "; print_token( pgm[0] );
 
         if( dynamic_cast<Epsilon*>( symbols.top() ) )
         {
@@ -126,34 +136,45 @@ int main( int argc, char **argv )
         }
         else if( dynamic_cast<EndOfFileToken*>( symbols.top() ) )
         {
-            cout << "Finished!" << endl;
+            //cout << "Finished!" << endl;
             pgm.erase( pgm.begin() );
             symbols.pop();
         }
         else if( dynamic_cast<EndOfStack*>( symbols.top() ) )
         {
-            cout << "Hit bottom of stack." << endl;
+            //cout << "Hit bottom of stack." << endl;
             symbols.pop();
         }
         else if( match( symbols.top(), pgm[0] ) )
         {
-            cout << "MATCH!" << endl;
+            // Matched terminal
+            RTree *leaf = new RTree(pgm[0]);
+            tree.top()->insertSubT( leaf );
+
+            //cout << "MATCH!" << endl;
             symbols.pop();
             pgm.erase( pgm.begin() );
+
+            //tree.pop();
         }
         else
         {
             if( dynamic_cast<NonTerminal*>( symbols.top() ) )
             {
                 NonTerminal *nt = dynamic_cast<NonTerminal*>( symbols.top() );
-                cout << "Split NT: "; print_token( nt );
+
+                RTree *branch = new RTree( nt );
+                tree.top()->insertSubT( branch );
+                tree.push( branch );
+
+                //cout << "Split NT: "; print_token( nt );
                 symbols.pop();
 
                 int prod_group_id = tt.prodGroupId( nt->raw() );
-                cout << "ProdGroupID:  " << prod_group_id << endl;
+                //cout << "ProdGroupID:  " << prod_group_id << endl;
 
                 int next_prod_index;
-                
+
                 // These two are special cases....
                 if( dynamic_cast<Number*>( pgm[0] ) )
                     next_prod_index = tt.getNextProdIndex( prod_group_id, "Integer" );
@@ -162,14 +183,14 @@ int main( int argc, char **argv )
                 else
                     next_prod_index = tt.getNextProdIndex( prod_group_id, pgm[0]->raw() );
 
-                cout << "NextProdINDX: " << next_prod_index << endl;
-               
-                cout << "Next Token:   "; print_token( pgm[0] );
+                //cout << "NextProdINDX: " << next_prod_index << endl;
+
+                //cout << "Next Token:   "; print_token( pgm[0] );
 
                 temp = tt.getRHSById( next_prod_index );
                 for( rit = temp.rbegin(); rit != temp.rend(); ++rit )
                 {
-                    cout << "Pushing: "; print_token( *rit );
+                    //cout << "Pushing: "; print_token( *rit );
                     symbols.push( *rit );
                 }
             }
@@ -181,6 +202,8 @@ int main( int argc, char **argv )
             }
         }
     }
+
+    root->printT();
 
     return 0;
 }
