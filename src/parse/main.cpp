@@ -133,17 +133,33 @@ int main( int argc, char **argv )
         if( dynamic_cast<Epsilon*>( symbols.top() ) )
         {
             symbols.pop();
+            tree.pop();
         }
         else if( dynamic_cast<EndOfFileToken*>( symbols.top() ) )
         {
-            //cout << "Finished!" << endl;
+            cout << "Finished!" << endl;
             pgm.erase( pgm.begin() );
             symbols.pop();
         }
         else if( dynamic_cast<EndOfStack*>( symbols.top() ) )
         {
-            //cout << "Hit bottom of stack." << endl;
+            cout << "Hit bottom of stack." << endl;
             symbols.pop();
+        }
+        else if ( dynamic_cast<Separator*>( symbols.top() ) )
+        {
+            symbols.pop();
+            //cout << "Merging trees - hit separator\n";
+            //cout << "tstack size - " << tree.size() << "\n";
+            //cout << "Stack top - " << tree.top()->printVal() << "\n";
+            if (tree.size() == 1) {
+                // Hit bottom of stack
+                //tree.top()->printT();
+            } else {
+                RTree *sub = tree.top();
+                tree.pop();
+                tree.top()->insertSubT( sub );
+            }
         }
         else if( match( symbols.top(), pgm[0] ) )
         {
@@ -161,14 +177,17 @@ int main( int argc, char **argv )
         {
             if( dynamic_cast<NonTerminal*>( symbols.top() ) )
             {
-                NonTerminal *nt = dynamic_cast<NonTerminal*>( symbols.top() );
+                NonTerminal *nt = dynamic_cast<NonTerminal*>(symbols.top());
 
-                RTree *branch = new RTree( nt );
-                tree.top()->insertSubT( branch );
+                // Add a new tier to the tree - for the prodgroup
+                RTree *branch = new RTree( symbols.top() );
                 tree.push( branch );
 
                 //cout << "Split NT: "; print_token( nt );
                 symbols.pop();
+
+                Separator *sep = new Separator();
+                symbols.push( sep );
 
                 int prod_group_id = tt.prodGroupId( nt->raw() );
                 //cout << "ProdGroupID:  " << prod_group_id << endl;
@@ -190,7 +209,7 @@ int main( int argc, char **argv )
                 temp = tt.getRHSById( next_prod_index );
                 for( rit = temp.rbegin(); rit != temp.rend(); ++rit )
                 {
-                    //cout << "Pushing: "; print_token( *rit );
+                    cout << "Pushing: "; print_token( *rit );
                     symbols.push( *rit );
                 }
             }

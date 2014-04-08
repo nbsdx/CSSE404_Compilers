@@ -3,8 +3,6 @@
 
 class RTree {
 public:
-    RTree(NonTerminal* nt);
-
     RTree(BasicToken* bt);
 
     bool isLeaf ();
@@ -12,6 +10,8 @@ public:
     void insertSubT (RTree *t);
 
     void printT ();
+
+    std::string printVal ();
 
 protected:
     void printBranch (int depth);

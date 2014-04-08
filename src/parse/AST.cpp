@@ -3,16 +3,12 @@
 #include "AST.h"
 #include "tt.hpp"
 
-RTree::RTree(NonTerminal* nt) 
-{
-    this->val = dynamic_cast<BasicToken*>( nt );
-    this->leaf = false;
-}
-
 RTree::RTree(BasicToken* bt) 
 {
+    NonTerminal *nt = dynamic_cast<NonTerminal*>( bt );
+    if (nt) this->leaf = false;
+    else this->leaf = true;
     this->val = bt;
-    this->leaf = true;
 }
 
 bool RTree::isLeaf () 
@@ -51,4 +47,8 @@ void RTree::printBranch (int depth) {
         t->printBranch (depth+1);
     }
     cout << ")";
+}
+
+string RTree::printVal () {
+    return this->val->raw();
 }
