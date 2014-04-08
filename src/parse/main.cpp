@@ -209,7 +209,6 @@ int main( int argc, char **argv )
                 temp = tt.getRHSById( next_prod_index );
                 for( rit = temp.rbegin(); rit != temp.rend(); ++rit )
                 {
-                    cout << "Pushing: "; print_token( *rit );
                     symbols.push( *rit );
                 }
             }

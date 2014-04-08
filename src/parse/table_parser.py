@@ -143,6 +143,12 @@ struct Epsilon : BasicToken
     ~Epsilon() {}
 };
 
+struct Separator : BasicToken
+{
+    Separator() : BasicToken ( "" ) {}
+    ~Separator() {}
+};
+
 class TransitionTable
 {
     vector< Production > productions;
