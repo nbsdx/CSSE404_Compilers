@@ -41,16 +41,23 @@ bool match( BasicToken *t1, BasicToken *t2 )
 
 void print_token( BasicToken *token )
 {
-    if( dynamic_cast<ReservedWord*>( token ) )
-        std::cout << "ReservedWord, ";
-    else if( dynamic_cast<Operator*>( token ) )
-        std::cout << "Operator, ";
-    else if( dynamic_cast<Delimiter*>( token ) )
-        std::cout << "Delimiter, ";
-    else if( dynamic_cast<Identifier*>( token ) )
-        std::cout << "ID, ";
-    else if( dynamic_cast<Number*>( token ) )
-        std::cout << "Integer, ";
+    
+    ReservedWord *rw;
+    Operator *op;
+    Delimiter *d;
+    Identifier *id;
+    Number *num;
+
+    if( rw = dynamic_cast<ReservedWord*>( token ) )
+        cout << "ReservedWord, [" << rw->line() << "," << rw->pos() << "]";
+    else if( op = dynamic_cast<Operator*>( token ) )
+        cout << "Operator, [" << op->line() << "," << op->pos() << "]";
+    else if( d = dynamic_cast<Delimiter*>( token ) )
+        cout << "Delimiter, [" << d->line() << "," << d->pos() << "]";
+    else if( id = dynamic_cast<Identifier*>( token ) )
+        cout << "ID, [" << id->line() << "," << id->pos() << "]";
+    else if( num = dynamic_cast<Number*>( token ) )
+        cout << "Integer, [" << num->line() << "," << num->pos() << "]";
     else if( dynamic_cast<NonTerminal*>( token ) )
         std::cout << "NonTerminal, ";
     else if( dynamic_cast<EndOfFileToken*>( token ) )
@@ -67,6 +74,32 @@ void print_token( BasicToken *token )
     
     std::cout << "[" << token->raw() << "]"  << std::endl;
 }
+
+// Make Messages more visible:
+enum Color {
+    None = 0,
+    Black, Red, Green, Yellow, Blue, Magenta, Cyan, White
+};
+
+string set_color( Color fg = None, Color bg = None )
+{
+    char num_s[3];
+    string s = "\033[";
+    if( !fg && !bg )
+        s += "0";
+
+    if( fg )
+    {
+        s += to_string( 29 + fg );
+        if( bg ) 
+            s += ";";
+    }
+
+    if( bg )
+        s += to_string( 39 + bg );
+
+    return s + "m";
+};
 
 int main( int argc, char **argv )
 {
@@ -108,7 +141,7 @@ int main( int argc, char **argv )
     // Push the Start State.
     for( rit = temp.rbegin() ; rit != temp.rend() ; ++rit )
     {
-        cout << "Pushing: "; print_token( *rit );
+//       cout << "Pushing: "; print_token( *rit );
         symbols.push( *rit );
     }
     
@@ -117,17 +150,14 @@ int main( int argc, char **argv )
     // Loop
     while( symbols.size() > 0 )
     {
-        cout << "Testing: "; print_token( symbols.top() );
-        cout << "Against: "; print_token( pgm[0] );
-
+/*
+        if( dynamic_cast<EndOfFileToken*>( pgm[0] ) )
+        {
+            cout << "End of File" << endl;
+        }
+*/
         if( dynamic_cast<Epsilon*>( symbols.top() ) )
         {
-            symbols.pop();
-        }
-        else if( dynamic_cast<EndOfFileToken*>( symbols.top() ) )
-        {
-            cout << "Finished!" << endl;
-            pgm.erase( pgm.begin() );
             symbols.pop();
         }
         else if( dynamic_cast<EndOfStack*>( symbols.top() ) )
@@ -137,7 +167,6 @@ int main( int argc, char **argv )
         }
         else if( match( symbols.top(), pgm[0] ) )
         {
-            cout << "MATCH!" << endl;
             symbols.pop();
             pgm.erase( pgm.begin() );
         }
@@ -146,11 +175,9 @@ int main( int argc, char **argv )
             if( dynamic_cast<NonTerminal*>( symbols.top() ) )
             {
                 NonTerminal *nt = dynamic_cast<NonTerminal*>( symbols.top() );
-                cout << "Split NT: "; print_token( nt );
                 symbols.pop();
 
                 int prod_group_id = tt.prodGroupId( nt->raw() );
-                cout << "ProdGroupID:  " << prod_group_id << endl;
 
                 int next_prod_index;
                 
@@ -162,24 +189,51 @@ int main( int argc, char **argv )
                 else
                     next_prod_index = tt.getNextProdIndex( prod_group_id, pgm[0]->raw() );
 
-                cout << "NextProdINDX: " << next_prod_index << endl;
-               
-                cout << "Next Token:   "; print_token( pgm[0] );
-
                 temp = tt.getRHSById( next_prod_index );
                 for( rit = temp.rbegin(); rit != temp.rend(); ++rit )
                 {
-                    cout << "Pushing: "; print_token( *rit );
                     symbols.push( *rit );
                 }
             }
             else
             {
-                cout << "Error parsing Token: " << pgm.front()->raw() << endl;
-                cout << "\tExpected: " << symbols.top()->raw() << endl;
+                ReservedWord *rw;
+                Operator *op;
+                Delimiter *d;
+                Identifier *id;
+                Number *num;
+
+                BasicToken *token = pgm[0];
+                
+                cerr << set_color( Red );
+                cerr << "Syntax Error: "; 
+                if( rw = dynamic_cast<ReservedWord*>( token ) )
+                    cerr << "Line " << rw->line() << " column: " << rw->pos() << endl;
+                else if( op = dynamic_cast<Operator*>( token ) )
+                    cerr << "Line " << op->line() << " column: " << op->pos() << endl;
+                else if( d = dynamic_cast<Delimiter*>( token ) )
+                    cerr << "Line " << d->line() << " column: " << d->pos() << endl;
+                else if( id = dynamic_cast<Identifier*>( token ) )
+                    cerr << "Line " << id->line() << " column: " << id->pos() << endl;
+                else if( num = dynamic_cast<Number*>( token ) )
+                    cerr << "Line " << num->line() << " column: " << num->pos() << endl;
+                
+                cerr << set_color() << "Found:    " << set_color( Blue ) << pgm.front()->raw() << endl;
+                cerr << set_color() << "Expected: " << set_color( Green ) << symbols.top()->raw() << endl;
+                cerr << set_color();
                 exit( 1 );
             }
         }
+    }
+
+    // Empty stack, and end of file.
+    if( dynamic_cast<EndOfFileToken*>( pgm[0] ) )
+    {
+        cerr << set_color( Cyan ) << "No Errors" << set_color() << endl;
+    }
+    else
+    {
+        cerr << set_color( Red ) << "Error: Could not consume all input tokens" << set_color() << endl;
     }
 
     return 0;

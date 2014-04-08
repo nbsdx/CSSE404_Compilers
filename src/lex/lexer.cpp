@@ -64,6 +64,8 @@ void Lexer::backup( int fd, int amount )
  */
 vector<BasicToken*> Lexer::lex( int fd )
 {
+    linenumber = 1;
+
     while( ( c = read_one( fd ) ) != 0 )
     {
         //cout << c << std::endl;
@@ -113,8 +115,12 @@ void Lexer::read_name( int fd, char c )
     ReservedWords rword;
     char in;
     int err;
+    int ln, pos;
 
     token.append( 1, c );
+
+    ln = linenumber;
+    pos = position - 1;
 
     while( ( in = read_one( fd ) ) != 0 )
     {
@@ -173,10 +179,10 @@ void Lexer::read_name( int fd, char c )
 
 finalize:
     if( ( rword = Util::RWord_FromString( token ) ) == ReservedWords::Invalid_RWord )
-        pgm.push_back( new Identifier( linenumber, position, Identifiers::Valid_Identifier, token ) );
+        pgm.push_back( new Identifier( ln, pos, Identifiers::Valid_Identifier, token ) );
 //        pgm.push_back( make_shared<Identifier>( token, linenumber, position ) );
     else
-        pgm.push_back( new ReservedWord( linenumber, position, rword ) );
+        pgm.push_back( new ReservedWord( ln, pos, rword ) );
 //        pgm.push_back( make_shared<ReservedWord>( rword, linenumber, position ) );
 
     if( in != 0 )
@@ -212,23 +218,23 @@ void Lexer::read_delimiter( int fd, char c )
 {
     switch( c ) 
     {
-        case ';': pgm.push_back( new Delimiter( linenumber, position, Delimiters::Semi ) );
+        case ';': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::Semi ) );
                   break;
-        case '[': pgm.push_back( new Delimiter( linenumber, position, Delimiters::LSquare ) );
+        case '[': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::LSquare ) );
                   break;
-        case ']': pgm.push_back( new Delimiter( linenumber, position, Delimiters::RSquare ) );
+        case ']': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::RSquare ) );
                   break;
-        case '(': pgm.push_back( new Delimiter( linenumber, position, Delimiters::LParen ) );
+        case '(': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::LParen ) );
                   break;
-        case ')': pgm.push_back( new Delimiter( linenumber, position, Delimiters::RParen ) );
+        case ')': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::RParen ) );
                   break;
-        case '{': pgm.push_back( new Delimiter( linenumber, position, Delimiters::LBrace ) );
+        case '{': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::LBrace ) );
                   break;
-        case '}': pgm.push_back( new Delimiter( linenumber, position, Delimiters::RBrace ) );
+        case '}': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::RBrace ) );
                   break;
-        case ',': pgm.push_back( new Delimiter( linenumber, position, Delimiters::Comma ) );
+        case ',': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::Comma ) );
                   break;
-        case '.': pgm.push_back( new Delimiter( linenumber, position, Delimiters::Period ) );
+        case '.': pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::Period ) );
                   break;
         default:  cerr << "Encounted Unexpected Delimiter " << c << std::endl;
                   break; // assert(false);
@@ -243,11 +249,11 @@ void Lexer::read_operator( int fd, char c )
     {
         case '/': read_comdiv( fd );
                   break;
-        case '+': pgm.push_back( new Operator( linenumber, position, Operators::Plus ) );
+        case '+': pgm.push_back( new Operator( linenumber, position-1, Operators::Plus ) );
                   break;
-        case '-': pgm.push_back( new Operator( linenumber, position, Operators::Minus ) );
+        case '-': pgm.push_back( new Operator( linenumber, position-1, Operators::Minus ) );
                   break;
-        case '*': pgm.push_back( new Operator( linenumber, position, Operators::Mult ) );
+        case '*': pgm.push_back( new Operator( linenumber, position-1, Operators::Mult ) );
                   break;
         case '<': read_twochar_operator( fd, '=', Operators::LT, Operators::LEq );
                   break;
@@ -262,7 +268,7 @@ void Lexer::read_operator( int fd, char c )
                     if( ( c2 = read_one( fd ) ) != 0 )
                     {
                         if( c2 == '&' )
-                            pgm.push_back( new Operator( linenumber, position, Operators::And ) );
+                            pgm.push_back( new Operator( linenumber, position-2, Operators::And ) );
                         else
                         {
                             cerr << "Encountered Unexpected character following a &." << endl;
@@ -278,7 +284,7 @@ void Lexer::read_operator( int fd, char c )
                     if( ( c2 = read_one( fd ) ) != 0 )
                     {
                         if( c2 == '|' )
-                            pgm.push_back( new Operator( linenumber, position, Operators::Or ) );
+                            pgm.push_back( new Operator( linenumber, position-2, Operators::Or ) );
                         else
                         {
                             cerr << "Encountered Unexpected character following a |." << endl;
@@ -300,16 +306,16 @@ void Lexer::read_twochar_operator( int fd, char next, Operators one, Operators t
     c = read_one( fd );
 
     if( c == 0 )
-        pgm.push_back( new Operator( linenumber, position, one ) );
+        pgm.push_back( new Operator( linenumber, position-1, one ) );
     else if( c != next ) 
     {
         // Oops, read too much.
         backup( fd, -1 );
-        pgm.push_back( new Operator( linenumber, position, one ) );
+        pgm.push_back( new Operator( linenumber, position-1, one ) );
     } 
     else 
     {
-        pgm.push_back( new Operator( linenumber, position, two ) );
+        pgm.push_back( new Operator( linenumber, position-2, two ) );
     }
 }
 
@@ -321,11 +327,11 @@ void Lexer::read_equal_assign( int fd )
     {
         // Opps, not a ==, just a =.
         backup( fd, -1 );
-        pgm.push_back( new Delimiter( linenumber, position, Delimiters::Equal ) );
+        pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::Equal ) );
     }
     else 
     {
-        pgm.push_back( new Operator( linenumber, position, Operators::EqualEq ) );
+        pgm.push_back( new Operator( linenumber, position-2, Operators::EqualEq ) );
     }
 }
 /*
@@ -362,7 +368,7 @@ void Lexer::read_comdiv( int fd )
     {
         if( c == 0 )
             cout << "why is c = 0...\n";
-        pgm.push_back( new Operator( linenumber, position, Operators::Div ) );
+        pgm.push_back( new Operator( linenumber, position-1, Operators::Div ) );
     }
     if( c != 0 ) 
     {
@@ -403,6 +409,8 @@ void Lexer::read_int( int fd, char c )
 {
     int err;
     string num;
+    int ln  = linenumber;
+    int pos = position-1;
 
     num.append( 1, c );
 
@@ -426,7 +434,7 @@ void Lexer::read_int( int fd, char c )
 
 make_token:
     // Form integer
-    pgm.push_back( new Number( linenumber, position, Numbers::Valid_Number, stoi( num ) ) );
+    pgm.push_back( new Number( ln, pos, Numbers::Valid_Number, stoi( num ) ) );
 }
 
 // Accept a string literal (like a #define) and check char membership
