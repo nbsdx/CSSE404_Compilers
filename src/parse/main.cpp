@@ -107,6 +107,14 @@ int main( int argc, char **argv )
     // Temp storage
     vector<BasicToken*> temp = tt.getRHSById( curProdGroup );
 
+    // AST root
+    RTree *root = new RTree( new NonTerminal("Program") );
+    
+    stack<RTree*> tree;
+    tree.push(root);
+
+    symbols.push(new Separator());
+
     // Push the Start State.
     for( rit = temp.rbegin() ; rit != temp.rend() ; ++rit )
     {
@@ -115,12 +123,6 @@ int main( int argc, char **argv )
     }
 
     curProdGroup = 1;
-
-    // AST root
-    RTree *root = new RTree( new NonTerminal("Program") );
-
-    stack<RTree*> tree;
-    tree.push(root);
 
     // Loop
     while( symbols.size() > 0 )
@@ -133,7 +135,8 @@ int main( int argc, char **argv )
         if( dynamic_cast<Epsilon*>( symbols.top() ) )
         {
             symbols.pop();
-            tree.pop();
+            //tree.pop();
+            //symbols.push(new Separator() );
         }
         else if( dynamic_cast<EndOfFileToken*>( symbols.top() ) )
         {
@@ -149,9 +152,9 @@ int main( int argc, char **argv )
         else if ( dynamic_cast<Separator*>( symbols.top() ) )
         {
             symbols.pop();
-            //cout << "Merging trees - hit separator\n";
-            //cout << "tstack size - " << tree.size() << "\n";
-            //cout << "Stack top - " << tree.top()->printVal() << "\n";
+            cout << "Merging trees - hit separator\n";
+            cout << "tstack size - " << tree.size() << "\n";
+            cout << "Stack top - " << tree.top()->printVal() << "\n";
             if (tree.size() == 1) {
                 // Hit bottom of stack
                 //tree.top()->printT();
@@ -184,7 +187,7 @@ int main( int argc, char **argv )
                 tree.push( branch );
 
                 //cout << "Split NT: "; print_token( nt );
-                symbols.pop();
+                symbols.pop(); // Dispose of expanded NonTerminal
 
                 Separator *sep = new Separator();
                 symbols.push( sep );
