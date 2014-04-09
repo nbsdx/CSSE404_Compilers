@@ -13,7 +13,7 @@ BuiltInType boolean int
 Stmt ID { if while System.out.println boolean int
 StmtRHS = ID EPSILON .
 StmtLst EPSILON ID { if while System.out.println boolean int
-BoolExpr' && @@ EPSILON
+BoolExpr' && || EPSILON
 CompExpr' > >= <= < == != EPSILON
 AddExpr' + - EPSILON
 MultExpr' * / EPSILON

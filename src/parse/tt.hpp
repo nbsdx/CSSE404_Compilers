@@ -502,7 +502,7 @@ public:
 	// Table: 22
 		tmap[")"] = 43;
 		tmap[";"] = 43;
-		tmap["@@"] = 42;
+		tmap["||"] = 42;
 		tmap[","] = 43;
 		tmap["&&"] = 41;
 		table.push_back( tmap );
@@ -521,9 +521,9 @@ public:
 		table.push_back( tmap );
 		tmap.clear();
 	// Table: 24
-		tmap["@@"] = 51;
 		tmap[">="] = 46;
 		tmap[")"] = 51;
+		tmap["||"] = 51;
 		tmap["<="] = 47;
 		tmap[","] = 51;
 		tmap["=="] = 49;
@@ -548,15 +548,15 @@ public:
 		table.push_back( tmap );
 		tmap.clear();
 	// Table: 26
-		tmap["@@"] = 55;
 		tmap[">="] = 55;
 		tmap[")"] = 55;
-		tmap["+"] = 53;
+		tmap["||"] = 55;
 		tmap["<="] = 55;
 		tmap["-"] = 54;
 		tmap[","] = 55;
 		tmap["=="] = 55;
 		tmap["&&"] = 55;
+		tmap["+"] = 53;
 		tmap[";"] = 55;
 		tmap["!="] = 55;
 		tmap["<"] = 55;
@@ -577,17 +577,17 @@ public:
 		table.push_back( tmap );
 		tmap.clear();
 	// Table: 28
-		tmap["@@"] = 59;
 		tmap["*"] = 57;
 		tmap[">="] = 59;
 		tmap[")"] = 59;
-		tmap["+"] = 59;
+		tmap["||"] = 59;
 		tmap["<="] = 59;
 		tmap["-"] = 59;
 		tmap[","] = 59;
 		tmap["/"] = 58;
 		tmap["=="] = 59;
 		tmap["&&"] = 59;
+		tmap["+"] = 59;
 		tmap[";"] = 59;
 		tmap["!="] = 59;
 		tmap["<"] = 59;
@@ -619,11 +619,10 @@ public:
 		table.push_back( tmap );
 		tmap.clear();
 	// Table: 31
-		tmap["@@"] = 64;
 		tmap["*"] = 64;
 		tmap[">="] = 64;
 		tmap[")"] = 64;
-		tmap["+"] = 64;
+		tmap["||"] = 64;
 		tmap["<="] = 64;
 		tmap["-"] = 64;
 		tmap[","] = 64;
@@ -631,6 +630,7 @@ public:
 		tmap["."] = 65;
 		tmap["=="] = 64;
 		tmap["&&"] = 64;
+		tmap["+"] = 64;
 		tmap[";"] = 64;
 		tmap["!="] = 64;
 		tmap["<"] = 64;
@@ -685,7 +685,7 @@ public:
 		firstset["Stmt"] = { "ID", "{", "if", "while", "System.out.println", "boolean", "int", };
 		firstset["StmtRHS"] = { "=", "ID", "EPSILON", ".", };
 		firstset["StmtLst"] = { "EPSILON", "ID", "{", "if", "while", "System.out.println", "boolean", "int", };
-		firstset["BoolExpr_"] = { "&&", "@@", "EPSILON", };
+		firstset["BoolExpr_"] = { "&&", "||", "EPSILON", };
 		firstset["CompExpr_"] = { ">", ">=", "<=", "<", "==", "!=", "EPSILON", };
 		firstset["AddExpr_"] = { "+", "-", "EPSILON", };
 		firstset["MultExpr_"] = { "*", "/", "EPSILON", };
