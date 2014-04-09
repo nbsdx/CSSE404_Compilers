@@ -1,5 +1,7 @@
 #include "lexer.h"
 
+#include <unistd.h>
+
 // NB: While = is a delimiter, it's handled in the operator function
 //     (since this simplifies the == case)
 #define OPERCHARS "+-/!=><&|"
@@ -52,8 +54,32 @@ void Lexer::backup( int fd, int amount )
     // TODO: Do this one char at a time to check for 
     // rewinding over newlines.
     file_mutex.lock();
+
+    if( !( amount < 0  ) )
+        goto leave;
+
+//    lseek( fd, -1, SEEK_CUR );
+/*
+    for( int i = amount; i < 0; ++i )
+    {
+        char c;
+        read( fd, &c, 1 );
+        
+        cout.setstate( std::ios::failbit );
+        cout << c << endl;
+        cout.clear();
+
+        if( c == '\n' )
+            --linenumber;
+
+        lseek( fd, -2, SEEK_CUR );
+        usleep( 5 );
+    }
+*/
     lseek( fd, amount, SEEK_CUR );
     position += amount;
+
+leave:
     file_mutex.unlock();
 }
 

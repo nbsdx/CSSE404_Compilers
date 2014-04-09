@@ -1,36 +1,35 @@
-ClassHeader	-> class
-ClassDeclRHS	-> extends {
-ClassBody	-> EPSILON ID boolean int public
-MaybeMehtods	-> EPSILON
-ClassDecls	-> EPSILON class
-ClassVarDecls	-> EPSILON ID boolean int
-MethodDecl	-> public
-MethodDecls	-> EPSILON public
-MethodParams	-> EPSILON ID boolean int
-MethodParams'	-> COM EPSILON
-Type		-> ID boolean int
-BuiltInType	-> boolean int
-Stmt		-> ID { if while System.out.println boolean int
-StmtRHS		-> = ID
-StmtLst		-> EPSILON ID { if while System.out.println boolean int
-BoolExpr'	-> || @@ EPSILON
-CompExpr'	-> > >= <= < == != EPSILON
-AddExpr'	-> + - EPSILON
-MultExpr'	-> * / EPSILON
-NegExpr		-> - ! ID this Integer null true false ( new
-Literal		-> ID this Integer null true false ( new
-DotExpr		-> . EPSILON
-ExprLst		-> EPSILON - ! ID this Integer null true false ( new
-ExprLst'	-> COM EPSILON
-MainClassDecl	-> class
-ClassDecl	-> class
-Constant	-> ID this Integer null true false ( new
-Program		-> class
-MaybeMethods	-> EPSILON public
-ClassVarDecl	-> ID boolean int
-Formal		-> ID boolean int
-MultExpr	-> - ! ID this Integer null true false ( new
-AddExpr		-> - ! ID this Integer null true false ( new
-CompExpr	-> - ! ID this Integer null true false ( new
-BoolExpr	-> - ! ID this Integer null true false ( new
-Expr		-> - ! ID this Integer null true false ( new
+ClassHeader class
+ClassDeclRHS extends {
+ClassBody EPSILON ID boolean int public
+MaybeMethods EPSILON public
+ClassDecls EPSILON class
+ClassVarDecls EPSILON ID boolean int
+MethodDecl public
+MethodDecls EPSILON public
+MethodParams EPSILON ID boolean int
+MethodParams' , EPSILON
+Type ID boolean int
+BuiltInType boolean int
+Stmt ID { if while System.out.println boolean int
+StmtRHS = ID EPSILON .
+StmtLst EPSILON ID { if while System.out.println boolean int
+BoolExpr' && @@ EPSILON
+CompExpr' > >= <= < == != EPSILON
+AddExpr' + - EPSILON
+MultExpr' * / EPSILON
+NegExpr - ! ID this Integer null true false ( new
+DotExpr' EPSILON .
+Literal ID this Integer null true false ( new
+ExprLst EPSILON - ! ID this Integer null true false ( new
+ExprLst' , EPSILON
+MainClassDecl class
+ClassDecl class
+DotExpr ID this Integer null true false ( new
+Program class
+ClassVarDecl ID boolean int
+Formal ID boolean int
+MultExpr - ! ID this Integer null true false ( new
+AddExpr - ! ID this Integer null true false ( new
+CompExpr - ! ID this Integer null true false ( new
+BoolExpr - ! ID this Integer null true false ( new
+Expr - ! ID this Integer null true false ( new

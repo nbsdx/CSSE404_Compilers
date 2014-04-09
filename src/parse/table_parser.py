@@ -71,7 +71,7 @@ i_row = 0
 for row in table[2:]:
 
     # Get useful numbers.
-    nrow = [-1 if x==73 or x==72 else x-1 for x in row][1:]
+    nrow = [-1 if x==80 or x==79 else x-1 for x in row][1:]
 
 #    print "PARSING ROW FOR PROD: [" + groups[i_row].name + "]"
 
@@ -335,15 +335,14 @@ for line in firstsetfile:
     if not line:
         break;
 
-    l,r = [q.strip() for q in line.split( '->' )]
-    v = [q.strip() for q in r.split( ' ' )]
-    fsbuffer += ("\t\tfirstset[\"%s\"] = { " % fix_name(l)) + (( "\"%s\", " * len(v) ) % tuple(v)) + "};\n"
+    i = [q.strip() for q in line.split( ' ' )]
+    fsbuffer += ("\t\tfirstset[\"%s\"] = { " % fix_name(i[0])) + (( "\"%s\", " * len(i[1:]) ) % tuple(i[1:])) + "};\n"
 
 outfile = open( "tt.hpp", "w+" )
 outfile.write( ( file_template % (productions, table, fsbuffer) ) )
 outfile.close()
 
-#print (file_template % (productions, table))
+#print (file_template % (productions, table))1
 
 exit()
 

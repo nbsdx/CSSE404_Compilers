@@ -6,7 +6,7 @@ ClassDecl -> ClassHeader ClassDeclRHS
 
 ClassHeader -> class ID
 
-ClassDeclRHS -> extends { ClassBody }
+ClassDeclRHS -> extends ID { ClassBody }
 ClassDeclRHS -> { ClassBody }
 
 ClassBody -> ClassVarDecls MaybeMethods
@@ -14,7 +14,7 @@ ClassBody -> MethodDecls
 ClassBody -> EPSILON
 
 MaybeMethods -> MethodDecls
-MaybeMehtods -> EPSILON
+MaybeMethods -> EPSILON
 
 ClassDecls -> ClassDecl ClassDecls
 ClassDecls -> EPSILON
@@ -52,6 +52,7 @@ Stmt -> System.out.println ( Expr ) ;
 
 StmtRHS -> = Expr
 StmtRHS -> ID = Expr
+StmtRHS -> DotExpr'
 
 StmtLst -> Stmt StmtLst
 StmtLst -> EPSILON
@@ -86,11 +87,13 @@ MultExpr' -> * NegExpr MultExpr'
 MultExpr' -> / NegExpr MultExpr'
 MultExpr' -> EPSILON
 
-NegExpr -> - Constant
-NegExpr -> ! Constant
-NegExpr -> Constant
+NegExpr -> - DotExpr
+NegExpr -> ! DotExpr
+NegExpr -> DotExpr
 
-Constant -> Literal DotExpr
+DotExpr -> Literal DotExpr' 
+DotExpr' -> EPSILON
+DotExpr' -> . ID ( ExprLst ) DotExpr'
 
 Literal -> ID
 Literal -> this
@@ -100,9 +103,6 @@ Literal -> true
 Literal -> false
 Literal -> ( Expr )
 Literal -> new ID ( )
-
-DotExpr -> . ID ( ExprLst ) DotExpr 
-DotExpr -> EPSILON
 
 ExprLst -> Expr ExprLst'
 ExprLst -> EPSILON
