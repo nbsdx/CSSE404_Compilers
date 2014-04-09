@@ -352,8 +352,8 @@ break_early:
     else
         cerr << set_color( Red ) << "Error: Could not consume all input tokens" << set_color() << endl;
 
-    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
-        root->printT();
+    //if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
+    root->printT();
 
     return 0;
 }
