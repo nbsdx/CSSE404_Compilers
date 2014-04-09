@@ -67,8 +67,9 @@ int main( int argc, char **argv )
     TransitionTable tt;
     vector<BasicToken*>::reverse_iterator rit;
     int fd;
+    bool errored = false;
 
-    if( argc != 2 )
+    if( argc < 2 )
     {
         std::cout << "Error please supply file\n";
         exit( 1 );
@@ -109,11 +110,15 @@ int main( int argc, char **argv )
     // Push the Start State.
     for( rit = temp.rbegin() ; rit != temp.rend() ; ++rit )
     {
-        //cout << "Pushing: "; print_token( *rit );
         symbols.push( *rit );
     }
 
     curProdGroup = 1;
+
+    stack<BasicToken *> recovery;
+
+    recovery.push( new NonTerminal( "Program" ) );
+    recovery.push( temp[1] );
 
     // Loop
     while( symbols.size() > 0 )
@@ -147,6 +152,7 @@ int main( int argc, char **argv )
             if (tree.size() > 1) {
                 RTree *sub = tree.top();
                 tree.pop();
+                recovery.pop();
 
                 // The below is invariant for non-epsilon branches
                 // (We don't want those polluting the AST)
@@ -154,7 +160,9 @@ int main( int argc, char **argv )
                     tree.top()->insertSubT( sub );
             }
         }
-        else if( match( symbols.top(), pgm[0] ) )
+        else 
+recover_label:    
+        if( match( symbols.top(), pgm[0] ) )
         {
             // Matched terminal
             RTree *leaf = new RTree(pgm[0]);
@@ -178,6 +186,8 @@ int main( int argc, char **argv )
 
                 //cout << "Split NT: "; print_token( nt );
                 symbols.pop(); // Dispose of expanded NonTerminal
+
+                recovery.push( symbols.top() );
 
                 // The Separator token is used to trigger a subtree merge
                 Separator *sep = new Separator();
@@ -213,10 +223,12 @@ int main( int argc, char **argv )
                 Identifier *id;
                 Number *num;
 
+                errored = true;
+
                 BasicToken *token = pgm[0];
                 
                 cerr << set_color( Red );
-                cerr << "Syntax Error: "; 
+                cerr << "Syntax Error: " << set_color(); 
                 if(( rw = dynamic_cast<ReservedWord*>( token ) ))
                     cerr << "Line " << rw->line() << " column: " << rw->pos() << endl;
                 else if(( op = dynamic_cast<Operator*>( token ) ))
@@ -228,9 +240,81 @@ int main( int argc, char **argv )
                 else if(( num = dynamic_cast<Number*>( token ) ))
                     cerr << "Line " << num->line() << " column: " << num->pos() << endl;
                 
-                cerr << set_color() << "Found:    " << set_color( Blue ) << pgm.front()->raw() << endl;
-                cerr << set_color() << "Expected: " << set_color( Green ) << symbols.top()->raw() << endl;
+                cerr << set_color() << "Found: " << set_color( Magenta ) << pgm.front()->raw();
+                cerr << set_color() << ", expected: " << set_color( Green ) << symbols.top()->raw() << endl;
                 cerr << set_color();
+
+                // Try to ignore error.
+                // Pop off until the recovery token is found.
+                while( symbols.size() > 0 )
+                {
+                    if( symbols.top() != recovery.top() )
+                        symbols.pop();
+                    else
+                        break;
+                }
+
+                if( symbols.size() == 0 )// should never happen
+                {
+                    cerr << "Unrecoverable Error Occured" << endl;
+                    exit( 1 );
+                }
+
+                recovery.pop();
+                tree.top()->insertSubT( new RTree( new ErrorToken() ) );
+                
+                if( tree.size() > 1 )
+                    tree.pop();
+
+                // Now that the Symbol Stack has been fixed, match the program queue.
+                if( dynamic_cast<NonTerminal*>( symbols.top() ) )
+                {
+                    // Get the first set for the NonTerminal.
+                    // Then remove from pgm until the head
+                    // matches a first token.
+                    vector<string> first = tt.first( symbols.top()->raw() );
+                    while( pgm.empty() == false )
+                    {
+                        for( string s : first )
+                        {
+                            // If we see one of the first chars for the NT.
+                            if( pgm[0]->raw().compare( s ) == 0 )
+                            {
+                                goto break_early;
+                            }
+                        }
+                        pgm.erase( pgm.begin() );
+                    }
+break_early:                    
+                    if( pgm.empty() )
+                    {
+                        cerr << "Erron on NT Recovery.\n";
+                        cerr << "Unrecoverable Error Occured" << endl;
+                        exit( 1 );
+                    }
+
+                    goto recover_label;
+                }
+                else // Termial; Easy
+                {
+                    while( pgm.empty() == false )
+                    {
+                        if( *pgm[0] == *symbols.top() )
+                            break;
+                        else
+                            pgm.erase( pgm.begin() );
+                    }
+
+                    if( pgm.empty() )
+                    {
+                        cerr << "Error on T Recovery.\n";
+                        cerr << "Unrecoverable Error Occured" << endl;
+                        exit( 1 );
+                    }
+
+                    goto recover_label;
+                }
+
                 exit( 1 );
             }
         }
@@ -239,14 +323,16 @@ int main( int argc, char **argv )
     // Empty stack, and end of file.
     if( dynamic_cast<EndOfFileToken*>( pgm[0] ) )
     {
-        cerr << set_color( Cyan ) << "No Errors" << set_color() << endl;
+        if( errored )
+            cerr << set_color( Red ) << "Errors occured." << set_color() << " Check output for details." << set_color() << endl;
+        else
+            cerr << set_color( Cyan ) << "No Errors" << set_color() << endl;
     }
     else
-    {
         cerr << set_color( Red ) << "Error: Could not consume all input tokens" << set_color() << endl;
-    }
 
-    root->printT();
+    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
+        root->printT();
 
     return 0;
 }

@@ -4,7 +4,7 @@ CPP_FILES := $(wildcard src/util/*.cpp) $(wildcard src/lex/*.cpp) $(wildcard src
 OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o
 
 CC=g++
-CFLAGS=-I/usr/include/boost -MMD -std=c++11 -Wall
+CFLAGS=-I/usr/include/boost -MMD -std=c++11 -Wall -g
 
 all: main
 

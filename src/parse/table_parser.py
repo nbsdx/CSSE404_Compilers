@@ -35,6 +35,7 @@ class ProdGroup:
 
 table = json.loads( open( 'parse_table.json' ).read() )
 rulelines = open( '../../doc/rawgrammar.txt' ).read().split( '\n' )
+firstsetfile = open( '../../doc/firstsets.txt' ).read().split( '\n' )
 
 rules = []
 groups = []
@@ -136,6 +137,7 @@ class TransitionTable
     vector< Production > productions;
     vector< string >     prod_names;
     vector< map< string, int > > table;
+    map< string, vector<string>> firstset;
 
     int indexOf( const vector<string> &vec, const string& value ) {
         vector<string>::const_iterator it;
@@ -159,6 +161,9 @@ public:
 %s
 
         // Table creation goes here.
+%s
+
+        // Frist set stuff
 %s
     }
 
@@ -230,6 +235,10 @@ public:
             return -1;
         else
             return table[curProdGroup][nonTerminal];
+    }
+
+    vector<string> first( const string &name ) {
+        return firstset[name];
     }
 
 private:
@@ -321,8 +330,17 @@ for g in groups:
     table += "\t\ttmap.clear();\n"
     index_ = index_ + 1
 
+fsbuffer = ""
+for line in firstsetfile:
+    if not line:
+        break;
+
+    l,r = [q.strip() for q in line.split( '->' )]
+    v = [q.strip() for q in r.split( ' ' )]
+    fsbuffer += ("\t\tfirstset[\"%s\"] = { " % fix_name(l)) + (( "\"%s\", " * len(v) ) % tuple(v)) + "};\n"
+
 outfile = open( "tt.hpp", "w+" )
-outfile.write( ( file_template % (productions, table) ) )
+outfile.write( ( file_template % (productions, table, fsbuffer) ) )
 outfile.close()
 
 #print (file_template % (productions, table))

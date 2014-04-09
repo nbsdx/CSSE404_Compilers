@@ -123,6 +123,12 @@ struct EndOfStack : BasicToken
     ~EndOfStack() {}
 };
 
+struct ErrorToken : BasicToken
+{
+    ErrorToken() : BasicToken( "ERROR" ) {}
+    ~ErrorToken() {}
+};
+
 
 template
 <typename TokenType, typename ValueType>

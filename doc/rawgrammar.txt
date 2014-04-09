@@ -52,7 +52,7 @@ Expr -> BoolExpr
 BoolExpr -> CompExpr BoolExpr'
 
 BoolExpr' -> && CompExpr BoolExpr'
-BoolExpr' -> @@ CompExpr BoolExpr'
+BoolExpr' -> || CompExpr BoolExpr'
 BoolExpr' -> EPSILON
 
 CompExpr -> AddExpr CompExpr'
