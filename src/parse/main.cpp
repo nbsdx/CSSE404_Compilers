@@ -193,26 +193,47 @@ recover_label:
                 Separator *sep = new Separator();
                 symbols.push( sep );
 
-                int prod_group_id = tt.prodGroupId( nt->raw() );
-
+                int prod_group_id;
                 int next_prod_index;
 
-                // These two are special cases....
-                if( dynamic_cast<Number*>( pgm[0] ) )
-                    next_prod_index = tt.getNextProdIndex( prod_group_id, "Integer" );
-                else if( dynamic_cast<Identifier*>( pgm[0] ) )
-                    next_prod_index = tt.getNextProdIndex( prod_group_id, "ID" );
-                else
-                    next_prod_index = tt.getNextProdIndex( prod_group_id, pgm[0]->raw() );
-
-                //cout << "NextProdINDX: " << next_prod_index << endl;
-
-                //cout << "Next Token:   "; print_token( pgm[0] );
-
-                temp = tt.getRHSById( next_prod_index );
-                for( rit = temp.rbegin(); rit != temp.rend(); ++rit )
+                try
                 {
-                    symbols.push( *rit );
+                    prod_group_id = tt.prodGroupId( nt->raw() );
+
+                    // These two are special cases....
+                    if( dynamic_cast<Number*>( pgm[0] ) )
+                        next_prod_index = tt.getNextProdIndex( prod_group_id, "Integer" );
+                    else if( dynamic_cast<Identifier*>( pgm[0] ) )
+                        next_prod_index = tt.getNextProdIndex( prod_group_id, "ID" );
+                    else
+                        next_prod_index = tt.getNextProdIndex( prod_group_id, pgm[0]->raw() );
+
+                    //cout << "NextProdINDX: " << next_prod_index << endl;
+
+                    //cout << "Next Token:   "; print_token( pgm[0] );
+
+                    temp = tt.getRHSById( next_prod_index );
+/*
+                    cout << "Replacing [" << nt->raw() << "] with: \n[";
+                    for( vector<BasicToken*>::iterator it = temp.begin(); it != temp.end(); ++it )
+                    {
+                        cout << (*it)->raw() << ", ";
+                    }
+                    cout << "]" <<  endl;
+*/
+                    for( rit = temp.rbegin(); rit != temp.rend(); ++rit )
+                    {
+                        symbols.push( *rit );
+                    }
+                }
+                catch( char const *msg )
+                {
+                    /*
+                    cout << "ERROR: " << msg << endl;
+                    cout << "Production Group: " << prod_group_id << endl;
+                    cout << "Next Production Index: " << next_prod_index << endl;
+                    cout << "Using Input: " << pgm[0]->raw() << endl;
+                    */
                 }
             }
             else

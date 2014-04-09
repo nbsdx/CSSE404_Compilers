@@ -1,11 +1,20 @@
 Program -> MainClassDecl ClassDecls
 
-MainClassDecl -> class ID { public static void main ( String [ ] ID ) { StmtLst } }
+MainClassDecl -> ClassHeader { public static void main ( String [ ] ID ) { StmtLst } }
 
-ClassDecl -> class ID ClassExtention { ClassVarDecls MethodDecls }
+ClassDecl -> ClassHeader ClassDeclRHS
 
-ClassExtention -> extends ID 
-ClassExtention -> EPSILON
+ClassHeader -> class ID
+
+ClassDeclRHS -> extends { ClassBody }
+ClassDeclRHS -> { ClassBody }
+
+ClassBody -> ClassVarDecls MaybeMethods
+ClassBody -> MethodDecls
+ClassBody -> EPSILON
+
+MaybeMethods -> MethodDecls
+MaybeMehtods -> EPSILON
 
 ClassDecls -> ClassDecl ClassDecls
 ClassDecls -> EPSILON

@@ -33,7 +33,7 @@ class ProdGroup:
     def setDest( self, terminal, dest_prod ):
         self.dest[ terminal ] = dest_prod
 
-table = json.loads( open( 'parse_table.json' ).read() )
+table = json.loads( open( '../../doc/parse_table.json' ).read() )
 rulelines = open( '../../doc/rawgrammar.txt' ).read().split( '\n' )
 firstsetfile = open( '../../doc/firstsets.txt' ).read().split( '\n' )
 
@@ -71,7 +71,7 @@ i_row = 0
 for row in table[2:]:
 
     # Get useful numbers.
-    nrow = [-1 if x==73 or x==74 else x-1 for x in row][1:]
+    nrow = [-1 if x==73 or x==72 else x-1 for x in row][1:]
 
 #    print "PARSING ROW FOR PROD: [" + groups[i_row].name + "]"
 

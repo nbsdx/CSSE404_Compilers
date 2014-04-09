@@ -1,18 +1,19 @@
-MainClassDecl 	-> class
-ClassDecl	-> class
-ClassExtention	-> extends EPSILON
+ClassHeader	-> class
+ClassDeclRHS	-> extends {
+ClassBody	-> EPSILON ID boolean int public
+MaybeMehtods	-> EPSILON
 ClassDecls	-> EPSILON class
 ClassVarDecls	-> EPSILON ID boolean int
 MethodDecl	-> public
 MethodDecls	-> EPSILON public
 MethodParams	-> EPSILON ID boolean int
-MethodParams'	-> , EPSILON
+MethodParams'	-> COM EPSILON
 Type		-> ID boolean int
 BuiltInType	-> boolean int
 Stmt		-> ID { if while System.out.println boolean int
 StmtRHS		-> = ID
 StmtLst		-> EPSILON ID { if while System.out.println boolean int
-BoolExpr'	-> && || EPSILON
+BoolExpr'	-> || @@ EPSILON
 CompExpr'	-> > >= <= < == != EPSILON
 AddExpr'	-> + - EPSILON
 MultExpr'	-> * / EPSILON
@@ -20,9 +21,12 @@ NegExpr		-> - ! ID this Integer null true false ( new
 Literal		-> ID this Integer null true false ( new
 DotExpr		-> . EPSILON
 ExprLst		-> EPSILON - ! ID this Integer null true false ( new
-ExprLst'	-> , EPSILON
-Program		-> class
+ExprLst'	-> COM EPSILON
+MainClassDecl	-> class
+ClassDecl	-> class
 Constant	-> ID this Integer null true false ( new
+Program		-> class
+MaybeMethods	-> EPSILON public
 ClassVarDecl	-> ID boolean int
 Formal		-> ID boolean int
 MultExpr	-> - ! ID this Integer null true false ( new

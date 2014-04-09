@@ -15,9 +15,7 @@
 # Various binary names
 ./lexer
 
-# Auto-gen'd files
-tt.hpp
-
 # Old files
 *.h_
 *.cpp_
+*~
