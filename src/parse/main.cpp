@@ -4,6 +4,8 @@
 #include <vector>
 #include <stack>
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
 
 #include "tt.hpp"
 #include "../lex/lexer.h"
@@ -66,7 +68,7 @@ int main( int argc, char **argv )
     // Initialize our Transition Table.
     TransitionTable tt;
     vector<BasicToken*>::reverse_iterator rit;
-    int fd;
+    //int fd;
     bool errored = false;
 
     if( argc < 2 )
@@ -75,14 +77,17 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
-    if( ( fd = open( argv[1], O_RDONLY ) ) == -1 )
+    ifstream file( argv[1], ifstream::binary );
+    if( !file )
+//    if( ( fd = open( argv[1], O_RDONLY ) ) == -1 )
     {
         std::cout << "Error opening file\n";
         exit( 1 );
     }
 
     // Lexer Output.
-    vector<BasicToken*> pgm = lex::Lexer().lex( fd );
+    //vector<BasicToken*> pgm = lex::Lexer().lex( fd );
+    vector<BasicToken*> pgm = lex::Lexer().lex( file );
 
     //for( BasicToken *token : pgm )
     //{
@@ -352,8 +357,8 @@ break_early:
     else
         cerr << set_color( Red ) << "Error: Could not consume all input tokens" << set_color() << endl;
 
-    //if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
-    root->printT();
+    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
+        root->printT();
 
     return 0;
 }

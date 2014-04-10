@@ -7,7 +7,8 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <mutex>
+#include <iostream>
+#include <fstream>
 #include "../util/token.h"
 
 using namespace std;
@@ -17,33 +18,32 @@ namespace lex {
 class Lexer
 {
 public:
-    vector<BasicToken*> lex( int fd );
+    vector<BasicToken*> lex( ifstream &file );
 protected:
 private:
     char c;
     vector<BasicToken*> pgm;
-    mutex file_mutex;
 
     uint32_t linenumber;
     uint32_t position;
 
     /* IO functions */
-    char read_one( int fd );
-    void backup( int fd, 
+    char read_one( ifstream &file );
+    void backup( ifstream &file, 
                  int amount );
 
     /* Top Level Machines */
-    void read_int      ( int fd, char c );
-    void read_delimiter( int fd, char c );
-    void read_operator ( int fd, char c );
-    void read_name     ( int fd, char c );
+    void read_int      ( ifstream &file, char c );
+    void read_delimiter( ifstream &file, char c );
+    void read_operator ( ifstream &file, char c );
+    void read_name     ( ifstream &file, char c );
 
     /* Submachines */
-    void read_comdiv      ( int fd );
-    void comm_line        ( int fd );
-    void comm_block       ( int fd );
-    void read_equal_assign( int fd );
-    void read_twochar_operator( int fd, 
+    void read_comdiv      ( ifstream &file );
+    void comm_line        ( ifstream &file );
+    void comm_block       ( ifstream &file );
+    void read_equal_assign( ifstream &file );
+    void read_twochar_operator( ifstream &file, 
                                 char next, 
                                 Operators one, 
                                 Operators two );
@@ -62,7 +62,7 @@ private:
   
     bool is_one( char candidate, const char* group );
 
-//    void maybe_read_twochar(int fd, char next, Operator::Op just);
+//    void maybe_read_twochar(ifstream &file, char next, Operator::Op just);
 };
 
 } // End Namespace lex

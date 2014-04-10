@@ -10,25 +10,14 @@
 
 namespace lex {
 
-char Lexer::read_one( int fd )
+char Lexer::read_one( ifstream &file )
 {
-    int err;
     char input;
 
-    file_mutex.lock();
+    input = file.get();
 
-    err = read( fd, &input, 1 );
-
-    if( err != 0 )
+    if( file.good() )
     {
-        // Disregard this out. 
-        // I don't know why, but characters
-        // are skipped without this stuff...
-        // TODO: Fix this.
-//        cout.setstate( std::ios::failbit );
-//        cout << input;
-//        cout.clear();
-
         ++this->position;
         
         // Update line number.
@@ -38,49 +27,33 @@ char Lexer::read_one( int fd )
             this->position = 0;
         }
 
-        file_mutex.unlock();
+        file.sync();
 
         return input;
     }
 
-    file_mutex.unlock();
-
     return 0;
 }
 
-void Lexer::backup( int fd, int amount )
+void Lexer::backup( ifstream &file, int amount )
 {
-    // Tries to fix position as much as possible...
-    // TODO: Do this one char at a time to check for 
-    // rewinding over newlines.
-    file_mutex.lock();
-
     if( !( amount < 0  ) )
-        goto leave;
+    {
+        cerr << "Error: Not allowed to give positive number to backup." << endl;
+        return;
+    }
 
-//    lseek( fd, -1, SEEK_CUR );
-/*
     for( int i = amount; i < 0; ++i )
     {
-        char c;
-        read( fd, &c, 1 );
+        file.seekg( -1, ios_base::cur );
         
-        cout.setstate( std::ios::failbit );
-        cout << c << endl;
-        cout.clear();
-
-        if( c == '\n' )
+        if( file.peek() == '\n' )
             --linenumber;
-
-        lseek( fd, -2, SEEK_CUR );
-        usleep( 5 );
     }
-*/
-    lseek( fd, amount, SEEK_CUR );
-    position += amount;
 
-leave:
-    file_mutex.unlock();
+    file.sync();
+
+    position += amount;
 }
 
 /**
@@ -88,11 +61,11 @@ leave:
  *  Read one char from the stream, then dispatch another function
  *  that can complete the appropriate token.
  */
-vector<BasicToken*> Lexer::lex( int fd )
+vector<BasicToken*> Lexer::lex( ifstream &file )
 {
     linenumber = 1;
 
-    while( ( c = read_one( fd ) ) != 0 )
+    while( ( c = read_one( file ) ) != 0 )
     {
         //cout << c << std::endl;
         if( c == ' ' || c == '\t' || c == '\n' || c == '\r' ) 
@@ -102,22 +75,22 @@ vector<BasicToken*> Lexer::lex( int fd )
         } 
         else if( is_digit( c ) ) 
         {
-            read_int( fd, c );
+            read_int( file, c );
             continue;
         } 
         else if( is_alpha( c ) )
         {
-            read_name( fd, c );
+            read_name( file, c );
             continue;
         } 
         else if( is_delim_char( c ) )
         {
-            read_delimiter( fd, c );
+            read_delimiter( file, c );
             continue;
         }
         else if( is_op_char( c ) )
         {
-            read_operator( fd, c );
+            read_operator( file, c );
             continue;
         } 
         else 
@@ -134,7 +107,7 @@ vector<BasicToken*> Lexer::lex( int fd )
     return pgm;
 }
 
-void Lexer::read_name( int fd, char c )
+void Lexer::read_name( ifstream &file, char c )
 {
     bool has_period = false;
     string token;
@@ -147,7 +120,7 @@ void Lexer::read_name( int fd, char c )
     ln = linenumber;
     pos = position - 1;
 
-    while( ( in = read_one( fd ) ) != 0 )
+    while( ( in = read_one( file ) ) != 0 )
     {
         // Break conditions:
         if( !is_alpha( in ) && 
@@ -212,7 +185,7 @@ finalize:
 
     if( in != 0 )
         // Undo the last read.
-        backup( fd, -1 );
+        backup( file, -1 );
 
     return;
 
@@ -234,12 +207,12 @@ cleanup:
         // There's something messed up with the is_one 
         // stuff that I think is breaking one of the 
         // testcases.... XXX
-    backup( fd, -( strlen - first_p ) );
+    backup( file, -( strlen - first_p ) );
 
     goto finalize;
 }
 
-void Lexer::read_delimiter( int fd, char c )
+void Lexer::read_delimiter( ifstream &file, char c )
 {
     switch( c ) 
     {
@@ -266,13 +239,13 @@ void Lexer::read_delimiter( int fd, char c )
     }
 }
 
-void Lexer::read_operator( int fd, char c )
+void Lexer::read_operator( ifstream &file, char c )
 {
     // assert(c && is_one(OPERCHARS)
     //int err;
     switch( c ) 
     {
-        case '/': read_comdiv( fd );
+        case '/': read_comdiv( file );
                   break;
         case '+': pgm.push_back( new Operator( linenumber, position-1, Operators::Plus ) );
                   break;
@@ -280,24 +253,24 @@ void Lexer::read_operator( int fd, char c )
                   break;
         case '*': pgm.push_back( new Operator( linenumber, position-1, Operators::Mult ) );
                   break;
-        case '<': read_twochar_operator( fd, '=', Operators::LT, Operators::LEq );
+        case '<': read_twochar_operator( file, '=', Operators::LT, Operators::LEq );
                   break;
-        case '>': read_twochar_operator( fd, '=', Operators::GT, Operators::GEq );
+        case '>': read_twochar_operator( file, '=', Operators::GT, Operators::GEq );
                   break;
-        case '!': read_twochar_operator( fd, '=', Operators::Not, Operators::NEqual );
+        case '!': read_twochar_operator( file, '=', Operators::Not, Operators::NEqual );
                   break;
         case '&': {
                     //char c1 = c;
                     char c2;
 
-                    if( ( c2 = read_one( fd ) ) != 0 )
+                    if( ( c2 = read_one( file ) ) != 0 )
                     {
                         if( c2 == '&' )
                             pgm.push_back( new Operator( linenumber, position-2, Operators::And ) );
                         else
                         {
                             cerr << "Encountered Unexpected character following a &." << endl;
-                            backup( fd, -1 );
+                            backup( file, -1 );
                         }
                     }
                   }
@@ -306,36 +279,36 @@ void Lexer::read_operator( int fd, char c )
                     //char c1 = c;
                     char c2;
 
-                    if( ( c2 = read_one( fd ) ) != 0 )
+                    if( ( c2 = read_one( file ) ) != 0 )
                     {
                         if( c2 == '|' )
                             pgm.push_back( new Operator( linenumber, position-2, Operators::Or ) );
                         else
                         {
                             cerr << "Encountered Unexpected character following a |." << endl;
-                            backup( fd, -1 );
+                            backup( file, -1 );
                         }
                     }
                   }
                   break;
-        case '=': read_equal_assign( fd );
+        case '=': read_equal_assign( file );
                   break;
         default:  cerr << "Encounted Unexpected Operator " << c << std::endl;
                   break;
     }
 }
 
-void Lexer::read_twochar_operator( int fd, char next, Operators one, Operators two ) 
+void Lexer::read_twochar_operator( ifstream &file, char next, Operators one, Operators two ) 
 {
     char c;
-    c = read_one( fd );
+    c = read_one( file );
 
     if( c == 0 )
         pgm.push_back( new Operator( linenumber, position-1, one ) );
     else if( c != next ) 
     {
         // Oops, read too much.
-        backup( fd, -1 );
+        backup( file, -1 );
         pgm.push_back( new Operator( linenumber, position-1, one ) );
     } 
     else 
@@ -344,14 +317,14 @@ void Lexer::read_twochar_operator( int fd, char next, Operators one, Operators t
     }
 }
 
-void Lexer::read_equal_assign( int fd ) 
+void Lexer::read_equal_assign( ifstream &file ) 
 {
-    char c = read_one( fd );
+    char c = read_one( file );
 
     if( c == 0 || c != '=' )
     {
         // Opps, not a ==, just a =.
-        backup( fd, -1 );
+        backup( file, -1 );
         pgm.push_back( new Delimiter( linenumber, position-1, Delimiters::Equal ) );
     }
     else 
@@ -360,7 +333,7 @@ void Lexer::read_equal_assign( int fd )
     }
 }
 /*
-void Lexer::maybe_read_twochar( int fd, char next, Operator::Op just ) {
+void Lexer::maybe_read_twochar( ifstream &file, char next, Operator::Op just ) {
     char c;
     int err = read( fd, &c, 1);
     if (err != 0 && c != next) 
@@ -375,19 +348,19 @@ void Lexer::maybe_read_twochar( int fd, char next, Operator::Op just ) {
     }
 }
 */
-void Lexer::read_comdiv( int fd ) 
+void Lexer::read_comdiv( ifstream &file ) 
 {
     // assert (c && *c == '/')
     
-    char c = read_one( fd );
+    char c = read_one( file );
 
     if( c != 0 && c == '/' ) 
     {
-        return comm_line( fd );
+        return comm_line( file );
     } 
     else if( c != 0 && c == '*' ) 
     {
-        return comm_block( fd );
+        return comm_block( file );
     } 
     else
     {
@@ -398,15 +371,15 @@ void Lexer::read_comdiv( int fd )
     if( c != 0 ) 
     {
         // (and we just ate another function's character)
-        backup( fd, -1 );
+        backup( file, -1 );
     }
 }
 
-void Lexer::comm_line( int fd ) 
+void Lexer::comm_line( ifstream &file ) 
 {
     char c;
 
-    while ( ( c = read_one( fd ) ) != 0 ) 
+    while ( ( c = read_one( file ) ) != 0 ) 
     {
         if( c == 0 )
             break;
@@ -415,12 +388,12 @@ void Lexer::comm_line( int fd )
     }
 }
 
-void Lexer::comm_block( int fd )
+void Lexer::comm_block( ifstream &file )
 {
     char cur = 0;
     char last = '\0';
 
-    while( ( cur = read_one( fd ) ) != 0 )
+    while( ( cur = read_one( file ) ) != 0 )
     {
         if( last == '*' && cur == '/' )
             break;
@@ -429,7 +402,7 @@ void Lexer::comm_block( int fd )
     }
 }
 
-void Lexer::read_int( int fd, char c )
+void Lexer::read_int( ifstream &file, char c )
 {
     string num;
     int ln  = linenumber;
@@ -442,7 +415,7 @@ void Lexer::read_int( int fd, char c )
     if( c == '0' )
         goto make_token;
 
-    while( ( c = read_one( fd ) ) != 0 )
+    while( ( c = read_one( file ) ) != 0 )
     {
         if( c == 0 )
             break;
@@ -450,7 +423,7 @@ void Lexer::read_int( int fd, char c )
             num.append( 1, c );
         else
         {
-            backup( fd, -1 );
+            backup( file, -1 );
             break;
         }
     }
