@@ -1,6 +1,7 @@
 #include "context.h"
 
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -42,6 +43,24 @@ Entry::~Entry()
 
     if( c_prev )
         delete c_prev;
+}
+
+void Entry::append( Entry *e )
+{
+    // This is the last entry in the list.
+    if( this->m_next == nullptr )
+    {
+        this->m_next = e;
+        e->m_prev = this;
+    }
+    // This is not the last entry. 
+    else
+    {
+        e->m_next = this->m_next;
+        e->m_prev = this;
+        this->m_next->m_prev = e;
+        this->m_next = e;
+    }
 }
 
 void Context::enter()
@@ -89,4 +108,28 @@ void Context::add( const string &name, const string &type )
     }
 
     entries[ name ]->append( e );
+}
+
+void Context::merge( Context *c )
+{
+    for( auto i : c->entries )
+    {
+        // Disallow shadowing
+        if( this->defined( i.first ) )
+        {
+            cout << "Error: [" << i.first << "] already defined." << endl;
+        }
+        else
+        {
+            Entry *e = i.second;
+            e->set_prev_chain( handles.top() );
+            handles.pop();
+            handles.push( e );
+
+            if( entries.count( i.first ) == 0 )
+                entries[ i.first ] = new Entry();
+
+            entries[ i.first ]->append( e );
+        }
+    }
 }

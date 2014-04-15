@@ -6,6 +6,17 @@
 
 using namespace std;
 
+/**
+Represents a file such as:
+
+    class Test {}
+    
+    class Test2 {
+        int x;
+    }
+
+*/
+
 auto main( int argc, char **argv ) -> int
 {
     Context *c = new Context();

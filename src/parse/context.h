@@ -23,30 +23,18 @@ public:
     Entry();
     ~Entry();
 
-    inline void set_next( Entry *e ){ this->m_next = e; }
-    inline void set_prev( Entry *e ){ this->m_prev = e; }
-    inline void append( Entry *e ){
-        if( m_next == nullptr )
-        {
-            m_next = e;
-            e->m_prev = this;
-        }
-        else
-        {
-            Entry *e2;
-            for( e2 = m_next; e2->m_next->m_next != nullptr; e2 = e2->m_next );
-            e2->m_next = e;
-            e->m_prev = e2;
-        }
-    }
+    inline void set_prev_chain( Entry *e ){ this->c_prev = e; }
+    
+    /**
+     *  Correct way to set the next element in the list.
+     */
+    void append( Entry *e );
 
     Entry *next(){ return m_next; }
     Entry *prev(){ return m_prev; }
     
     string name(){ return m_name; }
     string type(){ return m_type; }
-
-    inline void set_prev_chain( Entry *e ){ this->c_prev = e; }
 };
 
 class Context
@@ -55,13 +43,30 @@ class Context
     stack< Entry *> handles;
     
 public:
+    /**
+     *  Begin a new scope (effectively { in c/c++).
+     */
     void enter();
+
+    /**
+     *  Leave the current scope (effectively } in c/c++).
+     */
     void leave();
 
     string typeof( const string &name );
     bool defined( const string &name );
 
+    /**
+     *  Add Varaible "name" to the context with type "type".
+     */
     void add( const string &name, const string &type );
+
+    /**
+     *  Add a the contents of another context to this context,
+     *  at the current scope (effectively calling this->add for
+     *  each Entry in c).
+     */
+    void merge( Context *c );
 };
 
 #endif
