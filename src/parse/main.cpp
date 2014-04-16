@@ -13,6 +13,10 @@
 
 using namespace std;
 
+
+
+RTree *parse (vector<BasicToken*> pgm);
+
 bool match( BasicToken *t1, BasicToken *t2 )
 {
     // Edge case - should never happen.
@@ -65,12 +69,6 @@ string set_color( Color fg = None, Color bg = None )
 
 int main( int argc, char **argv )
 {
-    // Initialize our Transition Table.
-    TransitionTable tt;
-    vector<BasicToken*>::reverse_iterator rit;
-    //int fd;
-    bool errored = false;
-
     if( argc < 2 )
     {
         std::cout << "Error please supply file\n";
@@ -88,6 +86,27 @@ int main( int argc, char **argv )
     // Lexer Output.
     //vector<BasicToken*> pgm = lex::Lexer().lex( fd );
     vector<BasicToken*> pgm = lex::Lexer().lex( file );
+
+    RTree *raw = parse( pgm );
+
+    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
+        raw->printT();
+
+
+    return EXIT_SUCCESS;
+}
+
+
+
+
+RTree *parse (vector<BasicToken*> pgm) {
+
+    // Initialize our Transition Table.
+    TransitionTable tt;
+    vector<BasicToken*>::reverse_iterator rit;
+    //int fd;
+    bool errored = false;
+
 
     //for( BasicToken *token : pgm )
     //{
@@ -357,8 +376,5 @@ break_early:
     else
         cerr << set_color( Red ) << "Error: Could not consume all input tokens" << set_color() << endl;
 
-    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
-        root->printT();
-
-    return 0;
+    return root;
 }
