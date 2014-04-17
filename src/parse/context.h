@@ -40,9 +40,14 @@ public:
 class Context
 {
     map< string, Entry* > entries;
+    map< string, Context* > refrences;
     stack< Entry *> handles;
+    bool m_persist;
     
 public:
+    
+    Context( bool persistant = false );
+
     /**
      *  Begin a new scope (effectively { in c/c++).
      */
@@ -54,12 +59,29 @@ public:
     void leave();
 
     string typeof( const string &name );
+    string typeof( const string &ns, const string &name );
+
     bool defined( const string &name );
+
+    /**
+     *  Check for the existence of the given namespace
+     */
+    bool ns_defined( const string &name );
+
+    /**
+     *  Look up the name in the given namespace ns
+     */
+    bool defined( const string &ns, const string &name );
 
     /**
      *  Add Varaible "name" to the context with type "type".
      */
     void add( const string &name, const string &type );
+
+    /** 
+     *  Add a refrence to another context with the given name.
+     */
+    void add( const string &name, Context *context );
 
     /**
      *  Add a the contents of another context to this context,
