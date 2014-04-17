@@ -97,6 +97,8 @@ int main( int argc, char **argv )
 
     RTree *checked = check( raw );
 
+    checked->printT();
+
     return EXIT_SUCCESS;
 }
 
@@ -134,13 +136,26 @@ RTree *vvisit (RTree *t) {
 RTree *lleave (RTree *t) {
     cout << "LEAVE\n";
     string tval = t->printVal();
+    vector<RTree*> branches = t->getBranches();
+
     string cmp ("ClassDecl");
     string mth ("MethodDecl");
     string var ("ClassVarDecl");
+    string exx ("Expr");
+
     if (cmp.compare(tval) == 0) {
         cout << "Up one level\n";
         c->leave();
+    } else if (exx.compare(tval) == 0) {
+        // If we have an expr, let's uhh
+        // eat our children, recursively
     }
+
+    if (branches.size() == 1) {
+        cout << "LETS KILL THIS BRANCH";
+        return branches[0];
+    }
+
     return t;
 }
 
@@ -149,21 +164,21 @@ RTree *postOrder (RTree *t, RTree *(*visit)(RTree*), RTree *(*leave)(RTree*)) {
     if (!t || t->isLeaf()) return t; // need to visit leaves for actual typechecking
     vector<RTree*> branches = t->getBranches();
     visit(t);
+    RTree* nt = new RTree(t->getVal());
     for (RTree *branch : branches) {
-        postOrder (branch, visit, leave);
+        RTree *b = postOrder (branch, visit, leave);
+        nt->insertSubT(b);
     }
-    return leave(t);
+    return leave(nt);
 }
 
 RTree *check (RTree *raw) {
     c->enter();
-    postOrder(raw, &vvisit, &lleave);
+    RTree *nt = postOrder(raw, &vvisit, &lleave);
     cout << "Printing global namespace: \n";
     c->print();
-    return raw;
+    return nt;
 }
-
-
 
 RTree *parse (vector<BasicToken*> pgm) {
 

@@ -67,3 +67,7 @@ int RTree::degree () {
 vector<RTree*> RTree::getBranches () {
     return this->branches;
 }
+
+BasicToken *RTree::getVal () {
+    return this->val;
+}

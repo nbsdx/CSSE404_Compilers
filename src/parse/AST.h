@@ -17,6 +17,8 @@ public:
 
     vector <RTree*> getBranches ();
 
+    BasicToken *getVal();
+
 protected:
     void printBranch (int depth);
 private:
