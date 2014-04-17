@@ -94,7 +94,7 @@ int main( int argc, char **argv )
 
     RTree *checked = tc->check( raw );
 
-//    checked->printT();
+    checked->printT();
 
     return EXIT_SUCCESS;
 }

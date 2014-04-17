@@ -12,6 +12,7 @@ using namespace std;
 class TypeCheck
 {
     Context *global;
+    Context *second;
     string  cur_namespace;
 
 public:
@@ -25,6 +26,8 @@ public:
     RTree *visit( RTree *node );
     RTree *leave( RTree *node );
 
+    RTree *visit2( RTree *node );
+    RTree *leave2( RTree *node );
 };
 
 #endif

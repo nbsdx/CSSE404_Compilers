@@ -6,6 +6,7 @@ using namespace std;
 TypeCheck::TypeCheck()
 {
     this->global = new Context( true );
+    this->second = new Context(false);
 }
 
 RTree* TypeCheck::check( RTree *raw )
@@ -15,7 +16,11 @@ RTree* TypeCheck::check( RTree *raw )
     RTree *cleaned = postOrder( raw,
                                 [this](RTree* t) { return this->visit( t ); },
                                 [this](RTree* t) { return this->leave( t ); } );
-    
+
+    cleaned = postOrder( cleaned,
+                                [this](RTree* t) { return this->visit2( t ); },
+                                [this](RTree* t) { return this->leave2( t ); } );
+
     cout << "Global Namespace: " << endl;
     global->print();
 
@@ -28,21 +33,59 @@ RTree *TypeCheck::postOrder( RTree *tree,
 {
 //    cout << "Enter TC::postOrder" << endl;
 
-    if( !tree || tree->isLeaf() )
+   // if( !tree || tree->isLeaf() )
+   //     return tree;
+
+    if (!tree->isLeaf()) {
+        vector< RTree* > branches = tree->getBranches();
+
+        visit( tree );
+
+        RTree *handle = new RTree( tree-> getVal() );
+
+        for( RTree *branch : branches )
+        {
+            handle->insertSubT( postOrder( branch, visit, leave ) );
+        }
+        return leave( handle );
+    } else {
+        tree = visit( tree );
+        tree = leave( tree );
         return tree;
+    }
+}
 
-    vector< RTree* > branches = tree->getBranches();
+RTree *TypeCheck::leave2( RTree *node ) {
+    string tval = node->printVal();
+    BasicToken* rep = node->getVal();
 
-    visit( tree );
-
-    RTree *handle = new RTree( tree-> getVal() );
-
-    for( RTree *branch : branches )
+    if (tval.compare ("ClassDecl") == 0
+        || tval.compare("MainClassDecl") == 0
+        || tval.compare("MethodDecl") == 0)
     {
-        handle->insertSubT( postOrder( branch, visit, leave ) );
+        second->leave();
+        node->setType("_void");
+    } else if ( dynamic_cast<Number*>( rep )) {
+        node->setType("int");
+    } else if ( dynamic_cast<Delimiter*>( rep )) {
+        node->setType("_nil");
     }
 
-    return leave( handle );
+    return node;
+}
+
+RTree *TypeCheck::visit2( RTree *node ) {
+    string tval = node->printVal();
+    BasicToken* rep = node->getVal();
+
+    if (tval.compare ("ClassDecl")
+        || tval.compare("MainClassDecl")
+        || tval.compare("MethodDecl"))
+    {
+        second->enter();
+    }
+
+    return node;
 }
 
 RTree *TypeCheck::leave( RTree *node )
