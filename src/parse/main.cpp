@@ -104,11 +104,10 @@ int main( int argc, char **argv )
 Context *c = new Context();
 int ccc = 0;
 
-void firstPass (RTree *t) {
-    if (!t || t->isLeaf()) return;
-    cout << "HAHA" << ccc++ << "\n";
-    string tval = t->printVal();
+void vvisit (RTree *t) {
+    cout << "VISIT\n";
     vector<RTree*> branches = t->getBranches();
+    string tval = t->printVal();
     string cmp ("ClassDecl");
     string mth ("MethodDecl");
     string var ("ClassVarDecl");
@@ -118,12 +117,6 @@ void firstPass (RTree *t) {
         c->add(string(cname), string("class"));
         c->enter();
         cout << "New lexical depth\n";
-        for (RTree *branch : branches) {
-            firstPass(branch);
-        }
-        cout << "Up one level\n";
-        c->leave();
-        return;
     } else if (mth.compare(tval) == 0) {
         // Get type somehow here? need to traverse
         RTree *b = branches[3];
@@ -135,15 +128,35 @@ void firstPass (RTree *t) {
         string vname = b->printVal();
         c->add(string(vname), string("classvar"));
     }
+    return;
+}
 
-    for (RTree *branch : branches) {
-        firstPass(branch);
+void lleave (RTree *t) {
+    cout << "LEAVE\n";
+    string tval = t->printVal();
+    string cmp ("ClassDecl");
+    string mth ("MethodDecl");
+    string var ("ClassVarDecl");
+    if (cmp.compare(tval) == 0) {
+        cout << "Up one level\n";
+        c->leave();
     }
+}
+
+void postOrder (RTree *t, void (*visit)(RTree*), void (*leave)(RTree*)) {
+    cout << "TRAVERSE\n";
+    if (!t || t->isLeaf()) return; // need to visit leaves for actual typechecking
+    vector<RTree*> branches = t->getBranches();
+    visit(t);
+    for (RTree *branch : branches) {
+        postOrder (branch, visit, leave);
+    }
+    leave(t);
 }
 
 RTree *check (RTree *raw) {
     c->enter();
-    firstPass(raw);
+    postOrder(raw, &vvisit, &lleave);
     cout << "Printing global namespace: \n";
     c->print();
     return raw;
