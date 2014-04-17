@@ -84,6 +84,11 @@ public:
     void add( const string &name, Context *context );
 
     /**
+     *  Add an entry to a namespace
+     */
+    void add( const string &ns, const string &name, const string &type );
+
+    /**
      *  Add a the contents of another context to this context,
      *  at the current scope (effectively calling this->add for
      *  each Entry in c).

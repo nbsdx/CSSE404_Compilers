@@ -1,4 +1,7 @@
 
+#ifndef AST_H
+#define AST_H 1
+
 #include "tt.hpp"
 
 class RTree {
@@ -27,3 +30,5 @@ private:
     bool leaf;
     vector <RTree*> branches;
 };
+
+#endif
