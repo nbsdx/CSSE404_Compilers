@@ -87,9 +87,11 @@ bool Context::defined( const string &name )
     {
         if( x->second->next() == nullptr )
             return false;
+        else 
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 bool Context::defined( const string &ns, const string &name )
@@ -135,7 +137,7 @@ void Context::add( const string &name, const string &type )
 void Context::add( const string &name, Context *context )
 {
     if( refrences.find( name ) == refrences.end() )
-        refrences.insert( name, context );
+        refrences[ name] = context;
     else
         cerr << "Namesspace [" << name << "] already defined" << endl;
 }
@@ -157,10 +159,10 @@ void Context::merge( Context *c )
         else
         {
             Entry *e = i.second;
-            
+
             if( c->m_persist )
                 e = new Entry( e->name(), e->type() );
-            
+
             e->set_prev_chain( handles.top() );
             handles.pop();
             handles.push( e );

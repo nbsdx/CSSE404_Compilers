@@ -12,6 +12,8 @@ RTree::RTree(BasicToken* bt)
     else this->leaf = true;
     this->val = bt;
     this->cnt = 0;
+    this->typed = false;
+    this->type = "_untyped";
 }
 
 bool RTree::isLeaf () 
@@ -37,7 +39,12 @@ void RTree::printT ()
         cout << "\n";
         t->printBranch(1);
     }
-    cout << ")";
+    if (this->typed) {
+        cout << " :" << this->type << ")";
+    } else {
+        cout << ")";
+    }
+
 }
 
 void RTree::printBranch (int depth) {
@@ -53,7 +60,11 @@ void RTree::printBranch (int depth) {
         cout << "\n";
         t->printBranch (depth+1);
     }
-    cout << ")";
+    if (this->typed) {
+        cout << " :" << this->type << ")";
+    } else {
+        cout << ")";
+    }
 }
 
 string RTree::printVal () {
@@ -70,4 +81,13 @@ vector<RTree*> RTree::getBranches () {
 
 BasicToken *RTree::getVal () {
     return this->val;
+}
+
+void RTree::setType (string str) {
+    this->type = str;
+    this->typed = true;
+}
+
+string RTree::getType () {
+    return this->type;
 }

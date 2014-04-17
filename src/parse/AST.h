@@ -1,4 +1,4 @@
-
+#include <string>
 #include "tt.hpp"
 
 class RTree {
@@ -19,11 +19,17 @@ public:
 
     BasicToken *getVal();
 
+    void setType (string str);
+
+    string getType ();
+
 protected:
     void printBranch (int depth);
+    string type;
 private:
     int cnt;
     BasicToken *val;
     bool leaf;
     vector <RTree*> branches;
+    bool typed;
 };
