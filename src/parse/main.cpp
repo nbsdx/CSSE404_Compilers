@@ -139,20 +139,14 @@ RTree *lleave (RTree *t) {
     vector<RTree*> branches = t->getBranches();
 
     string cmp ("ClassDecl");
-    string mth ("MethodDecl");
-    string var ("ClassVarDecl");
-    string exx ("Expr");
+    string typ ("Type");
 
     if (cmp.compare(tval) == 0) {
         cout << "Up one level\n";
         c->leave();
-    } else if (exx.compare(tval) == 0) {
-        // If we have an expr, let's uhh
-        // eat our children, recursively
     }
-
-    if (branches.size() == 1) {
-        cout << "LETS KILL THIS BRANCH";
+    if (typ.compare(tval) != 0 && branches.size() == 1) {
+        // Collapse singleton branches, UNLESS THEY ARE TYPES
         return branches[0];
     }
 
