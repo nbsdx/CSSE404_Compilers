@@ -63,6 +63,11 @@ void Entry::append( Entry *e )
     }
 }
 
+Context::Context( bool persistant )
+{
+    this->m_persist = persistant;
+}
+
 void Context::enter()
 {
     handles.push( new Entry() );
@@ -87,10 +92,27 @@ bool Context::defined( const string &name )
     return true;
 }
 
+bool Context::defined( const string &ns, const string &name )
+{
+    return ns_defined( ns ) && refrences[ns]->defined( name );
+}
+
+bool Context::ns_defined( const string &ns )
+{
+    return refrences.find( ns ) != refrences.end();
+}
+
 string Context::typeof( const string &name )
 {
     if( defined( name ) )
         return entries[name]->next()->type();
+    return "Undefined";
+}
+
+string Context::typeof( const string &ns, const string &name )
+{
+    if( ns_defined( ns ) )
+        return refrences[ns]->typeof( name );
     return "Undefined";
 }
 
@@ -110,6 +132,19 @@ void Context::add( const string &name, const string &type )
     entries[ name ]->append( e );
 }
 
+void Context::add( const string &name, Context *context )
+{
+    if( refrences.find( name ) == refrences.end() )
+        refrences.insert( name, context );
+    else
+        cerr << "Namesspace [" << name << "] already defined" << endl;
+}
+
+/**
+ *  Add another context into this context.
+ *  If the other context should persist, copy
+ *  instead of direct insertion.
+ */
 void Context::merge( Context *c )
 {
     for( auto i : c->entries )
@@ -122,6 +157,10 @@ void Context::merge( Context *c )
         else
         {
             Entry *e = i.second;
+            
+            if( c->m_persist )
+                e = new Entry( e->name(), e->type() );
+            
             e->set_prev_chain( handles.top() );
             handles.pop();
             handles.push( e );
