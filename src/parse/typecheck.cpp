@@ -55,9 +55,27 @@ RTree *TypeCheck::postOrder( RTree *tree,
     }
 }
 
+void typeError (string excuse) {
+    cerr << excuse << endl;
+}
+
+string typeMatch (string a, string b) {
+    string nil ("_nil");
+    if (nil.compare(a) == 0) {
+        return b;
+    } else if (nil.compare(b) == 0) {
+        return a;
+    } else if (a.compare(b) == 0) {
+        return a;
+    } else {
+        return "";
+    }
+}
+
 RTree *TypeCheck::leave2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
+    vector<RTree*> branches = node->getBranches();
 
     if (tval.compare ("ClassDecl") == 0
         || tval.compare("MainClassDecl") == 0
@@ -65,10 +83,46 @@ RTree *TypeCheck::leave2( RTree *node ) {
     {
         second->leave();
         node->setType("_void");
+    } else if (tval.compare ("Stmt") == 0) {
+        // TODO: StmtList?
+        // Stmts always return void
+        node->setType("_void");
+        // TODO: Stmt should also have multiple forms requiring checks
+    } else if (tval.compare ("DotExpr") == 0) {
+        // one or two branches ONLY
+        cout << "We have a DotExpr";
+        if (branches.size() > 1) {
+            string match = typeMatch(branches[0]->getType(), branches[1]->getType());
+            if (!match.empty()) {
+                node->setType(match);
+            } else {
+                typeError("Types did not match");
+            }
+        } else {
+            // Only one branch
+            node->setType(branches[0]->getType());
+        }
+    } else if (tval.compare ("DotExpr_") == 0) {
+            // Big mess. needs method lookups
+            // TODO: Actually look things up
+            node->setType("_lookup");
+    } else if ( dynamic_cast<Identifier*>( rep )) {
+        // todo: actually look this up
+        node->setType("_lookup");
     } else if ( dynamic_cast<Number*>( rep )) {
         node->setType("int");
     } else if ( dynamic_cast<Delimiter*>( rep )) {
         node->setType("_nil");
+    } else if ( dynamic_cast<ReservedWord*>( rep )) {
+        ReservedWord* rw = dynamic_cast<ReservedWord*>( rep );
+        switch (rw->token()) {
+            case True: 
+            case False: node->setType("boolean"); break;
+            case Null: node->setType("null"); break;
+            case New: node->setType("_nil"); break;
+            // TODO: Check these
+            default: node->setType("_void"); break;
+        };
     }
 
     return node;
