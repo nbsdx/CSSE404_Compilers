@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <vector>
 
 #include "../util/token.h"
 #include "AST.h"
@@ -61,4 +62,8 @@ string RTree::printVal () {
 
 int RTree::degree () {
     return this->cnt;
+}
+
+vector<RTree*> RTree::getBranches () {
+    return this->branches;
 }

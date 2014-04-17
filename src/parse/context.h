@@ -67,6 +67,11 @@ public:
      *  each Entry in c).
      */
     void merge( Context *c );
+
+    /**
+     * Print out all entries.
+     */
+    void print();
 };
 
 #endif

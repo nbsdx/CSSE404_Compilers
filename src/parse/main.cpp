@@ -10,12 +10,15 @@
 #include "tt.hpp"
 #include "../lex/lexer.h"
 #include "AST.h"
+#include "context.h"
 
 using namespace std;
 
 
 
+// TODO: C++ify structure
 RTree *parse (vector<BasicToken*> pgm);
+RTree *check (RTree *raw);
 
 bool match( BasicToken *t1, BasicToken *t2 )
 {
@@ -92,10 +95,59 @@ int main( int argc, char **argv )
     if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
         raw->printT();
 
+    RTree *checked = check( raw );
 
     return EXIT_SUCCESS;
 }
 
+
+Context *c = new Context();
+int ccc = 0;
+
+void firstPass (RTree *t) {
+    if (!t || t->isLeaf()) return;
+    cout << "HAHA" << ccc++ << "\n";
+    string tval = t->printVal();
+    vector<RTree*> branches = t->getBranches();
+    string cmp ("ClassDecl");
+    string mth ("MethodDecl");
+    string var ("ClassVarDecl");
+    if (cmp.compare(tval) == 0) {
+        RTree *b = branches[0]->getBranches()[1];
+        string cname = b->printVal();
+        c->add(string(cname), string("class"));
+        c->enter();
+        cout << "New lexical depth\n";
+        for (RTree *branch : branches) {
+            firstPass(branch);
+        }
+        cout << "Up one level\n";
+        c->leave();
+        return;
+    } else if (mth.compare(tval) == 0) {
+        // Get type somehow here? need to traverse
+        RTree *b = branches[3];
+        string mname = b->printVal();
+        c->add(string(mname), string("method"));
+    } else if (var.compare(tval) == 0) {
+        // TODO: type retrieval fn as above
+        RTree *b = branches[1];
+        string vname = b->printVal();
+        c->add(string(vname), string("classvar"));
+    }
+
+    for (RTree *branch : branches) {
+        firstPass(branch);
+    }
+}
+
+RTree *check (RTree *raw) {
+    c->enter();
+    firstPass(raw);
+    cout << "Printing global namespace: \n";
+    c->print();
+    return raw;
+}
 
 
 

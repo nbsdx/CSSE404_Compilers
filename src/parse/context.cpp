@@ -133,3 +133,9 @@ void Context::merge( Context *c )
         }
     }
 }
+
+void Context::print () {
+    for( auto i : this->entries ) {
+        cout << "K: " << i.first << " V: " << i.second->type() << "\n";
+    }
+}

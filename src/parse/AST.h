@@ -15,6 +15,8 @@ public:
 
     int degree ();
 
+    vector <RTree*> getBranches ();
+
 protected:
     void printBranch (int depth);
 private:
