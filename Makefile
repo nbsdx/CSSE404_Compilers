@@ -1,17 +1,20 @@
-CPP_FILES := $(wildcard src/util/*.cpp) $(wildcard src/lex/*.cpp) $(wildcard src/parse/*.cpp)
+#CPP_FILES := $(wildcard src/util/*.cpp) $(wildcard src/lex/*.cpp) $(wildcard src/parse/*.cpp)
 #OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
-OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o obj/context.o
+OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o obj/context.o obj/typecheck.o
 
 CC=g++
-CFLAGS=-I/usr/include/boost -MMD -std=c++11 -Wall -g
+CFLAGS=-MMD -std=c++11 -Wall -g
 
 all: main
 
 main: $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $@ $^
 
-obj/main.o: src/parse/main.cpp src/parse/tt.hpp obj/token.o obj/lexer.o obj/AST.o obj/context.o
+obj/main.o: src/parse/main.cpp src/parse/tt.hpp obj/token.o obj/lexer.o obj/AST.o obj/context.o obj/typecheck.o
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/typecheck.o: src/parse/typecheck.cpp src/parse/typecheck.h obj/AST.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/context.o: src/parse/context.cpp src/parse/context.h

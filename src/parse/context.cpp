@@ -132,14 +132,24 @@ void Context::add( const string &name, const string &type )
     }
 
     entries[ name ]->append( e );
+
+    cout << "\n\n" << "ADDED: [" << name << " : " << type << "]\n\n" << endl;
 }
 
 void Context::add( const string &name, Context *context )
 {
     if( refrences.find( name ) == refrences.end() )
-        refrences[ name] = context;
+        refrences.insert( pair<string, Context*>( name, context ) );
     else
-        cerr << "Namesspace [" << name << "] already defined" << endl;
+        cerr << "Namespace [" << name << "] already defined" << endl;
+}
+
+void Context::add( const string &ns, const string &name, const string &type )
+{
+    if( refrences.find( ns ) != refrences.end() )
+        refrences[ns]->add( name, type );
+    else
+        cerr << "Namespace [" << ns << "] does not exist" << endl;
 }
 
 /**
@@ -176,7 +186,15 @@ void Context::merge( Context *c )
 }
 
 void Context::print () {
+
+    cout << "There are " << entries.size() << " entries" << endl;
     for( auto i : this->entries ) {
-        cout << "K: " << i.first << " V: " << i.second->type() << "\n";
+        cout << "K: " << i.first << " V: " << typeof( i.first ) << "\n";
+    }
+
+    cout << "There are " << refrences.size() << " namespaces defined" << endl;
+    for( auto i : this->refrences ) {
+        cout << "Name: " << i.first << endl;
+        i.second->print();
     }
 }

@@ -11,14 +11,11 @@
 #include "../lex/lexer.h"
 #include "AST.h"
 #include "context.h"
+#include "typecheck.h"
 
 using namespace std;
 
-
-
-// TODO: C++ify structure
 RTree *parse (vector<BasicToken*> pgm);
-RTree *check (RTree *raw);
 
 bool match( BasicToken *t1, BasicToken *t2 )
 {
@@ -93,165 +90,13 @@ int main( int argc, char **argv )
     RTree *raw = parse( pgm );
 
 
-    RTree *checked = check( raw );
+    TypeCheck *tc = new TypeCheck();
 
-    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
-        checked->printT();
+    RTree *checked = tc->check( raw );
 
-    //checked->printT();
+//    checked->printT();
 
     return EXIT_SUCCESS;
-}
-
-
-Context *c = new Context(true);
-Context *cur;
-
-Context *pass2 = new Context(false);
-
-RTree *secondVisit (RTree *t) {
-    //vector<RTree*> branches = t->getBranches();
-    string tval = t->printVal();
-    string cmp ("ClassDecl");
-    string mcd ("MainClassDecl");
-    string mtd ("MethodDecl");
-    if (  cmp.compare(tval) == 0
-       || mcd.compare(tval) == 0
-       || mtd.compare(tval) == 0 )
-    {
-        cout << "Entering scope for " << tval << ":\n";
-        pass2->enter();
-    }
-
-    return t;
-}
-
-RTree *secondLeave (RTree *t) {
-    vector<RTree*> branches = t->getBranches();
-    string tval = t->printVal();
-    string cmp ("ClassDecl");
-    string mcd ("MainClassDecl");
-    string mtd ("MethodDecl");
-    string intt ("Integer");
-    string del ("Delimiter");
-
-    cout << tval << "\n";
-    if (  cmp.compare(tval) == 0
-       || mcd.compare(tval) == 0
-       || mtd.compare(tval) == 0 )
-    {
-        cout << "Leaving scope for " << tval << ":\n";
-        pass2->leave();
-        t->setType("_void");
-        cout << "VOID WORKS";
-    } else if ( dynamic_cast<Number*>( t->getVal() )  ) {
-        cout << tval << "\n";
-        t->setType("int");
-    } else if (del.compare(tval) == 0) {
-        cout << tval << "\n";
-        t->setType("_nil");
-    } else {
-
-    }
-
-    return t;
-}
-
-
-
-RTree *vvisit (RTree *t) {
-    vector<RTree*> branches = t->getBranches();
-    string tval = t->printVal();
-    string cmp ("ClassDecl");
-    string mth ("MethodDecl");
-    string var ("ClassVarDecl");
-
-    if (cmp.compare(tval) == 0) {
-
-        RTree *b = branches[0]->getBranches()[1];
-        string cname = b->printVal();
-        // Create new context
-        cur = new Context(true);
-        cur->enter();
-
-        cout << "Inserting to global table: " << string(cname) << " class\n";
-
-        cout << "New lexical depth\n";
-    } else if (mth.compare(tval) == 0) {
-
-        // Get type somehow here? need to traverse
-        RTree *b = branches[2];
-        string mname = b->printVal();
-        cout << "Inserting to table: " << string(mname) << " method\n";
-        cur->add(string(mname), string("method"));
-    } else if (var.compare(tval) == 0) {
-
-        // TODO: type retrieval fn as above
-        RTree *b = branches[1];
-        string vname = b->printVal();
-        cout << "Inserting to table: " << string(vname) << " classvar\n";
-        cur->add(string(vname), string("classvar"));
-    }
-    return t;
-}
-
-RTree *lleave (RTree *t) {
-    string tval = t->printVal();
-    vector<RTree*> branches = t->getBranches();
-
-    string cmp ("ClassDecl");
-    string typ ("Type");
-
-    if (cmp.compare(tval) == 0) {
-        RTree *b = branches[0]->getBranches()[1];
-        string cname = b->printVal();
-        cout << "Up one level\n";
-
-        c->add(cname, cur);
-        cur = NULL;
-    }
-    if (typ.compare(tval) != 0 && branches.size() == 1) {
-        // Collapse singleton branches, UNLESS THEY ARE TYPES
-        return branches[0];
-    }
-
-    return t;
-}
-
-RTree *postOrder (RTree *t, RTree *(*visit)(RTree*), RTree *(*leave)(RTree*)) {
-    if (t && !t->isLeaf()) {
-        vector<RTree*> branches = t->getBranches();
-        visit(t);
-        RTree* nt = new RTree(t->getVal());
-        for (RTree *branch : branches) {
-            RTree *b = postOrder (branch, visit, leave);
-            nt->insertSubT(b);
-        }
-        return leave(nt);
-    } else if (t->isLeaf()) {
-        t = visit(t);
-        t = leave(t);
-        return t;
-    } else {
-        cout << "THIS SHOULD NOT BE HAPPENING\n";
-    }
-}
-
-RTree *check (RTree *raw) {
-    c->enter();
-    RTree *nt = postOrder(raw, &vvisit, &lleave);
-    cout << "Printing global namespace: \n";
-    c->print();
-
-    if (c->defined("Fib")) {
-        cout << "defined.\n";
-    } else {
-        cout << "No class named that.\n";
-    }
-
-    nt = postOrder(nt, &secondVisit, &secondLeave);
-
-    return nt;
 }
 
 RTree *parse (vector<BasicToken*> pgm) {

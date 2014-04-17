@@ -1,3 +1,7 @@
+
+#ifndef AST_H
+#define AST_H 1
+
 #include <string>
 #include "tt.hpp"
 
@@ -33,3 +37,5 @@ private:
     vector <RTree*> branches;
     bool typed;
 };
+
+#endif
