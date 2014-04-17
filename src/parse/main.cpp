@@ -104,7 +104,7 @@ int main( int argc, char **argv )
 Context *c = new Context();
 int ccc = 0;
 
-void vvisit (RTree *t) {
+RTree *vvisit (RTree *t) {
     cout << "VISIT\n";
     vector<RTree*> branches = t->getBranches();
     string tval = t->printVal();
@@ -128,10 +128,10 @@ void vvisit (RTree *t) {
         string vname = b->printVal();
         c->add(string(vname), string("classvar"));
     }
-    return;
+    return t;
 }
 
-void lleave (RTree *t) {
+RTree *lleave (RTree *t) {
     cout << "LEAVE\n";
     string tval = t->printVal();
     string cmp ("ClassDecl");
@@ -141,17 +141,18 @@ void lleave (RTree *t) {
         cout << "Up one level\n";
         c->leave();
     }
+    return t;
 }
 
-void postOrder (RTree *t, void (*visit)(RTree*), void (*leave)(RTree*)) {
+RTree *postOrder (RTree *t, RTree *(*visit)(RTree*), RTree *(*leave)(RTree*)) {
     cout << "TRAVERSE\n";
-    if (!t || t->isLeaf()) return; // need to visit leaves for actual typechecking
+    if (!t || t->isLeaf()) return t; // need to visit leaves for actual typechecking
     vector<RTree*> branches = t->getBranches();
     visit(t);
     for (RTree *branch : branches) {
         postOrder (branch, visit, leave);
     }
-    leave(t);
+    return leave(t);
 }
 
 RTree *check (RTree *raw) {
