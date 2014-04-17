@@ -78,16 +78,39 @@ RTree *TypeCheck::leave2( RTree *node ) {
     vector<RTree*> branches = node->getBranches();
 
     if (tval.compare ("ClassDecl") == 0
+        || tval.compare("ClassDecls") == 0
         || tval.compare("MainClassDecl") == 0
+        || tval.compare("ClassBody") == 0
+        || tval.compare("Program") == 0
+        || tval.compare("ClassHeader") == 0
+        || tval.compare("ClassDeclRHS") == 0
+        || tval.compare("ClassVarDecl") == 0
         || tval.compare("MethodDecl") == 0)
     {
+        // TODO: These should probably check the correct subtrees
+        // and ensure that they are void.
         second->leave();
         node->setType("_void");
     } else if (tval.compare ("Stmt") == 0) {
-        // TODO: StmtList?
         // Stmts always return void
         node->setType("_void");
         // TODO: Stmt should also have multiple forms requiring checks
+        //       and throw errors when unhappy.
+    } else if (tval.compare ("StmtLst") == 0) {
+        node->setType("_void");
+    } else if (tval.compare ("StmtRHS") == 0) {
+        // Special statement form for assignment. pass the type up
+        //   to be verified against LHS in Stmt group.
+        int deg = branches.size();
+        switch (deg) {
+            case 1: node->setType(branches[0]->getType()); break;
+            case 2: node->setType(branches[1]->getType()); break;
+            case 3: string match = typeMatch(branches[0]->getType(), branches[2]->getType());
+                    if (!match.empty()) node->setType(match); 
+                    else typeError("Types did not match in assignment statement.");
+                    break;
+        };
+   // } else if (tval.compare (""
     } else if (tval.compare ("DotExpr") == 0) {
         // one or two branches ONLY
         cout << "We have a DotExpr";
@@ -105,10 +128,10 @@ RTree *TypeCheck::leave2( RTree *node ) {
     } else if (tval.compare ("DotExpr_") == 0) {
             // Big mess. needs method lookups
             // TODO: Actually look things up
-            node->setType("_lookup");
+            //node->setType("_lookup");
     } else if ( dynamic_cast<Identifier*>( rep )) {
         // todo: actually look this up
-        node->setType("_lookup");
+        //node->setType("_lookup");
     } else if ( dynamic_cast<Number*>( rep )) {
         node->setType("int");
     } else if ( dynamic_cast<Delimiter*>( rep )) {

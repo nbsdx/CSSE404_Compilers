@@ -34,17 +34,20 @@ void RTree::printT ()
 {
     // Dump tree lisp-style
     cout << "(" << this->val->raw() << " ";
+    if (this->typed) {
+        cout << ":" << this->type << ")";
+    } else {
+        cout << "\033[0;31m\]:UNTYPED" << "\[\033[0m\]";
+    }
+
+
     for (RTree *t : branches) 
     {
         cout << "\n";
         t->printBranch(1);
     }
-    if (this->typed) {
-        cout << " :" << this->type << ")";
-    } else {
-        cout << ")";
-    }
 
+    cout << ")";
 }
 
 void RTree::printBranch (int depth) {
@@ -54,17 +57,22 @@ void RTree::printBranch (int depth) {
     }
     cout << "(";
     Util::print_token(this->val);
+
     cout << " ";
+    if (this->typed) {
+        cout << ":" << this->type << ")";
+    } else {
+        //cout << ")";
+        cout << "\033[0;31m:UNTYPED" << "\033[0m";
+    }
+
     for (RTree *t : branches)
     {
         cout << "\n";
         t->printBranch (depth+1);
     }
-    if (this->typed) {
-        cout << " :" << this->type << ")";
-    } else {
-        cout << ")";
-    }
+
+    cout << ")";
 }
 
 string RTree::printVal () {
