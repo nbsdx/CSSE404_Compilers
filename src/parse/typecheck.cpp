@@ -76,6 +76,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
     vector<RTree*> branches = node->getBranches();
+    int deg = branches.size();
 
     if (tval.compare ("ClassDecl") == 0
         || tval.compare("ClassDecls") == 0
@@ -101,7 +102,6 @@ RTree *TypeCheck::leave2( RTree *node ) {
     } else if (tval.compare ("StmtRHS") == 0) {
         // Special statement form for assignment. pass the type up
         //   to be verified against LHS in Stmt group.
-        int deg = branches.size();
         switch (deg) {
             case 1: node->setType(branches[0]->getType()); break;
             case 2: node->setType(branches[1]->getType()); break;
@@ -110,7 +110,49 @@ RTree *TypeCheck::leave2( RTree *node ) {
                     else typeError("Types did not match in assignment statement.");
                     break;
         };
-   // } else if (tval.compare (""
+    } else if (tval.compare ("NegExpr") == 0) {
+        // Unary operations
+        switch (deg) {
+            case 1: node->setType(branches[0]->getType()); break;
+            case 2: node->setType(branches[1]->getType()); break;
+            default: typeError("Unknown error in unary function.");
+        }
+    } else if (tval.compare ("MultExpr") == 0
+               || tval.compare("AddExpr") == 0) {
+        string typeA = branches[0]->getType();
+        if (typeA.compare("int") != 0) {
+            typeError("Expected int, got something else.");
+        } else switch (deg) {
+            case 1: node->setType(typeA); break;
+            case 2: string match = typeMatch(typeA,
+                                             branches[1]->getType());
+                    if (!match.empty()) {
+                        node->setType(match);
+                    } else {
+                        typeError("Mismatched types near mult/div operation.");
+                    }
+                    break;
+        }
+    } else if (tval.compare ("MultExpr_") == 0
+               || tval.compare ("AddExpr_") == 0) {
+        if (deg < 2 || deg > 3) {
+            typeError("Compiler bug - MultExpr' production, wrong argc.");
+        } else {
+            string typeA = branches[1]->getType();
+            if (typeA.compare("int") != 0) {
+                typeError("Expected int, got something else.");
+            } else {
+                string typeB;
+                if (deg == 2) typeB = "_nil";
+                else typeB = branches[2]->getType();
+                string match = typeMatch(typeA, typeB);
+                if (!match.empty()) {
+                    node->setType(match);
+                } else {
+                    typeError("Mismatched types in mult/div operation.");
+                }
+            }
+        }
     } else if (tval.compare ("DotExpr") == 0) {
         // one or two branches ONLY
         cout << "We have a DotExpr";
