@@ -21,8 +21,8 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
-    cout << "Global Namespace: " << endl;
-    global->print();
+//    cout << "Global Namespace: " << endl;
+//    global->print();
 
     return cleaned;
 }
@@ -31,11 +31,6 @@ RTree *TypeCheck::postOrder( RTree *tree,
                              function<RTree* (RTree*)> visit,
                              function<RTree* (RTree*)> leave )
 {
-//    cout << "Enter TC::postOrder" << endl;
-
-   // if( !tree || tree->isLeaf() )
-   //     return tree;
-
     if (!tree->isLeaf()) {
         vector< RTree* > branches = tree->getBranches();
 
@@ -97,19 +92,22 @@ RTree *TypeCheck::leave2( RTree *node ) {
     int deg = branches.size();
 
     if (tval.compare ("ClassDecl") == 0
-        || tval.compare("ClassDecls") == 0
         || tval.compare("MainClassDecl") == 0
-        || tval.compare("ClassBody") == 0
-        || tval.compare("Program") == 0
-        || tval.compare("ClassHeader") == 0
-        || tval.compare("ClassDeclRHS") == 0
-        || tval.compare("ClassVarDecl") == 0
         || tval.compare("MethodDecl") == 0)
     {
+        node->setType( "_void" );
         global->leave();
-//        second->leave();
+    }
+    else if( tval.compare("ClassDecls") == 0
+            || tval.compare("ClassBody") == 0
+            || tval.compare("Program") == 0
+            || tval.compare("ClassHeader") == 0
+            || tval.compare("ClassDeclRHS") == 0
+            || tval.compare("ClassVarDecl") == 0 ) 
+    {
         node->setType("_void");
-    } else if (tval.compare ("Stmt") == 0) {
+    } 
+    else if (tval.compare ("Stmt") == 0) {
         // TODO: StmtList?
         // Stmts always return void
         node->setType("_void");
@@ -201,9 +199,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
 
-    if (tval.compare ("ClassDecl")
-        || tval.compare("MainClassDecl")
-        || tval.compare("MethodDecl"))
+    if (tval.compare ("ClassDecl") == 0 )
     {
         string classname = node->getBranches()[0]->getBranches()[1]->printVal();
         cout << "\n\nENTERING CLASS: " << classname << endl;
