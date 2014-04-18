@@ -1,3 +1,4 @@
+#include <utility>
 
 #include "typecheck.h"
 
@@ -31,11 +32,6 @@ RTree *TypeCheck::postOrder( RTree *tree,
                              function<RTree* (RTree*)> visit,
                              function<RTree* (RTree*)> leave )
 {
-//    cout << "Enter TC::postOrder" << endl;
-
-   // if( !tree || tree->isLeaf() )
-   //     return tree;
-
     if (!tree->isLeaf()) {
         vector< RTree* > branches = tree->getBranches();
 
@@ -57,6 +53,20 @@ RTree *TypeCheck::postOrder( RTree *tree,
 
 void typeError (string excuse) {
     cerr << excuse << endl;
+}
+
+typedef pair<int, string> expect;
+
+bool expectsThese(vector<expect> tups, vector<RTree*> branches) {
+    bool ret = true;
+    for (expect e : tups) {
+        int fst = e.first;
+        string exp = e.second;
+        string act = branches[fst]->getType();
+
+        if (exp.compare(act) != 0) ret = false;
+    }
+    return ret;
 }
 
 string typeMatch (string a, string b) {
@@ -108,6 +118,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
     {
         // TODO: These should probably check the correct subtrees
         // and ensure that they are void.
+        // can do this with matchAll()
         second->leave();
         node->setType("_void");
     } else if (tval.compare ("Stmt") == 0) {
@@ -115,19 +126,33 @@ RTree *TypeCheck::leave2( RTree *node ) {
         node->setType("_void");
         // TODO: Stmt should also have multiple forms requiring checks
         //       and throw errors when unhappy.
+        vector<expect> tups;
+        string pform = branches[0]->printVal();
+        if (pform.compare("while") == 0) {
+            tups = {{2, "_nil"}, {4, "_void"}};
+            bool match = expectsThese(tups, branches);
+            if (!match) typeError("while statement non-void.");
+        } else if (pform.compare("if") == 0) {
+            tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
+            bool match = expectsThese(tups, branches);
+            if (!match) typeError("If statement branch non-void.");
+        } else if (pform.compare("{") == 0) {
+            tups = {{1, "_void"}};
+            bool match = expectsThese(tups, branches);
+            if (!match) typeError("Braced block returning non-void.");
+        } else if (pform.compare("System.out.println") == 0) {
+            tups = {{2, "int"}};
+            bool match = expectsThese(tups, branches);
+            if (!match) typeError("System.out.println only accepts numbers.");
+        } else {
+            // Assignments
+            string match = matchAll(branches);
+            if (match.empty())
+                typeError("Mismatched types in assignment.");
+
+        }
     } else if (tval.compare ("StmtLst") == 0) {
         node->setType("_void");
-    } else if (tval.compare ("StmtRHS") == 0) {
-        // Special statement form for assignment. pass the type up
-        //   to be verified against LHS in Stmt group.
-        switch (deg) {
-            case 1: node->setType(branches[0]->getType()); break;
-            case 2: node->setType(branches[1]->getType()); break;
-            case 3: string match = typeMatch(branches[0]->getType(), branches[2]->getType());
-                    if (!match.empty()) node->setType(match); 
-                    else typeError("Types did not match in assignment statement.");
-                    break;
-        };
     } else if (tval.compare ("MultExpr") == 0
               || tval.compare("AddExpr") == 0
               || tval.compare("NegExpr") == 0
@@ -135,7 +160,9 @@ RTree *TypeCheck::leave2( RTree *node ) {
               || tval.compare("AddExpr_") == 0
               || tval.compare("BoolExpr") == 0
               || tval.compare("BoolExpr_") == 0
-              || tval.compare("Expr") == 0) {
+              || tval.compare("Expr") == 0
+              || tval.compare("DotExpr") == 0
+              || tval.compare("StmtRHS") == 0) {
 
         //bool matchAll (vector<RTree*> branches) {
         string match = matchAll(branches);
@@ -144,26 +171,12 @@ RTree *TypeCheck::leave2( RTree *node ) {
         } else {
             // TODO: Could insert an error type here and proceed.
         }
-    } else if (tval.compare ("DotExpr") == 0) {
-        // one or two branches ONLY
-        cout << "We have a DotExpr";
-        if (branches.size() > 1) {
-            string match = typeMatch(branches[0]->getType(), branches[1]->getType());
-            if (!match.empty()) {
-                node->setType(match);
-            } else {
-                typeError("Types did not match");
-            }
-        } else {
-            // Only one branch
-            node->setType(branches[0]->getType());
-        }
     } else if (tval.compare ("DotExpr_") == 0) {
             // Big mess. needs method lookups
             // TODO: Actually look things up
             //node->setType("_lookup");
     } else if ( dynamic_cast<Identifier*>( rep )) {
-        // todo: actually look this up
+        // TODO: actually look this up
         //node->setType("_lookup");
     } else if ( dynamic_cast<Number*>( rep )) {
         node->setType("int");
