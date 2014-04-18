@@ -7,8 +7,8 @@ using namespace std;
 
 Entry::Entry( const string &name, const string &type )
 {
-    this->m_name = name;
-    this->m_type = type;
+    this->m_name = string( name );
+    this->m_type = string( type );
     this->m_prev = nullptr;
     this->m_next = nullptr;
     this->c_prev = nullptr;
@@ -25,21 +25,29 @@ Entry::Entry()
 
 Entry::~Entry()
 {
+    // prev <--> this <--> next
+    // prev <--> next
+    
+    // Both non-null
     if( this->m_prev && this->m_next )
     {
         this->m_next->m_prev = this->m_prev;
         this->m_prev->m_next = this->m_next;
     }
+    // m_next is null
     else if( this->m_prev )
     {
         this->m_prev->m_next = nullptr;
     }
+    // m_prev is null
     else if( this->m_next )
     {
         this->m_next->m_prev = nullptr;
     }
-    else
-        ; // Do nothing.
+    // both are null (should never happen)
+    else ; // Do nothing.
+
+//    cout << "Deleting: " << m_name << " " << m_type << endl;
 
     if( c_prev )
         delete c_prev;
@@ -132,8 +140,6 @@ void Context::add( const string &name, const string &type )
     }
 
     entries[ name ]->append( e );
-
-    cout << "\n\n" << "ADDED: [" << name << " : " << type << "]\n\n" << endl;
 }
 
 void Context::add( const string &name, Context *context )
@@ -152,6 +158,29 @@ void Context::add( const string &ns, const string &name, const string &type )
         cerr << "Namespace [" << ns << "] does not exist" << endl;
 }
 
+void Context::setType( const string &name, const string &type )
+{
+    if( defined( name ) )
+        entries[name]->next()->setType( type );
+    else
+        cout << "Object " << name << " is not defined." << endl;
+}
+
+void Context::setType( const string &ns, const string &name, const string &type )
+{
+    if( refrences.find( ns ) != refrences.end() )
+        refrences[ns]->setType( name, type );
+    else
+        cerr << "Namespace [" << ns << "] does not exist" << endl;
+}
+
+Context *Context::getNamespace( const string &ns )
+{
+    if( refrences.find( ns ) != refrences.end() )
+        return refrences[ns];
+    return nullptr;
+}
+
 /**
  *  Add another context into this context.
  *  If the other context should persist, copy
@@ -168,10 +197,12 @@ void Context::merge( Context *c )
         }
         else
         {
-            Entry *e = i.second;
+            Entry *e = i.second->next();
 
             if( c->m_persist )
+            {
                 e = new Entry( e->name(), e->type() );
+            }
 
             e->set_prev_chain( handles.top() );
             handles.pop();
@@ -185,16 +216,20 @@ void Context::merge( Context *c )
     }
 }
 
-void Context::print () {
+void Context::print ( int depth ) {
 
-    cout << "There are " << entries.size() << " entries" << endl;
+    cout << "Visable entries:" << endl;
     for( auto i : this->entries ) {
-        cout << "K: " << i.first << " V: " << typeof( i.first ) << "\n";
+        if( i.second->next() )
+            cout << "K: " << i.first << " V: " << typeof( i.first ) << "\n";
     }
 
-    cout << "There are " << refrences.size() << " namespaces defined" << endl;
-    for( auto i : this->refrences ) {
-        cout << "Name: " << i.first << endl;
-        i.second->print();
+    if( depth > 0 )
+    {
+        cout << "There are " << refrences.size() << " namespaces defined" << endl;
+        for( auto i : this->refrences ) {
+            cout << "Name: " << i.first << endl;
+            i.second->print( depth - 1);
+        }
     }
 }

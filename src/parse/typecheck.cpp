@@ -7,7 +7,7 @@ using namespace std;
 TypeCheck::TypeCheck()
 {
     this->global = new Context( true );
-    this->second = new Context(false);
+//    this->second = new Context(false);
 }
 
 RTree* TypeCheck::check( RTree *raw )
@@ -23,7 +23,9 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->leave2( t ); } );
 
     cout << "Global Namespace: " << endl;
-    global->print();
+    global->print( 0 );
+
+    cout << endl << endl;
 
     return cleaned;
 }
@@ -107,19 +109,19 @@ RTree *TypeCheck::leave2( RTree *node ) {
     int deg = branches.size();
 
     if (tval.compare ("ClassDecl") == 0
-        || tval.compare("ClassDecls") == 0
         || tval.compare("MainClassDecl") == 0
-        || tval.compare("ClassBody") == 0
-        || tval.compare("Program") == 0
-        || tval.compare("ClassHeader") == 0
-        || tval.compare("ClassDeclRHS") == 0
-        || tval.compare("ClassVarDecl") == 0
         || tval.compare("MethodDecl") == 0)
     {
-        // TODO: These should probably check the correct subtrees
-        // and ensure that they are void.
-        // can do this with matchAll()
-        second->leave();
+        node->setType( "_void" );
+        global->leave();
+    }
+    else if( tval.compare("ClassDecls") == 0
+            || tval.compare("ClassBody") == 0
+            || tval.compare("Program") == 0
+            || tval.compare("ClassHeader") == 0
+            || tval.compare("ClassDeclRHS") == 0
+            || tval.compare("ClassVarDecl") == 0 ) 
+    {
         node->setType("_void");
     } else if (tval.compare ("Stmt") == 0) {
         // Stmts always return void
@@ -171,6 +173,20 @@ RTree *TypeCheck::leave2( RTree *node ) {
         } else {
             // TODO: Could insert an error type here and proceed.
         }
+    } else if (tval.compare ("DotExpr") == 0) {
+        // one or two branches ONLY
+        cout << "We have a DotExpr" << endl;
+        if (branches.size() > 1) {
+            string match = typeMatch(branches[0]->getType(), branches[1]->getType());
+            if (!match.empty()) {
+                node->setType(match);
+            } else {
+                typeError("Types did not match");
+            }
+        } else {
+            // Only one branch
+            node->setType(branches[0]->getType());
+        }
     } else if (tval.compare ("DotExpr_") == 0) {
             // Big mess. needs method lookups
             // TODO: Actually look things up
@@ -214,11 +230,31 @@ RTree *TypeCheck::visit2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
 
-    if (tval.compare ("ClassDecl")
-        || tval.compare("MainClassDecl")
-        || tval.compare("MethodDecl"))
+    if (tval.compare ("ClassDecl") == 0 )
     {
-        second->enter();
+        string classname = node->getBranches()[0]->getBranches()[1]->printVal();
+        cout << "\n\nENTERING CLASS: " << classname << endl;
+
+        // Add the Class namespace to this one.
+        global->enter();
+        global->merge( global->getNamespace( classname ) );
+        
+        global->print( 0 );
+    }
+    else if( tval.compare("MainClassDecl") == 0 )
+    {
+        // Nothing else to do here; Enter for consistency
+        // Main class is special and can't have functions/
+        // or vatriables other than the main function.
+        global->enter();
+
+    } 
+    else if( tval.compare("MethodDecl") == 0 )
+    {
+        // Add the formals in the param list to the namespace.
+
+        global->enter();
+
     }
 
     return node;
@@ -259,28 +295,86 @@ RTree *TypeCheck::visit( RTree *node )
         Context *classContext = new Context( true );
         classContext->enter();
 
-        global->add( string( b->printVal() ), classContext );
         cur_namespace = string( b->printVal() );
+        global->add( cur_namespace, classContext );
+        global->add( cur_namespace, string( "class " ) + b->printVal() );
 
         cout << "Added new Namespace: " << b->printVal() << endl;
+    }
+    else if( tval.compare( "ClassDeclRHS" ) == 0 )
+    {
+        if( branches[0]->printVal().compare( "{" ) != 0 )
+        {
+            // We have an extention type.
+            string type = branches[1]->printVal();
+            
+            // Make sure it's been defined.
+            if( !global->defined( type ) )
+            {
+                typeError( "Cannot extend undefined class " + type );
+            }
+            else
+            {
+                global->setType( cur_namespace, global->typeof( cur_namespace ) + " " + type );
+            }
+        }
     }
     else if( tval.compare( "MethodDecl" ) == 0 )
     {
         RTree *b = branches[2];
+        string value;
 
+        // Classifier
+        value += "function ";
+        // Return Type
+        string s = branches[1]->getBranches()[0]->printVal();
+        if( s.compare( "BuiltInType" ) == 0 )
+            s = branches[1]->getBranches()[0]->getBranches()[0]->printVal();
+        value += s;
+
+        // Add without checking return type. Check on second pass.
         global->add( cur_namespace,
                      string( b->printVal() ),
-                     "value-shit-fix-later" );
+                     value );
+
+        cur_function = b->printVal();
 
         cout << "Added new Method: " << b->printVal() << endl;
+    }
+    else if( tval.compare( "Formal" ) == 0 )
+    {
+        string type = global->typeof( cur_namespace,
+                                      cur_function );
+
+        if( type.compare( "Undefined" ) == 0 )
+        {
+            cout << "ERROR: " << cur_namespace << "::" << cur_function << " is undefined." << endl;
+            exit( 1 );
+        }
+        
+        // Two types: BuiltIn, User
+        string s = branches[0]->getBranches()[0]->printVal();
+        if( s.compare( "BuiltInType" ) == 0 )
+            s = branches[0]->getBranches()[0]->getBranches()[0]->printVal();
+        
+        type += " ";
+        type += s;
+
+        global->setType( cur_namespace,
+                         cur_function,
+                         type );
     }
     else if( tval.compare( "ClassVarDecl" ) == 0 )
     {
         RTree *b = branches[1];
 
+        string type = branches[0]->getBranches()[0]->printVal();
+        if( type.compare( "BuiltInType" ) == 0 )
+            type = branches[0]->getBranches()[0]->getBranches()[0]->printVal();
+
         global->add( cur_namespace,
                      string( b->printVal() ),
-                     "VAR_TYPE_ADD_NOW" );
+                     type );
 
         cout << "Added new Class Var: " << b->printVal() << endl;
     }
