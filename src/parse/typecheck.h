@@ -14,6 +14,7 @@ class TypeCheck
     Context *global;
     Context *second;
     string  cur_namespace;
+    string  cur_function;
 
 public:
     TypeCheck();

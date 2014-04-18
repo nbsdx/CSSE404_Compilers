@@ -30,6 +30,9 @@ public:
      */
     void append( Entry *e );
 
+    void setName( const string &name ){ m_name = name; }
+    void setType( const string &type ){ m_type = type; }
+
     Entry *next(){ return m_next; }
     Entry *prev(){ return m_prev; }
     
@@ -88,6 +91,9 @@ public:
      */
     void add( const string &ns, const string &name, const string &type );
 
+    void setType( const string &name, const string &type );
+    void setType( const string &ns, const string &name, const string &type );
+
     /**
      *  Add a the contents of another context to this context,
      *  at the current scope (effectively calling this->add for
@@ -96,9 +102,14 @@ public:
     void merge( Context *c );
 
     /**
+     *  Get the context for a Namespace
+     */
+    Context *getNamespace( const string& ns );
+
+    /**
      * Print out all entries.
      */
-    void print();
+    void print( int depth = 1 );
 };
 
 #endif
