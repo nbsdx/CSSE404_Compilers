@@ -72,6 +72,24 @@ string typeMatch (string a, string b) {
     }
 }
 
+string matchAll (vector<RTree*> branches) {
+    string ret = "";
+    bool match = true;
+    for (RTree *b: branches) {
+        string type = b->getType();
+        bool isNil = type.compare("_nil") == 0;
+        bool matches = ret.compare(type) == 0;
+        if (ret.empty() && !isNil) {
+            ret = type;
+        } else if (!isNil && !matches) {
+            match = false;
+            typeError("Found " + type + " when expecting " + ret);
+        }
+    }
+    if (!match) ret = "";
+    return ret;
+}
+
 RTree *TypeCheck::leave2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
@@ -118,20 +136,14 @@ RTree *TypeCheck::leave2( RTree *node ) {
             default: typeError("Unknown error in unary function.");
         }
     } else if (tval.compare ("MultExpr") == 0
-               || tval.compare("AddExpr") == 0) {
-        string typeA = branches[0]->getType();
-        if (typeA.compare("int") != 0) {
-            typeError("Expected int, got something else.");
-        } else switch (deg) {
-            case 1: node->setType(typeA); break;
-            case 2: string match = typeMatch(typeA,
-                                             branches[1]->getType());
-                    if (!match.empty()) {
-                        node->setType(match);
-                    } else {
-                        typeError("Mismatched types near mult/div operation.");
-                    }
-                    break;
+              || tval.compare("AddExpr") == 0) {
+
+        //bool matchAll (vector<RTree*> branches) {
+        string match = matchAll(branches);
+        if (!match.empty()) {
+            node->setType(match);
+        } else {
+            // TODO: Could insert an error type here and proceed.
         }
     } else if (tval.compare ("MultExpr_") == 0
                || tval.compare ("AddExpr_") == 0) {
@@ -178,6 +190,19 @@ RTree *TypeCheck::leave2( RTree *node ) {
         node->setType("int");
     } else if ( dynamic_cast<Delimiter*>( rep )) {
         node->setType("_nil");
+    } else if ( dynamic_cast<Operator*>( rep )) {
+        Operator* op = dynamic_cast<Operator*>( rep );
+        switch (op->token()) {
+            // These operators can operate on any type
+            //  (except for void)
+            case EqualEq:  // Fall through
+            case NEqual:   //      v
+            case And:      //      v
+            case Or:       //      v
+            case Not: node->setType("_nil"); break;
+            // The rest (+-/*<<=>=>) only work with numbers
+            default: node->setType("int");
+        };
     } else if ( dynamic_cast<ReservedWord*>( rep )) {
         ReservedWord* rw = dynamic_cast<ReservedWord*>( rep );
         switch (rw->token()) {
