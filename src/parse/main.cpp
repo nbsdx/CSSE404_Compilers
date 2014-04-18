@@ -94,9 +94,25 @@ int main( int argc, char **argv )
 
     RTree *checked = tc->check( raw );
 
-    checked->printT();
+    if (tc->clean) {
+        cerr << "Passed type checking. Compilatioon can proceed.\n";
+    } else {
+        cerr << "Type errors detected. Compilation must halt.\n";
+    }
 
-    return EXIT_SUCCESS;
+    // holy duplication
+    if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
+    {
+        checked->printT();
+        cout << endl;
+    } else cerr << "Run with --print to see AST.\n";
+
+
+    if (tc->clean) {
+        return EXIT_SUCCESS;
+    } else {
+        return EXIT_FAILURE;
+    }
 }
 
 RTree *parse (vector<BasicToken*> pgm) {
