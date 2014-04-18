@@ -21,8 +21,10 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
-//    cout << "Global Namespace: " << endl;
-//    global->print();
+    cout << "Global Namespace: " << endl;
+    global->print( 0 );
+
+    cout << endl << endl;
 
     return cleaned;
 }
@@ -264,10 +266,29 @@ RTree *TypeCheck::visit( RTree *node )
         Context *classContext = new Context( true );
         classContext->enter();
 
-        global->add( string( b->printVal() ), classContext );
         cur_namespace = string( b->printVal() );
+        global->add( cur_namespace, classContext );
+        global->add( cur_namespace, string( "class " ) + b->printVal() );
 
         cout << "Added new Namespace: " << b->printVal() << endl;
+    }
+    else if( tval.compare( "ClassDeclRHS" ) == 0 )
+    {
+        if( branches[0]->printVal().compare( "{" ) != 0 )
+        {
+            // We have an extention type.
+            string type = branches[1]->printVal();
+            
+            // Make sure it's been defined.
+            if( !global->defined( type ) )
+            {
+                typeError( "Cannot extend undefined class " + type );
+            }
+            else
+            {
+                global->setType( cur_namespace, global->typeof( cur_namespace ) + " " + type );
+            }
+        }
     }
     else if( tval.compare( "MethodDecl" ) == 0 )
     {
@@ -282,6 +303,7 @@ RTree *TypeCheck::visit( RTree *node )
             s = branches[1]->getBranches()[0]->getBranches()[0]->printVal();
         value += s;
 
+        // Add without checking return type. Check on second pass.
         global->add( cur_namespace,
                      string( b->printVal() ),
                      value );
