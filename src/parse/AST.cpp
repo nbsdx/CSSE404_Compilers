@@ -14,6 +14,7 @@ RTree::RTree(BasicToken* bt)
     this->cnt = 0;
     this->typed = false;
     this->type = "_untyped";
+    this->left_type = "";
 }
 
 bool RTree::isLeaf () 

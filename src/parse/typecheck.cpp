@@ -86,21 +86,31 @@ string TypeCheck::typeMatch (string a, string b) {
     }
 }
 
-string TypeCheck::matchAll (vector<RTree*> branches) {
+string TypeCheck::matchAll (vector<RTree*> branches) 
+{
     string ret = "";
     bool match = true;
-    for (RTree *b: branches) {
+
+    for( RTree *b: branches )
+    {
         string type = b->getType();
-        bool isNil = type.compare("_nil") == 0;
-        bool matches = ret.compare(type) == 0;
-        if (ret.empty() && !isNil) {
+
+        bool branch_nil = type.compare( "_nil" ) == 0;
+        bool matches = type.compare( ret ) == 0;
+        
+        if( ret.empty() && !branch_nil ) 
+        {
             ret = type;
-        } else if (!isNil && !matches) {
+        } 
+        else if( !branch_nil && !matches ) 
+        {
             match = false;
             typeError("Found " + type + " when expecting " + ret);
         }
     }
-    if (!match) ret = "";
+    if( !match ) 
+        ret = "";
+
     return ret;
 }
 
@@ -132,24 +142,44 @@ RTree *TypeCheck::leave2( RTree *node ) {
         //       and throw errors when unhappy.
         vector<expect> tups;
         string pform = branches[0]->printVal();
-        if (pform.compare("while") == 0) {
+
+        if (pform.compare("while") == 0) 
+        {
             tups = {{2, "_nil"}, {4, "_void"}};
             bool match = expectsThese(tups, branches);
-            if (!match) typeError("while statement non-void.");
-        } else if (pform.compare("if") == 0) {
+            if (!match) 
+                typeError("while statement non-void.");
+        } 
+        else if (pform.compare("if") == 0) 
+        {
             tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
             bool match = expectsThese(tups, branches);
-            if (!match) typeError("If statement branch non-void.");
-        } else if (pform.compare("{") == 0) {
+            if (!match) 
+                typeError("If statement branch non-void.");
+        } 
+        else if (pform.compare("{") == 0) 
+        {
             tups = {{1, "_void"}};
             bool match = expectsThese(tups, branches);
-            if (!match) typeError("Braced block returning non-void.");
-        } else if (pform.compare("System.out.println") == 0) {
+            if (!match) 
+                typeError("Braced block returning non-void.");
+        } 
+        else if (pform.compare("System.out.println") == 0) 
+        {
             tups = {{2, "int"}};
             bool match = expectsThese(tups, branches);
-            if (!match) typeError("System.out.println only accepts numbers.");
-        } else {
+            if (!match) 
+                typeError("System.out.println only accepts numbers.");
+        } 
+        else 
+        {
             // Assignments
+            // Cases: ID = Expr;        => Everything should be of type "ID"
+            //        ID ID = Expr;     => Everything should be of type "ID"
+            //        int ID = Expr;    => Everything should be of type "int"
+            //        boolean ID = Expr;=> Everything should be of type "boolean"
+            
+            // I think this is correct.        
             string match = matchAll(branches);
             if (match.empty())
                 typeError("Mismatched types in assignment.");
@@ -170,9 +200,12 @@ RTree *TypeCheck::leave2( RTree *node ) {
 
         //bool matchAll (vector<RTree*> branches) {
         string match = matchAll(branches);
-        if (!match.empty()) {
+        if (!match.empty()) 
+        {
             node->setType(match);
-        } else {
+        } 
+        else 
+        {
             // TODO: Could insert an error type here and proceed.
         }
     } else if (tval.compare ("DotExpr") == 0) {
@@ -189,16 +222,55 @@ RTree *TypeCheck::leave2( RTree *node ) {
             // Only one branch
             node->setType(branches[0]->getType());
         }
-    } else if (tval.compare ("DotExpr_") == 0) {
-            // Big mess. needs method lookups
-            // TODO: Actually look things up
-            //node->setType("_lookup");
-    } else if ( dynamic_cast<Identifier*>( rep )) {
+    } 
+    else if (tval.compare ("DotExpr_") == 0) 
+    {
+
+        // Structure:
+        // . ID ( ...  ) DotExpr_
+        // Needs to handle the argument types.
+
+    }
+    else if( tval.compare( "Literal" ) == 0 )
+    {
+        string match = matchAll( branches );
+        if( match.empty() )
+        {
+            typeError( "Mismatched types in Literal." );
+            node->setType( "_nil" );
+        }
+        else
+            node->setType( match );
+    }
+    else if ( dynamic_cast<Identifier*>( rep )) 
+    {
         // TODO: actually look this up
         //node->setType("_lookup");
-    } else if ( dynamic_cast<Number*>( rep )) {
+        string type = global->typeof( tval );
+
+        if( type.find( "class" ) == 0 )
+        {
+            // We have something like the LHS of:
+            // MyClass mc = new MyClass();
+            node->setType( tval ); // Make it look like the type.
+        }
+        else if( type.compare( "Undefined" ) == 0 )
+        {
+            // We have an undefined variable. Might be "mc" of the above example.
+            // We should just set it to _nil, and let the expression handle it.
+            node->setType( "_nil" );
+        }
+        else
+        {
+            // Otherwise we should just set it to the lookedup type.
+            node->setType( type );
+        }
+    } 
+    else if ( dynamic_cast<Number*>( rep )) 
+    {
         node->setType("int");
-    } else if ( dynamic_cast<Delimiter*>( rep )) {
+    } 
+    else if ( dynamic_cast<Delimiter*>( rep )) {
         node->setType("_nil");
     } else if ( dynamic_cast<Operator*>( rep )) {
         Operator* op = dynamic_cast<Operator*>( rep );
@@ -217,9 +289,12 @@ RTree *TypeCheck::leave2( RTree *node ) {
         ReservedWord* rw = dynamic_cast<ReservedWord*>( rep );
         switch (rw->token()) {
             case True: 
-            case False: node->setType("boolean"); break;
+            case False:
+            case Bool: node->setType("boolean"); break;
             case Null: node->setType("null"); break;
             case New: node->setType("_nil"); break;
+
+            case Int: node->setType("int" ); break;
             // TODO: Check these
             default: node->setType("_void"); break;
         };
@@ -306,6 +381,85 @@ RTree *TypeCheck::visit2( RTree *node ) {
         global->add( name, type );
 
         cout << "Added new Class Var [" << name << " : " << type << "]" << endl;
+    }
+    else if( tval.compare( "DotExpr" ) == 0 )
+    {
+        auto branches = node->getBranches();
+        // Dot expressions need to know about the shit to their left. 
+        // If there is actually a dot, eval it here, and ignore it later
+        // otherwise eval it later.
+        if( branches.size() > 1 )
+        {
+            // Type of a stored variable. Should give back a namespace name.
+            string type = global->typeof( branches[0]->printVal() );
+            // We can only dot our own types.
+            if( type.compare( "int" ) == 0 ||
+                type.compare( "boolean" ) == 0 )
+            {
+                typeError( "Error: builtin type " + type + " has no functions" );
+                branches[1]->setLeftType( "Error" );
+            }
+            else if( type.compare( "Undefined" ) == 0 )
+            {
+                typeError( "Error: Undefined variable " + branches[0]->printVal() );
+                branches[1]->setLeftType( "Error" );
+            }
+            else
+            {
+                branches[1]->setLeftType( type );
+            }
+        }
+    }
+    else if( tval.compare( "DotExpr_" ) == 0 )
+    {
+        // We should have "left_type" set.
+        // If not, error.
+
+        if( node->getLeftType().empty() )
+        {
+            cerr << "Damnit Neil" << endl;
+            exit( 2 );
+        }
+
+        if( node->getLeftType().compare( "Error" ) == 0 )
+        {
+            // The left side is errored, just set this to nil.
+            node->setType( "_nil" );
+        }
+        else
+        {
+            // Not errored, has been set. We're good to go.
+            // Need to check if the last branch is a DotExpr_,
+            // and if it is, we need to set it's left_type
+            // to the return value of this. Parameter type
+            // checking will happen when leaving the node.
+
+            auto branches = node->getBranches();
+
+            // Get the function type
+            string type = global->typeof( node->getLeftType(), branches[1]->printVal() );
+            // Validate that it is a function
+            if( type.find( "function" ) == 0 )
+            {
+                bool skip = true;
+                stringstream stream( type );
+                string temp;
+                string ret_type;
+                stream >> temp; // Consume "function"
+                stream >> ret_type; // Get return type.
+
+                // Can only be ) or another DotExpr_
+                NonTerminal *token = dynamic_cast<NonTerminal*>( branches.back()->getVal() );
+
+                if( token )
+                    branches.back()->setLeftType( ret_type );
+            }
+            else
+            {
+                typeError( "Error: " + node->getLeftType() + "." + branches[1]->printVal() + " is not a function" );
+                node->setType( "_nil" );
+            }
+        }
     }
 
     return node;
