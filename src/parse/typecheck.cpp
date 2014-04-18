@@ -119,8 +119,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
     BasicToken* rep = node->getVal();
     vector<RTree*> branches = node->getBranches();
     int deg = branches.size();
-    //string match = matchAll(branches);
-    //bool matching = !match.empty();
+    string match = matchAll(branches);
+    bool matching = !match.empty();
 
     if (tval.compare ("ClassDecl") == 0
         || tval.compare("MainClassDecl") == 0
@@ -134,7 +134,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
             || tval.compare("Program") == 0
             || tval.compare("ClassHeader") == 0
             || tval.compare("ClassDeclRHS") == 0
-            || tval.compare("ClassVarDecl") == 0 ) 
+            || tval.compare("ClassVarDecl") == 0 
+            || tval.compare("ClassVarDecls") == 0) 
     {
         node->setType("_void");
     } else if (tval.compare ("Stmt") == 0) {
@@ -153,51 +154,63 @@ RTree *TypeCheck::leave2( RTree *node ) {
             // Stmt -> while ( Expr ) Stmt
             // ensure Stmt is void
             tups = {{2, "_nil"}, {4, "_void"}};
-            bool match = expectsThese(tups, branches);
-            if (!match) 
+            bool matches = expectsThese(tups, branches);
+            if (!matches) 
                 typeError("while statement non-void.");
         } 
         else if (pform.compare("if") == 0) 
         {
             // Stmt -> if ( Expr ) Stmt else Stmt
             tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
-            bool match = expectsThese(tups, branches);
-            if (!match) 
+            bool matches = expectsThese(tups, branches);
+            if (!matches) 
                 typeError("If statement branch non-void.");
         } 
         else if (pform.compare("{") == 0) 
         {
             tups = {{1, "_void"}};
-            bool match = expectsThese(tups, branches);
-            if (!match) 
+            bool matches = expectsThese(tups, branches);
+            if (!matches) 
                 typeError("Braced block returning non-void.");
         } 
         else if (pform.compare("System.out.println") == 0) 
         {
             tups = {{2, "int"}};
-            bool match = expectsThese(tups, branches);
-            if (!match) 
+            bool matches = expectsThese(tups, branches);
+            if (!matches) 
                 typeError("System.out.println only accepts numbers.");
         } 
         else 
         {
             // Assignments
-            // Cases: ID = Expr;        => Everything should be of type "ID"
-            //        ID ID = Expr;     => Everything should be of type "ID"
-            //        int ID = Expr;    => Everything should be of type "int"
-            //        boolean ID = Expr;=> Everything should be of type "boolean"
+            // Cases: ID = Expr ;         => 4 Everything should be of type "ID"
+            //        ID ID = Expr ;      => 5 Everything should be of type "ID"
+
+            //        int ID = Expr ;     => 5 Everything should be of type "int"
+            //        boolean ID = Expr ; => 5 Everything should be of type "boolean"
 
             // I think this is correct.        
             // TODO: This is broken because of DotExpr - check again after DotExpr' works properly.
-            string match = matchAll(branches);
-                cout << "TVAL " << tval << endl;
-                cout << "\tType is " << match << endl;
+            if (deg == 4) {
+
+            } else if (deg == 5) {
+                // Blindly insert the variable name
+                string type = branches[0]->printVal();
+                string myname = branches[1]->printVal();
+                // Ignore type of myname?
+                // (if it's typed, that's bad, but the lookup should fail)
+                cout << "Declared " << myname << "::" << type << endl;
+                global->add(myname, type);
+            }
+            //string match = matchAll(branches);
+                //cout << "TVAL " << tval << endl;
+                //cout << "\tType is " << match << endl;
 
             if (match.empty())
                 typeError("Mismatched types in assignment.");
-            else {
-                global->add(tval, match);
-            }
+            //else {
+            //    global->add(tval, match);
+            //}
         }
     } else if (tval.compare ("StmtLst") == 0) {
         node->setType("_void");
@@ -210,6 +223,14 @@ RTree *TypeCheck::leave2( RTree *node ) {
         } else {
             node->setType(typeA);
         }
+    } else if (tval.compare ("MethodParams") == 0
+              || tval.compare ("MethodParams_") == 0
+              || tval.compare ("Formal") == 0) {
+        // These have been taken care of in the first pass.
+        node->setType("_nil");
+
+    } else if (tval.compare ("Type") == 0) {
+        node->setType(match);
     } else if (tval.compare ("MultExpr") == 0
               || tval.compare("AddExpr") == 0
               || tval.compare("NegExpr") == 0
@@ -222,8 +243,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
               || tval.compare("ExprLst_") == 0) {
 
         //bool matchAll (vector<RTree*> branches) {
-        string match = matchAll(branches);
-        if (!match.empty()) 
+        //string match = matchAll(branches);
+        if (matching) 
         {
             node->setType(match);
         } 
@@ -297,8 +318,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
     }
     else if( tval.compare( "Literal" ) == 0 )
     {
-        string match = matchAll( branches );
-        if( match.empty() )
+        //string match = matchAll( branches );
+        if( !matching )
         {
             typeError( "Mismatched types in Literal." );
             node->setType( "_nil" );
@@ -308,8 +329,6 @@ RTree *TypeCheck::leave2( RTree *node ) {
     }
     else if ( dynamic_cast<Identifier*>( rep )) 
     {
-        // TODO: actually look this up
-        //node->setType("_lookup");
         string type = global->typeof( tval );
 
         if( type.find( "class" ) == 0 )
@@ -341,6 +360,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         switch (op->token()) {
             // These operators can operate on any type
             //  (except for void)
+            //  i.e. user types are evaluated as null or not null
             case EqualEq:  // Fall through
             case NEqual:   //      v
             case And:      //      v
