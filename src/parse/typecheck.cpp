@@ -119,6 +119,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
     BasicToken* rep = node->getVal();
     vector<RTree*> branches = node->getBranches();
     int deg = branches.size();
+    //string match = matchAll(branches);
+    //bool matching = !match.empty();
 
     if (tval.compare ("ClassDecl") == 0
         || tval.compare("MainClassDecl") == 0
@@ -138,13 +140,18 @@ RTree *TypeCheck::leave2( RTree *node ) {
     } else if (tval.compare ("Stmt") == 0) {
         // Stmts always return void
         node->setType("_void");
-        // TODO: Stmt should also have multiple forms requiring checks
-        //       and throw errors when unhappy.
+        // Stmts have a number of different forms with different semantics
         vector<expect> tups;
         string pform = branches[0]->printVal();
 
+        // These are pretty horrible. expectsThese accepts 2-tuples,
+        // {subtreeIdx, expectedType}. Easier than picking out the
+        // individual branches for inspection...
+        // (We can't use matchAll on these, since the types are supposed to conflict)
         if (pform.compare("while") == 0) 
         {
+            // Stmt -> while ( Expr ) Stmt
+            // ensure Stmt is void
             tups = {{2, "_nil"}, {4, "_void"}};
             bool match = expectsThese(tups, branches);
             if (!match) 
@@ -152,6 +159,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         } 
         else if (pform.compare("if") == 0) 
         {
+            // Stmt -> if ( Expr ) Stmt else Stmt
             tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
             bool match = expectsThese(tups, branches);
             if (!match) 
@@ -178,15 +186,30 @@ RTree *TypeCheck::leave2( RTree *node ) {
             //        ID ID = Expr;     => Everything should be of type "ID"
             //        int ID = Expr;    => Everything should be of type "int"
             //        boolean ID = Expr;=> Everything should be of type "boolean"
-            
+
             // I think this is correct.        
+            // TODO: This is broken because of DotExpr - check again after DotExpr' works properly.
             string match = matchAll(branches);
+                cout << "TVAL " << tval << endl;
+                cout << "\tType is " << match << endl;
+
             if (match.empty())
                 typeError("Mismatched types in assignment.");
-
+            else {
+                global->add(tval, match);
+            }
         }
     } else if (tval.compare ("StmtLst") == 0) {
         node->setType("_void");
+    } else if (tval.compare ("ExprLst") == 0) {
+        // ExprLst is only ever used for function parameters in DotExpr'
+        // ... we build up function parameters in the useful way
+        string typeA = branches[0]->getType();
+        if (deg > 1) {
+            node->setType(typeA + " " + branches[1]->getType());
+        } else {
+            node->setType(typeA);
+        }
     } else if (tval.compare ("MultExpr") == 0
               || tval.compare("AddExpr") == 0
               || tval.compare("NegExpr") == 0
@@ -195,8 +218,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
               || tval.compare("BoolExpr") == 0
               || tval.compare("BoolExpr_") == 0
               || tval.compare("Expr") == 0
-              || tval.compare("DotExpr") == 0
-              || tval.compare("StmtRHS") == 0) {
+              || tval.compare("StmtRHS") == 0
+              || tval.compare("ExprLst_") == 0) {
 
         //bool matchAll (vector<RTree*> branches) {
         string match = matchAll(branches);
@@ -208,27 +231,68 @@ RTree *TypeCheck::leave2( RTree *node ) {
         {
             // TODO: Could insert an error type here and proceed.
         }
-    } else if (tval.compare ("DotExpr") == 0) {
-        // one or two branches ONLY
-        cout << "We have a DotExpr" << endl;
-        if (branches.size() > 1) {
-            string match = typeMatch(branches[0]->getType(), branches[1]->getType());
-            if (!match.empty()) {
-                node->setType(match);
-            } else {
-                typeError("Types did not match");
-            }
-        } else {
-            // Only one branch
-            node->setType(branches[0]->getType());
-        }
-    } 
-    else if (tval.compare ("DotExpr_") == 0) 
+    } else if (tval.compare ("DotExpr_") == 0 || tval.compare ("DotExpr") == 0) 
     {
+        // Productions handled:
+        // . ID ( ExprLst  ) DotExpr_
+        // . ID ( ExprLst )
+        // . ID ( )
+        // Literal DotExpr'
+        // Literal
+        //
+        // Needs to handle the argument types for method lookups.
 
-        // Structure:
-        // . ID ( ...  ) DotExpr_
-        // Needs to handle the argument types.
+        // Argument types are concat'd in type field by ExprLst and ExprLst_
+        // ... but the DotExpr or DotExpr_ to our left will need the func name
+        //     in order to see if it exists.
+
+        // We actually cannot perform the lookup until the entire Stmt has been traversed.
+        // There will need to be logic in Stmt that traverses typed DotExpr_ and DotExpr
+        // in order to ensure that each function a) exists b) Produces the type implied by
+        // trailing DotExpr'.
+
+        // This code is a bit annoying, because we never allow epsilon productions
+        //   to enter the tree. Makes it difficult to find the two relevant
+        //   branches. ExprLst will be in [3] if it exists. (Degree 5)
+        //   DotExpr' will be in branch [5] if we have ExprLst (Degree 6), else it will
+        //   be in [4] (Degree 5)
+        //   If we have neither, the degree is 4.
+
+        string myname;
+        if (deg > 2) {
+            // Literal and Literal DotExpr' will not have a name
+            myname = branches[1]->printVal();
+            cout << "DOTEXPR_, ID = " << myname << endl;
+        }
+
+        if (deg == 6) {
+            // Both an ExprList and a DotExpr'.
+
+            // 1. Build function and arg string
+            node->setType("function " + myname + " " + branches[3]->getType());
+
+            // 2. That's it, since we don't know our real type yet. 
+            // need to visit this node later.
+        } else if (deg == 5) {
+            // One of the two, but not sure which.
+            node->setType("function " + myname + " " + branches[3]->getType());
+        } else if (deg == 4) {
+            // Neither an ExprList nor a DotExpr' on the right.
+            node->setType("function " + myname + " _void");
+        } else if (deg == 2) {
+            // Certain to be handling a DotExpr now.
+
+            // We can look up the method here!
+            node->setType("DECIDEABLE");
+        } else if (deg == 1) {
+            // Certain to be handling a DotExpr now.
+            // deg 1 -> this has probably already been trimmed from the tree
+            node->setType(branches[0]->getType());
+        } else {
+            node->setType("_nil");
+        }
+
+        // For nested DotExpr_ we will also need to conduct this lookup.
 
     }
     else if( tval.compare( "Literal" ) == 0 )
@@ -349,9 +413,9 @@ RTree *TypeCheck::visit2( RTree *node ) {
                 }
             }
         }
-        
+
         global->enter();
-        
+
         // Add the formals in the param list to the namespace
         // [This happens automatically from the Formal case]
     }
@@ -418,7 +482,9 @@ RTree *TypeCheck::visit2( RTree *node ) {
         if( node->getLeftType().empty() )
         {
             cerr << "Damnit Neil" << endl;
-            exit( 2 );
+            global->print();
+            // Not convinced this is fatal or that left types necessary
+            //exit( 2 );
         }
 
         if( node->getLeftType().compare( "Error" ) == 0 )
@@ -480,7 +546,8 @@ RTree *TypeCheck::leave( RTree *node )
         cout << "Up one level" << endl;
 //        global->leave();
     }
-    else if( tval.compare( "Type" ) != 0 && branches.size() == 1 )
+    else if( tval.compare( "Type" ) != 0 
+           && branches.size() == 1       )
     {
         return branches[0];
     }

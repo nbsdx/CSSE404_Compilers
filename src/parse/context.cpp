@@ -218,7 +218,7 @@ void Context::merge( Context *c )
 
 void Context::print ( int depth ) {
 
-    cout << "Visable entries:" << endl;
+    cout << "Visible entries:" << endl;
     for( auto i : this->entries ) {
         if( i.second->next() )
             cout << "K: " << i.first << " V: " << typeof( i.first ) << "\n";
