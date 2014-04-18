@@ -53,8 +53,9 @@ RTree *TypeCheck::postOrder( RTree *tree,
     }
 }
 
-void typeError (string excuse) {
+void TypeCheck::typeError (string excuse) {
     cerr << excuse << endl;
+    this->clean = false;
 }
 
 typedef pair<int, string> expect;
@@ -71,7 +72,7 @@ bool expectsThese(vector<expect> tups, vector<RTree*> branches) {
     return ret;
 }
 
-string typeMatch (string a, string b) {
+string TypeCheck::typeMatch (string a, string b) {
     string nil ("_nil");
     if (nil.compare(a) == 0) {
         return b;
@@ -84,7 +85,7 @@ string typeMatch (string a, string b) {
     }
 }
 
-string matchAll (vector<RTree*> branches) {
+string TypeCheck::matchAll (vector<RTree*> branches) {
     string ret = "";
     bool match = true;
     for (RTree *b: branches) {
