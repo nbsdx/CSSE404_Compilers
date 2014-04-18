@@ -21,8 +21,8 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
-//    cout << "Global Namespace: " << endl;
-//    global->print();
+    cout << "Global Namespace: " << endl;
+    global->print();
 
     return cleaned;
 }
@@ -31,6 +31,11 @@ RTree *TypeCheck::postOrder( RTree *tree,
                              function<RTree* (RTree*)> visit,
                              function<RTree* (RTree*)> leave )
 {
+//    cout << "Enter TC::postOrder" << endl;
+
+   // if( !tree || tree->isLeaf() )
+   //     return tree;
+
     if (!tree->isLeaf()) {
         vector< RTree* > branches = tree->getBranches();
 
@@ -67,13 +72,38 @@ string typeMatch (string a, string b) {
     }
 }
 
+string matchAll (vector<RTree*> branches) {
+    string ret = "";
+    bool match = true;
+    for (RTree *b: branches) {
+        string type = b->getType();
+        bool isNil = type.compare("_nil") == 0;
+        bool matches = ret.compare(type) == 0;
+        if (ret.empty() && !isNil) {
+            ret = type;
+        } else if (!isNil && !matches) {
+            match = false;
+            typeError("Found " + type + " when expecting " + ret);
+        }
+    }
+    if (!match) ret = "";
+    return ret;
+}
+
 RTree *TypeCheck::leave2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
     vector<RTree*> branches = node->getBranches();
+    int deg = branches.size();
 
     if (tval.compare ("ClassDecl") == 0
+        || tval.compare("ClassDecls") == 0
         || tval.compare("MainClassDecl") == 0
+        || tval.compare("ClassBody") == 0
+        || tval.compare("Program") == 0
+        || tval.compare("ClassHeader") == 0
+        || tval.compare("ClassDeclRHS") == 0
+        || tval.compare("ClassVarDecl") == 0
         || tval.compare("MethodDecl") == 0)
     {
         global->leave();
@@ -84,6 +114,36 @@ RTree *TypeCheck::leave2( RTree *node ) {
         // Stmts always return void
         node->setType("_void");
         // TODO: Stmt should also have multiple forms requiring checks
+        //       and throw errors when unhappy.
+    } else if (tval.compare ("StmtLst") == 0) {
+        node->setType("_void");
+    } else if (tval.compare ("StmtRHS") == 0) {
+        // Special statement form for assignment. pass the type up
+        //   to be verified against LHS in Stmt group.
+        switch (deg) {
+            case 1: node->setType(branches[0]->getType()); break;
+            case 2: node->setType(branches[1]->getType()); break;
+            case 3: string match = typeMatch(branches[0]->getType(), branches[2]->getType());
+                    if (!match.empty()) node->setType(match); 
+                    else typeError("Types did not match in assignment statement.");
+                    break;
+        };
+    } else if (tval.compare ("MultExpr") == 0
+              || tval.compare("AddExpr") == 0
+              || tval.compare("NegExpr") == 0
+              || tval.compare("MultExpr_") == 0
+              || tval.compare("AddExpr_") == 0
+              || tval.compare("BoolExpr") == 0
+              || tval.compare("BoolExpr_") == 0
+              || tval.compare("Expr") == 0) {
+
+        //bool matchAll (vector<RTree*> branches) {
+        string match = matchAll(branches);
+        if (!match.empty()) {
+            node->setType(match);
+        } else {
+            // TODO: Could insert an error type here and proceed.
+        }
     } else if (tval.compare ("DotExpr") == 0) {
         // one or two branches ONLY
         cout << "We have a DotExpr" << endl;
@@ -101,14 +161,27 @@ RTree *TypeCheck::leave2( RTree *node ) {
     } else if (tval.compare ("DotExpr_") == 0) {
             // Big mess. needs method lookups
             // TODO: Actually look things up
-            node->setType("_lookup");
+            //node->setType("_lookup");
     } else if ( dynamic_cast<Identifier*>( rep )) {
         // todo: actually look this up
-        node->setType("_lookup");
+        //node->setType("_lookup");
     } else if ( dynamic_cast<Number*>( rep )) {
         node->setType("int");
     } else if ( dynamic_cast<Delimiter*>( rep )) {
         node->setType("_nil");
+    } else if ( dynamic_cast<Operator*>( rep )) {
+        Operator* op = dynamic_cast<Operator*>( rep );
+        switch (op->token()) {
+            // These operators can operate on any type
+            //  (except for void)
+            case EqualEq:  // Fall through
+            case NEqual:   //      v
+            case And:      //      v
+            case Or:       //      v
+            case Not: node->setType("_nil"); break;
+            // The rest (+-/*<<=>=>) only work with numbers
+            default: node->setType("int");
+        };
     } else if ( dynamic_cast<ReservedWord*>( rep )) {
         ReservedWord* rw = dynamic_cast<ReservedWord*>( rep );
         switch (rw->token()) {
@@ -128,7 +201,9 @@ RTree *TypeCheck::visit2( RTree *node ) {
     string tval = node->printVal();
     BasicToken* rep = node->getVal();
 
-    if( tval.compare ("ClassDecl") == 0 )
+    if (tval.compare ("ClassDecl")
+        || tval.compare("MainClassDecl")
+        || tval.compare("MethodDecl"))
     {
         string classname = node->getBranches()[0]->getBranches()[1]->printVal();
         cout << "\n\nENTERING CLASS: " << classname << endl;
