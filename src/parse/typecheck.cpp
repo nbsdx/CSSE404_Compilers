@@ -291,6 +291,22 @@ RTree *TypeCheck::visit2( RTree *node ) {
 
         cout << "Added [" << name << " : " << type << "]" << endl;
     }
+    else if( tval.compare( "ClassVarDecl" ) == 0 )
+    {
+        string name = node->getBranches()[1]->printVal();
+        string type = node->getBranches()[0]->getBranches()[0]->printVal();
+
+        if( type.compare( "int" ) != 0 && type.compare( "boolean" ) != 0 )
+        {
+            if( global->typeof( type ).compare( "Undefined" ) == 0 )
+            {
+                typeError( "Error: Type " + type + " undefined." );
+            }
+        }
+        global->add( name, type );
+
+        cout << "Added new Class Var [" << name << " : " << type << "]" << endl;
+    }
 
     return node;
 }
@@ -381,6 +397,7 @@ RTree *TypeCheck::visit( RTree *node )
         string type = global->typeof( cur_namespace,
                                       cur_function );
 
+        // I dont think this should ever happen.
         if( type.compare( "Undefined" ) == 0 )
         {
             cout << "ERROR: " << cur_namespace << "::" << cur_function << " is undefined." << endl;
