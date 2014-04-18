@@ -1,4 +1,5 @@
 #include <utility>
+#include <sstream>
 
 #include "typecheck.h"
 
@@ -252,10 +253,43 @@ RTree *TypeCheck::visit2( RTree *node ) {
     } 
     else if( tval.compare("MethodDecl") == 0 )
     {
-        // Add the formals in the param list to the namespace.
+        // Check that the return type and argument types are defined.
+        // Get the definition from the first pass
+        string def = global->typeof( node->getBranches()[2]->printVal() );
+        stringstream stream( def );
+        string word;
 
+        stream >> word; // Read "Function"
+
+        while( stream >> word )
+        {
+            if( !( word.compare( "int" ) 
+                || word.compare( "boolean" ) ) )
+            {
+                // Check if it's a userdefined type.
+                string type = global->typeof( word );
+                if( type.find( "class" ) != 0 )
+                {
+                    typeError( "Undefined class: " + type );
+                }
+            }
+        }
+        
         global->enter();
+        
+        // Add the formals in the param list to the namespace
+        // [This happens automatically from the Formal case]
+    }
+    else if( tval.compare( "Formal" ) == 0 )
+    {
+        // We know this is a valid type, or at least we don't care 
+        // if it's not.
+        string name = node->getBranches()[1]->printVal();
+        string type = node->getBranches()[0]->getBranches()[0]->printVal();
 
+        global->add( name, type );
+
+        cout << "Added [" << name << " : " << type << "]" << endl;
     }
 
     return node;
@@ -367,7 +401,7 @@ RTree *TypeCheck::visit( RTree *node )
     }
     else if( tval.compare( "ClassVarDecl" ) == 0 )
     {
-        RTree *b = branches[1];
+/*        RTree *b = branches[1];
 
         string type = branches[0]->getBranches()[0]->printVal();
         if( type.compare( "BuiltInType" ) == 0 )
@@ -378,7 +412,7 @@ RTree *TypeCheck::visit( RTree *node )
                      type );
 
         cout << "Added new Class Var: " << b->printVal() << endl;
-    }
+*/    }
 
     return node;
 }
