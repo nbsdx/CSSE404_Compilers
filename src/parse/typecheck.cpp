@@ -151,7 +151,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         // 10 public Type ID ( ) { return Expr ; }
         // Need to ensure Type matches return Expr
         // Note: ID has been taken care of by first pass
-        assert(deg > 10);
+        assert(deg >= 10);
         string expected = branches[1]->getType();
         
         int actidx;
@@ -418,6 +418,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
             // Certain to be handling a DotExpr now.
 
             // We can look up the method here!
+            dotExprResolve(node);
             node->setType("DECIDEABLE");
             node->setErr();
         } else if (deg == 1) {
@@ -671,6 +672,79 @@ RTree *TypeCheck::visit2( RTree *node ) {
     }
 
     return node;
+}
+
+void TypeCheck::dotExprResolve (RTree *t) {
+    // DotExpr branches are fully decidable when leaving
+    vector<RTree*> branches = t->getBranches();
+
+    // The left subtree carries our opening namespace
+    string nspace = branches[0]->getType();
+
+    resolveDexPrime(nspace, branches[1]);
+    /*
+    string munged = branches[1]->getType();
+
+    cout << "Check namespace " << nspace << " for " << munged << endl;
+    if (munged.find( "function" ) == 0) {
+        stringstream stream( munged );
+        string tmp;
+        string fname;
+        stream >> tmp;
+        stream >> fname;
+        cout << "Function name to lookup is " << fname << endl;
+        Context *c = global->getNamespace(nspace);
+        cout << "Looked up " << nspace<< endl;
+        c->print();
+        string ftype = c->typeof(fname);
+        cout << ftype << endl;
+        stringstream strm2 ( ftype );
+        strm2 >> tmp;
+
+        string rettype;
+        strm2 >> rettype;
+
+        cout << "Looked up function returns " << rettype << endl; 
+
+        
+        while (true) {
+            string tmp1, tmp2;
+            stream >> tmp1;
+            strm2 >> tmp2;
+            if (tmp1.empty() || tmp2.empty()) break;
+            cout << tmp1 << " == " << tmp2 << "?\n";
+        }
+    }
+    */
+}
+
+// TODO: Catch the other entry point for DotExpr_
+
+// This accepts an ltype and a DotExpr_ (right now, but could be generalised)
+//   it will get the munged type info from the DotExpr_, and check that function
+//   exists in the namespace ltype.
+void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
+    Context *c = global->getNamespace(ltype);
+    string munged = t->getType();
+    stringstream mstrm (munged);
+
+    string tmp;
+    mstrm >> tmp;
+
+    string fname;
+    mstrm >> fname;
+
+    cout << "Searching namespace " << ltype << " for " << fname << endl;
+
+    string ftype = c->typeof(fname);
+    stringstream fstrm (ftype);
+    fstrm >> tmp;
+
+    string rettype;
+    fstrm >> rettype;
+
+    // set node's type field here somewhere
+    // ... and descend
 }
 
 RTree *TypeCheck::leave( RTree *node )

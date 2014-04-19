@@ -34,7 +34,8 @@ public:
     RTree *leave2( RTree *node );
 protected:
     void typeError (string excuse, RTree *node);
-
+    void dotExprResolve (RTree *t);
+    void resolveDexPrime (string ltype, RTree *t);
     string typeMatch (string a, string b);
     string matchAll (vector<RTree*> branches);
 };
