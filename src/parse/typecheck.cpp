@@ -304,8 +304,6 @@ RTree *TypeCheck::leave2( RTree *node ) {
               || tval.compare("NegExpr") == 0
               || tval.compare("MultExpr_") == 0
               || tval.compare("AddExpr_") == 0
-              || tval.compare("BoolExpr") == 0
-              || tval.compare("BoolExpr_") == 0
               || tval.compare("Expr") == 0
               || tval.compare("StmtRHS") == 0
               || tval.compare("ExprLst_") == 0) {
@@ -319,6 +317,29 @@ RTree *TypeCheck::leave2( RTree *node ) {
         else 
         {
             // TODO: Could insert an error type here and proceed.
+        }
+    } else if (tval.compare("BoolExpr_") == 0)
+    {
+        // Anything can be evaluated in a boolean context, which is why
+        //      '||' and '&&' are both _nil typed. 
+        // (... except for _void, but I don't think that is possible below
+        //      boolexpr' in an AST.)
+        node->setType("boolean");
+    } else if (tval.compare("BoolExpr") == 0)
+    {
+        // CompExpr BoolExpr'
+        // CompExpr
+        if (deg == 2) {
+            // The BoolExpr' infects everything to the left of it
+            string bexpt = branches[1]->getType();
+            // BoolExpr' should absolutely always be boolean
+            assert(bexpt.compare("boolean") == 0);
+            node->setType("boolean");
+        } else if (deg == 1) {
+            node->setType(branches[0]->getType());
+        } else {
+            // something is very broken
+            assert(0);
         }
     } else if (tval.compare ("DotExpr_") == 0 || tval.compare ("DotExpr") == 0) 
     {
