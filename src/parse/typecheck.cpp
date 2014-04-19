@@ -231,10 +231,12 @@ RTree *TypeCheck::leave2( RTree *node ) {
             if (deg == 3) {
                 // ID StmtRHS ;
                 // We can rely on the looked-up type of ID here.
-                if (!matching) {
-                    typeError("Mismatched types in assignment.", node);
+                // EDIT: now that dotexpr's type does not represent the match of
+                // its subtrees, we can't use matching in all cases
+                //if (!matching) {
+                  //  typeError("Mismatched types in assignment.", node);
                     //node->setErr();
-                }
+                //}
 
 
                 string type = branches[0]->getType();
@@ -269,15 +271,16 @@ RTree *TypeCheck::leave2( RTree *node ) {
                 // Blindly insert the variable name into the context table
                 string type = branches[0]->printVal();
                 string myname = branches[1]->printVal();
-                // Ignore type of myname?
-                // (if it's typed, that's bad, but the add should fail?)
-                //cout << "Declared " << myname << "::" << type << endl;
+                // Ignore type of myname - allow shadowing.
+
+                // TODO: Ensure that this fails for redefinition in scope,
+                // but allows shadowing in global scope.
                 global->add(myname, type);
 
-                // Check the types...
-                if (!matching) {
+                // Check the type of the right hand side matches BasicType
+                string lhrs = typeMatch(type, branches[3]->getType());
+                if (lhrs.empty()) {
                     typeError("Mismatched types in assignment.", node);
-                    //node->setErr();
                 }
             }
             //string match = matchAll(branches);
@@ -300,8 +303,10 @@ RTree *TypeCheck::leave2( RTree *node ) {
         string typeA = branches[0]->getType();
         if (deg > 1) {
             node->setType(typeA + " " + branches[1]->getType());
-        } else {
+        } else if (typeA.compare("_void") != 0) {
             node->setType(typeA);
+        } else {
+            node->setType("");
         }
     } else if (tval.compare ("MethodParams") == 0
               || tval.compare ("MethodParams_") == 0
@@ -413,7 +418,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
             node->setType("function " + myname + " " + branches[3]->getType());
         } else if (deg == 4) {
             // Neither an ExprList nor a DotExpr' on the right.
-            node->setType("function " + myname + " _void");
+            node->setType("function " + myname);
         } else if (deg == 2) {
             // Certain to be handling a DotExpr now.
 
@@ -703,7 +708,7 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
     string munged = t->getType();
     stringstream mstrm (munged);
 
-    cout << "Munged: " << munged << endl;
+
 
     string tmp;
     mstrm >> tmp;
@@ -717,6 +722,9 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
     stringstream fstrm (ftype);
     fstrm >> tmp;
 
+    cout << "Munged: " << munged << endl;
+    cout << "Lookued up: " << ftype << endl;
+
     string rettype;
     fstrm >> rettype;
 
@@ -726,23 +734,20 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
 
     cout << rettype << endl;
 
-    if (rettype.compare(ltype) == 0) {
-        cout << "Types match!" << endl;
-    } else {
-        typeError("Method lookup mismatch.", t);
-    }
-
     while (true) {
         string par1, par2;
         mstrm >> par1;
         fstrm >> par2;
         if (!par1.empty() && !par2.empty()) {
             cout << par1 << " " << par2 << endl;
+            if (par1.compare(par2) != 0) {
+                typeError("Method parameters are of incorrect type.", t);
+            }
         } else if (par1.empty() && par2.empty()) {
             cout << "Successful type match!" << endl;
             break;
         } else {
-            typeError("Method parameters do not match.", t);
+            typeError("Wrong number of method parameters.", t);
             break;
         }
     }
