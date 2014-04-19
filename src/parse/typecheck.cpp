@@ -168,6 +168,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
             typeError("Method does not return correct type.", node);
         }
         node->setType("_void");
+        global->leave();
     } else if (tval.compare ("Stmt") == 0) {
         // Stmts always return void
         node->setType("_void");
@@ -321,7 +322,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         else 
         {
             //node->setErr();
-            typeError("while statement non-void.", node);
+            typeError("Type mismatch in expression.", node);
         }
     } else if (tval.compare("BoolExpr_") == 0)
     {
