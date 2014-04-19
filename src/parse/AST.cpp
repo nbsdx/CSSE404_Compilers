@@ -99,6 +99,8 @@ pair<int,int> RTree::getPos () {
         return {-1,-1};
     } else {
         // Lazily try and get a subtree's position
+        // This will frequently return incorrect line numbers.
+        // Don't have time to look for the deepest line number.
         return branches[0]->getPos();
     }
 }

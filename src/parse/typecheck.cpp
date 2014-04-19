@@ -1,6 +1,8 @@
 #include <utility>
 #include <sstream>
 
+#include <assert.h>
+
 #include "typecheck.h"
 
 using namespace std;
@@ -124,8 +126,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
     bool matching = !match.empty();
 
     if (tval.compare ("ClassDecl") == 0
-        || tval.compare("MainClassDecl") == 0
-        || tval.compare("MethodDecl") == 0)
+        || tval.compare("MainClassDecl") == 0)
     {
         node->setType( "_void" );
         global->leave();
@@ -138,6 +139,30 @@ RTree *TypeCheck::leave2( RTree *node ) {
             || tval.compare("ClassVarDecl") == 0 
             || tval.compare("ClassVarDecls") == 0) 
     {
+        node->setType("_void");
+    } else if (tval.compare ("MethodDecl") == 0) {
+        // 12 public Type ID ( MethodParams ) { StmtLst return Expr ; }
+        // 11 public Type ID ( ) { StmtLst return Expr ; }
+        // 11 public Type ID ( MethodParams ) { return Expr ; }
+        // 10 public Type ID ( ) { return Expr ; }
+        // Need to ensure Type matches return Expr
+        // Note: ID has been taken care of by first pass
+        assert(deg > 10);
+        string expected = branches[1]->getType();
+        
+        int actidx;
+        if (deg == 10) actidx = 7;
+        else if (deg == 11) actidx = 8;
+        else if (deg == 12) actidx = 9;
+        else assert(false);
+
+        string actual = branches[actidx]->getType();
+        string mm = typeMatch(expected, actual);
+        
+        if (mm.empty()) {
+            node->setErr();
+            typeError("Method does not return correct type.");
+        }
         node->setType("_void");
     } else if (tval.compare ("Stmt") == 0) {
         // Stmts always return void
