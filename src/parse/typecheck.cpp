@@ -27,8 +27,8 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
-    cout << "Global Namespace: " << endl;
-    global->print( 0 );
+    //cout << "Global Namespace: " << endl;
+    //global->print( 0 );
 
     cout << endl << endl;
 
@@ -180,7 +180,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         // {subtreeIdx, expectedType}. Easier than picking out the
         // individual branches for inspection...
         // (We can't use matchAll on these, since the types are supposed to conflict)
-        cout << "PFORM: " << pform << endl;
+        //cout << "PFORM: " << pform << endl;
         if (pform.compare("while") == 0) 
         {
             // Stmt -> while ( Expr ) Stmt
@@ -246,17 +246,17 @@ RTree *TypeCheck::leave2( RTree *node ) {
                     // ID (ID = Expr) ; <-- DeclInit  
                     myname = branches[1]->getBranches()[0]->printVal();
                     global->add(myname, type);
-                    cout << "Declared " << myname << "::" << type << endl;
+                    ///cout << "Declared " << myname << "::" << type << endl;
                 } else if ( dynamic_cast<Delimiter*>( one )) {
                     // ID (= Expr) ; <-- Assign
                     Delimiter *del = dynamic_cast<Delimiter*>( one );
                     if (del->token() == Equal) {
                         myname = branches[0]->printVal();
                         global->add(myname, type);
-                        cout << "Decl/assed " << myname << "::" << type << endl;
+                        //cout << "Decl/assed " << myname << "::" << type << endl;
                     } else if (del->token() == Period) {
                     // ID (. DotExprChain...) ; <-- method lookup
-                        cout << "<<--- Method lookup here\n";
+                        //cout << "<<--- Method lookup here\n";
                     }
                 }
                 // else fatal compiler error
@@ -269,7 +269,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
                 string myname = branches[1]->printVal();
                 // Ignore type of myname?
                 // (if it's typed, that's bad, but the add should fail?)
-                cout << "Declared " << myname << "::" << type << endl;
+                //cout << "Declared " << myname << "::" << type << endl;
                 global->add(myname, type);
 
                 // Check the types...
@@ -397,7 +397,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         if (deg > 2) {
             // Literal and Literal DotExpr' will not have a name
             myname = branches[1]->printVal();
-            cout << "DOTEXPR_, ID = " << myname << endl;
+            //cout << "DOTEXPR_, ID = " << myname << endl;
         }
 
         if (deg == 6) {
@@ -512,13 +512,13 @@ RTree *TypeCheck::visit2( RTree *node ) {
     if (tval.compare ("ClassDecl") == 0 )
     {
         string classname = node->getBranches()[0]->getBranches()[1]->printVal();
-        cout << "\n\nENTERING CLASS: " << classname << endl;
+        //cout << "\n\nENTERING CLASS: " << classname << endl;
 
         // Add the Class namespace to this one.
         global->enter();
         global->merge( global->getNamespace( classname ) );
         
-        global->print( 0 );
+        //global->print( 0 );
     }
     else if( tval.compare("MainClassDecl") == 0 )
     {
@@ -567,7 +567,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
 
         global->add( name, type );
 
-        cout << "Added [" << name << " : " << type << "]" << endl;
+        //cout << "Added [" << name << " : " << type << "]" << endl;
     }
     else if( tval.compare( "ClassVarDecl" ) == 0 )
     {
@@ -584,7 +584,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
         }
         global->add( name, type );
 
-        cout << "Added new Class Var [" << name << " : " << type << "]" << endl;
+        //cout << "Added new Class Var [" << name << " : " << type << "]" << endl;
     }
     else if( tval.compare( "DotExpr" ) == 0 )
     {
@@ -623,8 +623,8 @@ RTree *TypeCheck::visit2( RTree *node ) {
 
         if( node->getLeftType().empty() )
         {
-            cerr << "Damnit Neil" << endl;
-            global->print();
+            //cerr << "Damnit Neil" << endl;
+            //global->print();
             // Not convinced this is fatal or that left types necessary
             //exit( 2 );
         }
@@ -685,8 +685,8 @@ RTree *TypeCheck::leave( RTree *node )
 
     if( tval.compare( "ClassDecl" ) == 0 )
     {
-        cout << "Up one level" << endl;
-//        global->leave();
+        //cout << "Up one level" << endl;
+        //global->leave();
     }
     else if( tval.compare( "Type" ) != 0 
            && branches.size() == 1       )
@@ -713,7 +713,7 @@ RTree *TypeCheck::visit( RTree *node )
         global->add( cur_namespace, classContext );
         global->add( cur_namespace, string( "class " ) + b->printVal() );
 
-        cout << "Added new Namespace: " << b->printVal() << endl;
+        //cout << "Added new Namespace: " << b->printVal() << endl;
     }
     else if( tval.compare( "ClassDeclRHS" ) == 0 )
     {
@@ -753,7 +753,7 @@ RTree *TypeCheck::visit( RTree *node )
 
         cur_function = b->printVal();
 
-        cout << "Added new Method: " << b->printVal() << endl;
+        //cout << "Added new Method: " << b->printVal() << endl;
     }
     else if( tval.compare( "Formal" ) == 0 )
     {
