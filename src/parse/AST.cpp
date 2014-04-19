@@ -15,6 +15,7 @@ RTree::RTree(BasicToken* bt)
     this->typed = false;
     this->type = "_untyped";
     this->left_type = "";
+    this->error = false;
 }
 
 bool RTree::isLeaf () 
@@ -61,10 +62,14 @@ void RTree::printBranch (int depth) {
 
     cout << " ";
     if (this->typed) {
-        cout << ":" << this->type << ")";
+        cout << ":" << this->type;// << ")";
     } else {
         //cout << ")";
         cout << "\033[0;31m:UNTYPED" << "\033[0m";
+    }
+
+    if (this->error) {
+        cout << "<===";
     }
 
     for (RTree *t : branches)
@@ -99,4 +104,12 @@ void RTree::setType (string str) {
 
 string RTree::getType () {
     return this->type;
+}
+
+bool RTree::getErr () {
+    return this->error;
+}
+
+void RTree::setErr () {
+    this->error = true;
 }

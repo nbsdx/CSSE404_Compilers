@@ -9,6 +9,7 @@ TypeCheck::TypeCheck()
 {
     this->global = new Context( true );
 //    this->second = new Context(false);
+    this->clean = true;
 }
 
 RTree* TypeCheck::check( RTree *raw )
@@ -105,7 +106,7 @@ string TypeCheck::matchAll (vector<RTree*> branches)
         else if( !branch_nil && !matches ) 
         {
             match = false;
-            typeError("Found " + type + " when expecting " + ret);
+            //typeError("Found " + type + " when expecting " + ret);
         }
     }
     if( !match ) 
@@ -155,59 +156,101 @@ RTree *TypeCheck::leave2( RTree *node ) {
             // ensure Stmt is void
             tups = {{2, "_nil"}, {4, "_void"}};
             bool matches = expectsThese(tups, branches);
-            if (!matches) 
+            if (!matches) {
+                node->setErr();
                 typeError("while statement non-void.");
+            }
         } 
         else if (pform.compare("if") == 0) 
         {
             // Stmt -> if ( Expr ) Stmt else Stmt
             tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
             bool matches = expectsThese(tups, branches);
-            if (!matches) 
+            if (!matches) {
+                node->setErr();
                 typeError("If statement branch non-void.");
+            }
         } 
         else if (pform.compare("{") == 0) 
         {
             tups = {{1, "_void"}};
             bool matches = expectsThese(tups, branches);
-            if (!matches) 
+            if (!matches) {
+                node->setErr();
                 typeError("Braced block returning non-void.");
+            }
         } 
         else if (pform.compare("System.out.println") == 0) 
         {
             tups = {{2, "int"}};
             bool matches = expectsThese(tups, branches);
-            if (!matches) 
+            if (!matches) {
+                node->setErr();
                 typeError("System.out.println only accepts numbers.");
+            }
         } 
         else 
         {
-            // Assignments
-            // Cases: ID = Expr ;         => 4 Everything should be of type "ID"
-            //        ID ID = Expr ;      => 5 Everything should be of type "ID"
-
-            //        int ID = Expr ;     => 5 Everything should be of type "int"
-            //        boolean ID = Expr ; => 5 Everything should be of type "boolean"
+            // Assignments and method calls
 
             // I think this is correct.        
             // TODO: This is broken because of DotExpr - check again after DotExpr' works properly.
-            if (deg == 4) {
+            //if (deg == 3) cout << "\nTrying to declare usertype var:";
+            node->printT();
+            //cout << "Degree: " << deg ;
+            if (deg == 3) {
+                // ID StmtRHS ;
+                // We can rely on the looked-up type of ID here.
+                if (!matching) {
+                    typeError("Mismatched types in assignment.");
+                    node->setErr();
+                }
+
+
+                string type = branches[0]->getType();
+                string myname;
+                BasicToken* one = branches[1]->getBranches()[0]->getVal();
+                if ( dynamic_cast<Operator*>( one )) {
+                    // ID (= Expr) ; <-- Assign
+                    myname = branches[0]->printVal();
+                    global->add(myname, type);
+                    cout << "Declared " << myname << "::" << type << endl;
+                } else if ( dynamic_cast<Identifier*>( one )) {
+                    // ID (ID = Expr) ; <-- DeclInit  
+                    myname = branches[1]->getBranches()[0]->printVal();
+                    global->add(myname, type);
+                    cout << "Declared " << myname << "::" << type << endl;
+                } else if ( dynamic_cast<Delimiter*>( one )) {
+                    // ID (. DotExprChain...) ; <-- method lookup
+                    cout << "<<--- Method lookup here\n";
+                }
+                // else fatal compiler error
 
             } else if (deg == 5) {
-                // Blindly insert the variable name
+                // BasicType ID = Expr ; 
+
+                // Blindly insert the variable name into the context table
                 string type = branches[0]->printVal();
                 string myname = branches[1]->printVal();
                 // Ignore type of myname?
-                // (if it's typed, that's bad, but the lookup should fail)
+                // (if it's typed, that's bad, but the add should fail?)
                 cout << "Declared " << myname << "::" << type << endl;
                 global->add(myname, type);
+
+                // Check the types...
+                if (!matching) {
+                    typeError("Mismatched types in assignment.");
+                    node->setErr();
+                }
             }
             //string match = matchAll(branches);
                 //cout << "TVAL " << tval << endl;
                 //cout << "\tType is " << match << endl;
 
-            if (match.empty())
-                typeError("Mismatched types in assignment.");
+            //if (!matching) {
+            //    node->setErr(); 
+            //    typeError("Mismatched types in assignment.");
+            //}
             //else {
             //    global->add(tval, match);
             //}
@@ -305,6 +348,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
 
             // We can look up the method here!
             node->setType("DECIDEABLE");
+            node->setErr();
         } else if (deg == 1) {
             // Certain to be handling a DotExpr now.
             // deg 1 -> this has probably already been trimmed from the tree
@@ -321,7 +365,9 @@ RTree *TypeCheck::leave2( RTree *node ) {
         //string match = matchAll( branches );
         if( !matching )
         {
+            node->setErr();
             typeError( "Mismatched types in Literal." );
+            // Why is this nil?
             node->setType( "_nil" );
         }
         else
@@ -429,6 +475,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
                 string type = global->typeof( word );
                 if( type.find( "class" ) != 0 )
                 {
+                    node->setErr();
                     typeError( "Undefined class: " + type );
                 }
             }
@@ -459,6 +506,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
         {
             if( global->typeof( type ).compare( "Undefined" ) == 0 )
             {
+                node->setErr();
                 typeError( "Error: Type " + type + " undefined." );
             }
         }
@@ -480,12 +528,14 @@ RTree *TypeCheck::visit2( RTree *node ) {
             if( type.compare( "int" ) == 0 ||
                 type.compare( "boolean" ) == 0 )
             {
-                typeError( "Error: builtin type " + type + " has no functions" );
+                //node->setErr();
+                //typeError( "Error: builtin type " + type + " has no functions" );
                 branches[1]->setLeftType( "Error" );
             }
             else if( type.compare( "Undefined" ) == 0 )
             {
-                typeError( "Error: Undefined variable " + branches[0]->printVal() );
+                //node->setErr();
+                //typeError( "Error: Undefined variable " + branches[0]->printVal() );
                 branches[1]->setLeftType( "Error" );
             }
             else
@@ -542,7 +592,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
             }
             else
             {
-                typeError( "Error: " + node->getLeftType() + "." + branches[1]->printVal() + " is not a function" );
+                //typeError( "Error: " + node->getLeftType() + "." + branches[1]->printVal() + " is not a function" );
                 node->setType( "_nil" );
             }
         }

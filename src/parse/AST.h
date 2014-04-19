@@ -33,6 +33,10 @@ public:
 
     string getLeftType(){ return left_type; }
 
+    void setErr ();
+
+    bool getErr ();
+
 protected:
     void printBranch (int depth);
     string type;
@@ -42,6 +46,7 @@ private:
     bool leaf;
     vector <RTree*> branches;
     bool typed;
+    bool error;
 
     string left_type;
 };
