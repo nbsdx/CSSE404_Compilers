@@ -1,7 +1,7 @@
 #CPP_FILES := $(wildcard src/util/*.cpp) $(wildcard src/lex/*.cpp) $(wildcard src/parse/*.cpp)
 #OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
-OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o obj/context.o obj/typecheck.o
+OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o obj/context.o obj/typecheck.o obj/parse.o
 
 CC=g++
 CFLAGS=-MMD -std=c++11 -Wall -g
@@ -12,6 +12,9 @@ main: $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $@ $^
 
 obj/main.o: src/parse/main.cpp src/parse/tt.hpp obj/token.o obj/lexer.o obj/AST.o obj/context.o obj/typecheck.o
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/parse.o: src/parse/parse.cpp obj/token.o obj/lexer.o obj/AST.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/typecheck.o: src/parse/typecheck.cpp src/parse/typecheck.h obj/AST.o

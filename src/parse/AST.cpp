@@ -16,6 +16,7 @@ RTree::RTree(BasicToken* bt)
     this->type = "_untyped";
     this->left_type = "";
     this->error = false;
+    this->haspos = false;
 }
 
 bool RTree::isLeaf () 
@@ -67,9 +68,11 @@ void RTree::printBranch (int depth) {
         //cout << ")";
         cout << "\033[0;31m:UNTYPED" << "\033[0m";
     }
-
+    
     if (this->error) {
-        cout << "<===";
+        pair<int,int> posi = this->getPos();
+    
+        cout << "<=== " << "Line " << posi.first;
     }
 
     for (RTree *t : branches)
@@ -79,6 +82,25 @@ void RTree::printBranch (int depth) {
     }
 
     cout << ")";
+}
+
+void RTree::setPos (int line, int col) {
+    if (!this->haspos) {
+        this->haspos = true;
+        this->line = line;
+        this->col = col;
+    }
+}
+
+pair<int,int> RTree::getPos () {
+    if (this->haspos) {
+        return {this->line, this->col};
+    } else if (leaf) {
+        return {-1,-1};
+    } else {
+        // Lazily try and get a subtree's position
+        return branches[0]->getPos();
+    }
 }
 
 string RTree::printVal () {

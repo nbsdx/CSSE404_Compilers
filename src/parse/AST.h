@@ -3,6 +3,7 @@
 #define AST_H 1
 
 #include <string>
+#include <utility>
 #include "tt.hpp"
 
 class RTree {
@@ -37,6 +38,10 @@ public:
 
     bool getErr ();
 
+    void setPos(int line, int col);
+
+    pair<int,int> getPos();
+
 protected:
     void printBranch (int depth);
     string type;
@@ -47,6 +52,10 @@ private:
     vector <RTree*> branches;
     bool typed;
     bool error;
+
+    bool haspos;
+    int line;
+    int col;
 
     string left_type;
 };

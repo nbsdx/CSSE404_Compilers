@@ -196,7 +196,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
             // I think this is correct.        
             // TODO: This is broken because of DotExpr - check again after DotExpr' works properly.
             //if (deg == 3) cout << "\nTrying to declare usertype var:";
-            node->printT();
+            //node->printT();
             //cout << "Degree: " << deg ;
             if (deg == 3) {
                 // ID StmtRHS ;
