@@ -195,7 +195,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         else if (pform.compare("if") == 0) 
         {
             // Stmt -> if ( Expr ) Stmt else Stmt
-            tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
+            tups = {{4, "_void"}, {6, "_void"}};
             bool matches = expectsThese(tups, branches);
             if (!matches) {
                 //node->setErr();
@@ -315,7 +315,6 @@ RTree *TypeCheck::leave2( RTree *node ) {
               || tval.compare("MultExpr_") == 0
               || tval.compare("AddExpr_") == 0
               || tval.compare("Expr") == 0
-              || tval.compare("StmtRHS") == 0
               || tval.compare("ExprLst_") == 0) {
 
         //bool matchAll (vector<RTree*> branches) {
@@ -329,6 +328,21 @@ RTree *TypeCheck::leave2( RTree *node ) {
             //node->setErr();
             typeError("Type mismatch in expression.", node);
         }
+    } else if (tval.compare("StmtRHS") == 0) {
+        // DotExpr' <- DotExpr' becomes decideable here and should be traversed
+        // = Expr <- match, allowing nil
+        // ID = Expr <- must match type of ID, Expr can be nil
+        if (deg == 1) {
+            // TODO: Decision process (traversal) for DotExpr'
+            node->setType(branches[0]->getType());
+        } else if (deg == 2) {
+            if (matching) node->setType(match);
+            else node->setType("_nil");
+        } else if (deg == 3) {
+            if (matching) node->setType(match);
+            else typeError("Mismatched types in right-hand side of statement.", node);            
+        }
+
     } else if (tval.compare("BoolExpr_") == 0)
     {
         // Anything can be evaluated in a boolean context, which is why
@@ -478,7 +492,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
             case True: 
             case False:
             case Bool: node->setType("boolean"); break;
-            case Null: node->setType("null"); break;
+            // Null can be assigned to anything
+            case Null: node->setType("_nil"); break;
             case New: node->setType("_nil"); break;
 
             case Int: node->setType("int" ); break;
