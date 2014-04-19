@@ -694,6 +694,12 @@ void TypeCheck::dotExprResolve (RTree *t) {
 //   exists in the namespace ltype.
 void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
     Context *c = global->getNamespace(ltype);
+
+    if (!c) {
+        typeError("There are no methods associated with " + ltype, t);
+        return;
+    }
+
     string munged = t->getType();
     stringstream mstrm (munged);
 
