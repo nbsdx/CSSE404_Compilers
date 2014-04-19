@@ -180,11 +180,12 @@ RTree *TypeCheck::leave2( RTree *node ) {
         // {subtreeIdx, expectedType}. Easier than picking out the
         // individual branches for inspection...
         // (We can't use matchAll on these, since the types are supposed to conflict)
+        cout << "PFORM: " << pform << endl;
         if (pform.compare("while") == 0) 
         {
             // Stmt -> while ( Expr ) Stmt
             // ensure Stmt is void
-            tups = {{2, "_nil"}, {4, "_void"}};
+            tups = {{4, "_void"}};
             bool matches = expectsThese(tups, branches);
             if (!matches) {
                 //node->setErr();
@@ -222,8 +223,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         else 
         {
             // Assignments and method calls
-
-            // I think this is correct.        
+     
             // TODO: This is broken because of DotExpr - check again after DotExpr' works properly.
             //if (deg == 3) cout << "\nTrying to declare usertype var:";
             //node->printT();
@@ -241,18 +241,23 @@ RTree *TypeCheck::leave2( RTree *node ) {
                 string myname;
                 BasicToken* one = branches[1]->getBranches()[0]->getVal();
                 if ( dynamic_cast<Operator*>( one )) {
-                    // ID (= Expr) ; <-- Assign
-                    myname = branches[0]->printVal();
-                    global->add(myname, type);
-                    cout << "Declared " << myname << "::" << type << endl;
+                    assert(0);
                 } else if ( dynamic_cast<Identifier*>( one )) {
                     // ID (ID = Expr) ; <-- DeclInit  
                     myname = branches[1]->getBranches()[0]->printVal();
                     global->add(myname, type);
                     cout << "Declared " << myname << "::" << type << endl;
                 } else if ( dynamic_cast<Delimiter*>( one )) {
+                    // ID (= Expr) ; <-- Assign
+                    Delimiter *del = dynamic_cast<Delimiter*>( one );
+                    if (del->token() == Equal) {
+                        myname = branches[0]->printVal();
+                        global->add(myname, type);
+                        cout << "Decl/assed " << myname << "::" << type << endl;
+                    } else if (del->token() == Period) {
                     // ID (. DotExprChain...) ; <-- method lookup
-                    cout << "<<--- Method lookup here\n";
+                        cout << "<<--- Method lookup here\n";
+                    }
                 }
                 // else fatal compiler error
 
