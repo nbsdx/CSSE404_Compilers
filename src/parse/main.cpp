@@ -46,9 +46,9 @@ int main( int argc, char **argv )
     RTree *checked = tc->check( raw );
 
     if (tc->clean) {
-        cerr << "Passed type checking. Compilatioon can proceed.\n";
+        cerr << "Passed type checking. Compilation can proceed.\n";
     } else {
-        cerr << "Type errors detected. Compilation must halt.\n";
+        cerr << tc->errs << " type error(s) detected. Compilation must halt.\n";
     }
 
     // holy duplication

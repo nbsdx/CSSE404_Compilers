@@ -12,6 +12,7 @@ TypeCheck::TypeCheck()
     this->global = new Context( true );
 //    this->second = new Context(false);
     this->clean = true;
+    this->errs = 0;
 }
 
 RTree* TypeCheck::check( RTree *raw )
@@ -57,8 +58,11 @@ RTree *TypeCheck::postOrder( RTree *tree,
     }
 }
 
-void TypeCheck::typeError (string excuse) {
-    cerr << excuse << endl;
+void TypeCheck::typeError (string excuse, RTree *node) {
+    node->setErr();
+    this->errs++;
+    pair<int,int> posi = node->getPos();
+    cerr << "Line " << posi.first << "c" << posi.second << ": " << excuse << endl;
     this->clean = false;
 }
 
@@ -108,7 +112,7 @@ string TypeCheck::matchAll (vector<RTree*> branches)
         else if( !branch_nil && !matches ) 
         {
             match = false;
-            //typeError("Found " + type + " when expecting " + ret);
+            //typeError("Found " + type + " when expecting " + ret, node);
         }
     }
     if( !match ) 
@@ -160,8 +164,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
         string mm = typeMatch(expected, actual);
         
         if (mm.empty()) {
-            node->setErr();
-            typeError("Method does not return correct type.");
+            //node->setErr();
+            typeError("Method does not return correct type.", node);
         }
         node->setType("_void");
     } else if (tval.compare ("Stmt") == 0) {
@@ -182,8 +186,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
             tups = {{2, "_nil"}, {4, "_void"}};
             bool matches = expectsThese(tups, branches);
             if (!matches) {
-                node->setErr();
-                typeError("while statement non-void.");
+                //node->setErr();
+                typeError("while statement non-void.", node);
             }
         } 
         else if (pform.compare("if") == 0) 
@@ -192,8 +196,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
             tups = {{2, "_nil"}, {4, "_void"}, {6, "_void"}};
             bool matches = expectsThese(tups, branches);
             if (!matches) {
-                node->setErr();
-                typeError("If statement branch non-void.");
+                //node->setErr();
+                typeError("If statement branch non-void.", node);
             }
         } 
         else if (pform.compare("{") == 0) 
@@ -201,8 +205,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
             tups = {{1, "_void"}};
             bool matches = expectsThese(tups, branches);
             if (!matches) {
-                node->setErr();
-                typeError("Braced block returning non-void.");
+                //node->setErr();
+                typeError("Braced block returning non-void.",node);
             }
         } 
         else if (pform.compare("System.out.println") == 0) 
@@ -210,8 +214,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
             tups = {{2, "int"}};
             bool matches = expectsThese(tups, branches);
             if (!matches) {
-                node->setErr();
-                typeError("System.out.println only accepts numbers.");
+                //node->setErr();
+                typeError("System.out.println only accepts numbers.",node);
             }
         } 
         else 
@@ -227,8 +231,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
                 // ID StmtRHS ;
                 // We can rely on the looked-up type of ID here.
                 if (!matching) {
-                    typeError("Mismatched types in assignment.");
-                    node->setErr();
+                    typeError("Mismatched types in assignment.", node);
+                    //node->setErr();
                 }
 
 
@@ -264,8 +268,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
 
                 // Check the types...
                 if (!matching) {
-                    typeError("Mismatched types in assignment.");
-                    node->setErr();
+                    typeError("Mismatched types in assignment.", node);
+                    //node->setErr();
                 }
             }
             //string match = matchAll(branches);
@@ -316,7 +320,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
         } 
         else 
         {
-            // TODO: Could insert an error type here and proceed.
+            //node->setErr();
+            typeError("while statement non-void.", node);
         }
     } else if (tval.compare("BoolExpr_") == 0)
     {
@@ -411,8 +416,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
         //string match = matchAll( branches );
         if( !matching )
         {
-            node->setErr();
-            typeError( "Mismatched types in Literal." );
+            //node->setErr();
+            typeError( "Mismatched types in Literal.", node);
             // Why is this nil?
             node->setType( "_nil" );
         }
@@ -521,8 +526,8 @@ RTree *TypeCheck::visit2( RTree *node ) {
                 string type = global->typeof( word );
                 if( type.find( "class" ) != 0 )
                 {
-                    node->setErr();
-                    typeError( "Undefined class: " + type );
+                    //node->setErr();
+                    typeError( "Undefined class: " + type , node);
                 }
             }
         }
@@ -552,8 +557,8 @@ RTree *TypeCheck::visit2( RTree *node ) {
         {
             if( global->typeof( type ).compare( "Undefined" ) == 0 )
             {
-                node->setErr();
-                typeError( "Error: Type " + type + " undefined." );
+                //node->setErr();
+                typeError( "Error: Type " + type + " undefined.", node);
             }
         }
         global->add( name, type );
@@ -575,7 +580,7 @@ RTree *TypeCheck::visit2( RTree *node ) {
                 type.compare( "boolean" ) == 0 )
             {
                 //node->setErr();
-                //typeError( "Error: builtin type " + type + " has no functions" );
+                //typeError( "Error: builtin type " + type + " has no functions" , node);
                 branches[1]->setLeftType( "Error" );
             }
             else if( type.compare( "Undefined" ) == 0 )
@@ -699,7 +704,7 @@ RTree *TypeCheck::visit( RTree *node )
             // Make sure it's been defined.
             if( !global->defined( type ) )
             {
-                typeError( "Cannot extend undefined class " + type );
+                typeError( "Cannot extend undefined class " + type, node );
             }
             else
             {

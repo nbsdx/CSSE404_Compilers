@@ -19,6 +19,7 @@ class TypeCheck
 
 public:
     bool clean;
+    int errs;
     TypeCheck();
     RTree *check( RTree *raw );
 
@@ -32,7 +33,7 @@ public:
     RTree *visit2( RTree *node );
     RTree *leave2( RTree *node );
 protected:
-    void typeError (string excuse);
+    void typeError (string excuse, RTree *node);
 
     string typeMatch (string a, string b);
     string matchAll (vector<RTree*> branches);
