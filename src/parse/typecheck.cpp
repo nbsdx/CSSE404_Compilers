@@ -257,6 +257,8 @@ RTree *TypeCheck::leave2( RTree *node ) {
                     } else if (del->token() == Period) {
                     // ID (. DotExprChain...) ; <-- method lookup
                         //cout << "<<--- Method lookup here\n";
+                        resolveDexPrime(type, branches[1]);
+
                     }
                 }
                 // else fatal compiler error
@@ -333,7 +335,9 @@ RTree *TypeCheck::leave2( RTree *node ) {
         // = Expr <- match, allowing nil
         // ID = Expr <- must match type of ID, Expr can be nil
         if (deg == 1) {
-            // TODO: Decision process (traversal) for DotExpr'
+            // DotExpr'
+            // Singleton branches should have been trimmed already
+            // but it is safe to trust the child's inferred type.
             node->setType(branches[0]->getType());
         } else if (deg == 2) {
             if (matching) node->setType(match);
@@ -380,11 +384,7 @@ RTree *TypeCheck::leave2( RTree *node ) {
         // Argument types are concat'd in type field by ExprLst and ExprLst_
         // ... but the DotExpr or DotExpr_ to our left will need the func name
         //     in order to see if it exists.
-
-        // We actually cannot perform the lookup until the entire Stmt has been traversed.
-        // There will need to be logic in Stmt that traverses typed DotExpr_ and DotExpr
-        // in order to ensure that each function a) exists b) Produces the type implied by
-        // trailing DotExpr'.
+        // Traversing these types is taken care of in Stmt, DotExpr
 
         // This code is a bit annoying, because we never allow epsilon productions
         //   to enter the tree. Makes it difficult to find the two relevant
@@ -419,14 +419,15 @@ RTree *TypeCheck::leave2( RTree *node ) {
 
             // We can look up the method here!
             dotExprResolve(node);
-            node->setType("DECIDEABLE");
-            node->setErr();
+            //node->setType("DECIDEABLE");
+            //node->setErr();
         } else if (deg == 1) {
             // Certain to be handling a DotExpr now.
             // deg 1 -> this has probably already been trimmed from the tree
             node->setType(branches[0]->getType());
         } else {
-            node->setType("_nil");
+            typeError ("Method lookup error.", node);
+            //node->setType("_nil");
         }
 
         // For nested DotExpr_ we will also need to conduct this lookup.
@@ -682,40 +683,8 @@ void TypeCheck::dotExprResolve (RTree *t) {
     string nspace = branches[0]->getType();
 
     resolveDexPrime(nspace, branches[1]);
-    /*
-    string munged = branches[1]->getType();
+    t->setType(branches[1]->getType());
 
-    cout << "Check namespace " << nspace << " for " << munged << endl;
-    if (munged.find( "function" ) == 0) {
-        stringstream stream( munged );
-        string tmp;
-        string fname;
-        stream >> tmp;
-        stream >> fname;
-        cout << "Function name to lookup is " << fname << endl;
-        Context *c = global->getNamespace(nspace);
-        cout << "Looked up " << nspace<< endl;
-        c->print();
-        string ftype = c->typeof(fname);
-        cout << ftype << endl;
-        stringstream strm2 ( ftype );
-        strm2 >> tmp;
-
-        string rettype;
-        strm2 >> rettype;
-
-        cout << "Looked up function returns " << rettype << endl; 
-
-        
-        while (true) {
-            string tmp1, tmp2;
-            stream >> tmp1;
-            strm2 >> tmp2;
-            if (tmp1.empty() || tmp2.empty()) break;
-            cout << tmp1 << " == " << tmp2 << "?\n";
-        }
-    }
-    */
 }
 
 // TODO: Catch the other entry point for DotExpr_
@@ -727,6 +696,8 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
     Context *c = global->getNamespace(ltype);
     string munged = t->getType();
     stringstream mstrm (munged);
+
+    cout << "Munged: " << munged << endl;
 
     string tmp;
     mstrm >> tmp;
@@ -742,6 +713,46 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
 
     string rettype;
     fstrm >> rettype;
+
+    // Set the return type for this node to the function ret
+    t->setType(rettype);
+    // This gets overridden below if the node has children
+
+    cout << rettype << endl;
+
+    if (rettype.compare(ltype) == 0) {
+        cout << "Types match!" << endl;
+    } else {
+        typeError("Method lookup mismatch.", t);
+    }
+
+    while (true) {
+        string par1, par2;
+        mstrm >> par1;
+        fstrm >> par2;
+        if (!par1.empty() && !par2.empty()) {
+            cout << par1 << " " << par2 << endl;
+        } else if (par1.empty() && par2.empty()) {
+            cout << "Successful type match!" << endl;
+            break;
+        } else {
+            typeError("Method parameters do not match.", t);
+            break;
+        }
+    }
+
+    cout << t->degree();
+
+    if (t->degree() == 6) {
+        RTree *b = t->getBranches()[5];
+        cout << "Proceeding to next dotExpr with ltype " << rettype << endl;
+        resolveDexPrime(rettype, b);
+        // Pass the type info back up
+        t->setType(b->getType());
+        //cout << "Does " << ltype << " == " << b->getType() << "?" << endl;
+    } else {
+        cout << "Completed type match, no further dotExpr_" << endl;
+    }
 
     // set node's type field here somewhere
     // ... and descend
