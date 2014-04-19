@@ -716,14 +716,14 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
     string fname;
     mstrm >> fname;
 
-    cout << "Searching namespace " << ltype << " for " << fname << endl;
+   // cout << "Searching namespace " << ltype << " for " << fname << endl;
 
     string ftype = c->typeof(fname);
     stringstream fstrm (ftype);
     fstrm >> tmp;
 
-    cout << "Munged: " << munged << endl;
-    cout << "Lookued up: " << ftype << endl;
+    //cout << "Munged: " << munged << endl;
+    //cout << "Lookued up: " << ftype << endl;
 
     string rettype;
     fstrm >> rettype;
@@ -744,7 +744,7 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
                 typeError("Method parameters are of incorrect type.", t);
             }
         } else if (par1.empty() && par2.empty()) {
-            cout << "Successful type match!" << endl;
+            //cout << "Successful type match!" << endl;
             break;
         } else {
             typeError("Wrong number of method parameters.", t);
@@ -756,13 +756,13 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
 
     if (t->degree() == 6) {
         RTree *b = t->getBranches()[5];
-        cout << "Proceeding to next dotExpr with ltype " << rettype << endl;
+        //cout << "Proceeding to next dotExpr with ltype " << rettype << endl;
         resolveDexPrime(rettype, b);
         // Pass the type info back up
         t->setType(b->getType());
         //cout << "Does " << ltype << " == " << b->getType() << "?" << endl;
     } else {
-        cout << "Completed type match, no further dotExpr_" << endl;
+        //cout << "Completed type match, no further dotExpr_" << endl;
     }
 
     // set node's type field here somewhere
