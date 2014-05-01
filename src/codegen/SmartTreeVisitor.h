@@ -5,6 +5,10 @@
 #include "SmartTree.h"
 
 #include <fstream>
+#include <sstream>
+#include <string>
+#include <stack>
+#include <map>
 
 namespace ir
 {
@@ -38,8 +42,14 @@ public:
 
 class CodeGenerator : public Visitor
 {
-    fstream file;
 public:
+    enum RegisterState
+    {
+        Clean,
+        InUse,
+        Dirty
+    };
+
     CodeGenerator( const string& );
     void process( Program * );
     void process( MainClass * );
@@ -48,6 +58,28 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( FinalExpression * );
+
+private:
+
+    void finalize_function();
+    void finalize_program();
+
+    fstream file;
+    stack<string> outreg;
+    stack<string> available_registers;
+    map<string,RegisterState> register_state;
+
+    // Function parts.
+    stringstream function_header;
+    stringstream function_footer;
+    stringstream function_body;
+
+    // Sections
+    stringstream section_data;
+
+    // globals/externs
+    stringstream text_header;
+    stringstream text_body;
 };
 
 } // End Namespace <ir>

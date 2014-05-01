@@ -13,32 +13,79 @@ namespace ir
 CodeGenerator::CodeGenerator( const string &filename )
 {
     file.open( filename, fstream::binary | fstream::out | fstream::trunc );
+
+    // Set up our register pool.
+//    register_state[ "rax" ] = Clean;  // For simplicity, reserve RAX for ret value.
+    register_state[ "rbx" ] = Clean;
+    register_state[ "rcx" ] = Clean;
+    register_state[ "rdx" ] = Clean;
+//    register_state[ "rdi" ] = Clean;  // For simplicity, don't use these as GP 
+//    register_state[ "rsi" ] = Clean;  // registers. Then they are "always" safe
+    register_state[ "r8" ] = Clean;
+    register_state[ "r9" ] = Clean;
+    register_state[ "r10" ] = Clean;
+    register_state[ "r11" ] = Clean;
+    register_state[ "r12" ] = Clean;
+    register_state[ "r13" ] = Clean;
+    register_state[ "r14" ] = Clean;
+    register_state[ "r15" ] = Clean;
+
+    // Set all of our registers to clean. 
+    for( auto i : register_state )
+    {
+        available_registers.push( i.first );
+    }
+}
+
+void CodeGenerator::finalize_function()
+{
+    text_body << function_header.str();
+    text_body << function_body.str();
+    text_body << function_footer.str();
+
+    function_header.str( "" );
+    function_body.str( "" );
+    function_footer.str( "" );
+}
+
+void CodeGenerator::finalize_program()
+{
+    file << section_data.str();
+    file << endl; 
+    file << text_header.str();
+    file << text_body.str();
+
+    file.close();
 }
 
 void CodeGenerator::process( Program *p )
 {
     // Write any init code that we need.
-    file << "section .data" << endl;
-    file << "\tprint_format_string db \"%d\", 10, 0" << endl;
-    file << endl;
+    section_data << "section .data" << endl;
+    section_data << "\tprint_format_string db \"%d\", 10, 0" << endl;
 
-    file << "section .text" << endl;
-    file << "\tglobal main" << endl;
-    file << "\textern printf" << endl;
-    file << "\textern exit" << endl;
-    file << endl;
+    text_header << "section .text" << endl;
+    text_header << "\tglobal main" << endl;
+    text_header << "\textern printf" << endl;
+    text_header << "\textern exit" << endl;
 
-    file << "main:" << endl;
+    function_header << "main:" << endl;
 
     // Write Main Class.
     p->getMainClass()->visit( this );
-//    for( auto a : p->getClasses() )
-//        a->visit( this );
     
     // Return 0.
-    file << endl;
-    file << "\tmov rax, 0" << endl;
-    file << "\tcall exit" << endl;
+    function_body << endl;
+    function_body << "\txor rax, rax" << endl;
+    function_body << "\tcall exit" << endl;
+
+    finalize_function();
+
+    // Write other classes.
+//    for( auto a : p->getClasses() )
+//        a->visit( this );
+
+    finalize_program();
 }
 
 void CodeGenerator::process( MainClass *mc )
@@ -59,11 +106,19 @@ void CodeGenerator::process( Formal *f ){}
 
 void CodeGenerator::process( PrintStatement *p )
 {
+    outreg.push( available_registers.top() );
+    register_state[ available_registers.top() ] = InUse;
+    available_registers.pop();
+
     this->visitIExpression( p->getValue() );
-    file << "\tmov rdi, print_format_string" << endl;
-    file << "\tmov rsi, rdx" << endl;
-    file << "\tmov rax, 0" << endl;
-    file << "\tcall printf" << endl;
+    function_body << "\tmov rdi, print_format_string" << endl;
+    function_body << "\tmov rsi, " << outreg.top() << endl;
+    function_body << "\txor rax, rax" << endl;
+    function_body << "\tcall printf" << endl;
+
+    available_registers.push( outreg.top() );
+    register_state[ outreg.top() ] = Clean;
+    outreg.pop();
 }
 
 /*
@@ -73,7 +128,7 @@ void CodeGenerator::process( FinalExpression *f )
 {
     int i = stoi( f->getLiteral() );
     
-    file << "\tmov rdx, " << i << endl;
+    function_body << "\tmov " << outreg.top() << ", " << i << endl;
 }
 
 
