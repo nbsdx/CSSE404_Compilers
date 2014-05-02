@@ -7,6 +7,7 @@
 #include <string>
 #include "context.h"
 #include "AST.h"
+#include "../codegen/SmartTree.h"
 
 using namespace std;
 
@@ -32,7 +33,10 @@ public:
 
     RTree *visit2( RTree *node );
     RTree *leave2( RTree *node );
+
+    ir::Program *getIR ();
 protected:
+    ir::Program *pgm;
     void typeError (string excuse, RTree *node);
     void dotExprResolve (RTree *t);
     void resolveDexPrime (string ltype, RTree *t);

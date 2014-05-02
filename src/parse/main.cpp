@@ -13,6 +13,9 @@
 #include "context.h"
 #include "typecheck.h"
 #include "parse.h"
+#include "../codegen/SmartTree.h"
+#include "../codegen/SmartTreeVisitor.h"
+
 
 using namespace std;
 
@@ -60,8 +63,22 @@ int main( int argc, char **argv )
 
 
     if (tc->clean) {
-        return EXIT_SUCCESS;
+        if ( ( argc > 2 ) && ( string( "--asm" ).compare( argv[2] ) == 0) ) {
+            using namespace ir;
+            Program *p = tc->getIR();
+            if (argc != 4) {
+                cerr << "Please supply a file to write to." << endl;
+                return EXIT_FAILURE;
+            } else {
+                PrintVisitor *visitor = new PrintVisitor();
+                p->visit( visitor );
+                CodeGenerator *gen = new CodeGenerator( argv[3] );
+                p->visit( gen );
+            }
+        }
+        else return EXIT_SUCCESS;
     } else {
         return EXIT_FAILURE;
     }
+
 }

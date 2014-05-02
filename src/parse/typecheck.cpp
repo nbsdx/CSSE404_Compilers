@@ -9,6 +9,15 @@
 
 using namespace std;
 
+ir::MainClass *mc = NULL;
+ir::PrintStatement *ps = NULL;
+
+
+ir::Program* TypeCheck::getIR ()
+{
+    return pgm;
+}
+
 TypeCheck::TypeCheck()
 {
     this->global = new Context( true );
@@ -136,6 +145,12 @@ RTree *TypeCheck::leave2( RTree *node ) {
     {
         node->setType( "_void" );
         global->leave();
+
+        // Dreadful hack for quick println gcodegen
+	    mc = new ir::MainClass(branches[1]->printVal());
+        mc->addStatement(ps);
+        pgm = new ir::Program();
+	    pgm->setMainClass(mc);
     }
     else if( tval.compare("ClassDecls") == 0
             || tval.compare("ClassBody") == 0
@@ -221,6 +236,16 @@ RTree *TypeCheck::leave2( RTree *node ) {
                 //node->setErr();
                 typeError("System.out.println only accepts numbers.",node);
             }
+
+            // Dreadful and temporary hack
+            // TODO: Urgently remove.
+            using namespace ir;
+            FinalExpression *five = new FinalExpression( branches[2]->printVal() );
+            ps = new PrintStatement( five );
+            //mc->addStatement( print );
+
+
+
         } 
         else 
         {
