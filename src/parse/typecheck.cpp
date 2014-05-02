@@ -375,6 +375,30 @@ RTree *TypeCheck::leave2( RTree *node ) {
             // something is very broken
             assert(0);
         }
+    } else if (tval.compare("CompExpr") == 0) {
+        if (deg == 1) {
+            node->setType(branches[0]->getType());
+        } else if (deg == 2) {
+            // We have a comparison. The end type is always a boolean
+            node->setType("boolean");
+
+            // ... but we need to be certain that the two arguments are of the same type
+            if (!matching) {
+                typeError("Comparators require like-typed expressions.", node);
+            }
+
+        } // else parsing bug
+
+    } else if (tval.compare("CompExpr_") == 0) {
+        // Inherit the type of the right subtree
+        // Only ordering operators will have non-nil type information.
+        // So, if there's a mismatch, can be sure someone's trying to order bools or user types.
+        assert(deg == 2);
+        node->setType(branches[1]->getType());
+        if (!matching) {
+            // < <= >= > being used on non-integer
+            typeError("Ordering only defined against integers.", node);
+        }
     } else if (tval.compare ("DotExpr_") == 0 || tval.compare ("DotExpr") == 0) 
     {
         // Productions handled:
@@ -732,14 +756,14 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
     t->setType(rettype);
     // This gets overridden below if the node has children
 
-    cout << rettype << endl;
+    //cout << rettype << endl;
 
     while (true) {
         string par1, par2;
         mstrm >> par1;
         fstrm >> par2;
         if (!par1.empty() && !par2.empty()) {
-            cout << par1 << " " << par2 << endl;
+            //cout << par1 << " " << par2 << endl;
             if (par1.compare(par2) != 0) {
                 typeError("Method parameters are of incorrect type.", t);
             }
@@ -752,7 +776,7 @@ void TypeCheck::resolveDexPrime (string ltype, RTree *t) {
         }
     }
 
-    cout << t->degree();
+    //cout << t->degree();
 
     if (t->degree() == 6) {
         RTree *b = t->getBranches()[5];
