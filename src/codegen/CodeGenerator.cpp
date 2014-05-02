@@ -17,8 +17,8 @@ CodeGenerator::CodeGenerator( const string &filename )
     // Set up our register pool.
 //    register_state[ "rax" ] = Clean;  // For simplicity, reserve RAX for ret value.
     register_state[ "rbx" ] = Clean;
-    register_state[ "rcx" ] = Clean;
-//    register_state[ "rdx" ] = Clean;
+    register_state[ "rcx" ] = Clean;  // Will probably be reserved for branching.
+//    register_state[ "rdx" ] = Clean;  // Reserved for division.
 //    register_state[ "rdi" ] = Clean;  // For simplicity, don't use these as GP 
 //    register_state[ "rsi" ] = Clean;  // registers. Then they are "always" safe
     register_state[ "r8" ] = Clean;
@@ -109,7 +109,7 @@ void CodeGenerator::process( MainClass *mc )
     // Just process each statement
     // The statements themselves will manage register usage.
     for( auto a : mc->getBody() )
-        this->visitIStatement( a );
+        a->visit( this );
 }
 
 void CodeGenerator::process( Class *c )
@@ -151,13 +151,14 @@ void CodeGenerator::process( Function *f )
     // Write statements
     for( auto a : f->getBody() )
     {
-        this->visitIStatement( a );
+        a->visit( this );
     }
 
     // Get the result from the return:
     reserve_register();
+  
+    f->getRet()->visit( this );
     
-    this->visitIExpression( f->getRet() );
     function_footer << "\tmov rax, " << outreg.top() << endl;
     function_footer << "\tleave" << endl << "\tret" << endl;
 
@@ -175,7 +176,7 @@ void CodeGenerator::process( PrintStatement *p )
 {
     reserve_register();
 
-    this->visitIExpression( p->getValue() );
+    p->getValue()->visit( this );
     function_body << "\tmov rdi, print_format_string" << endl;
     function_body << "\tmov rsi, " << outreg.top() << endl;
     function_body << "\txor rax, rax" << endl;
@@ -190,14 +191,14 @@ void CodeGenerator::process( MathExpression *m )
     string right_result;
 
     reserve_register();
-    this->visitIExpression( m->getLeft() );
+    m->getLeft()->visit( this );
     function_body << "\tmov " << dest << ", " << outreg.top() << endl;
 
     // Not necessecary:
     // release_register();
     // reserve_register();
     
-    this->visitIExpression( m->getRight() );
+    m->getRight()->visit( this );
     
     switch( m->getOperator() )
     {
