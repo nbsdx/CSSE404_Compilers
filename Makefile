@@ -1,7 +1,7 @@
 #CPP_FILES := $(wildcard src/util/*.cpp) $(wildcard src/lex/*.cpp) $(wildcard src/parse/*.cpp)
 #OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
-OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o obj/context.o obj/typecheck.o obj/parse.o
+OBJ_FILES := obj/token.o obj/lexer.o obj/AST.o obj/main.o obj/context.o obj/typecheck.o obj/parse.o obj/SmartTree.o obj/CodeGenerator.o obj/SmartTreeVisitor.o
 
 CC=g++
 CFLAGS=-MMD -std=c++11 -Wall -g
@@ -30,6 +30,15 @@ obj/lexer.o: src/lex/lexer.cpp src/lex/lexer.h obj/token.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/token.o: src/util/token.cpp src/util/token.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/SmartTree.o: src/codegen/SmartTree.cpp src/codegen/SmartTree.h obj/SmartTreeVisitor.o
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/SmartTreeVisitor.o: src/codegen/SmartTreeVisitor.cpp src/codegen/SmartTreeVisitor.h 
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/CodeGenerator.o: src/codegen/CodeGenerator.cpp obj/SmartTree.o obj/SmartTreeVisitor.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

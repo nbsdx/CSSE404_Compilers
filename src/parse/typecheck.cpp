@@ -4,6 +4,8 @@
 #include <assert.h>
 
 #include "typecheck.h"
+#include "../codegen/SmartTree.h"
+#include "../codegen/SmartTreeVisitor.h"
 
 using namespace std;
 
