@@ -158,6 +158,39 @@ void MathExpression::visit( Visitor *v )
     v->process( this );
 }
 
+/***********************************
+ *  CallExpression Class Functions *
+ ***********************************/
+CallExpression::CallExpression()
+{
+
+}
+
+void CallExpression::setClass( const string &cname )
+{
+    this->class_name = cname;
+}
+
+void CallExpression::setCaller( IExpression *exp )
+{
+    this->caller = exp;
+}
+
+void CallExpression::setFunction( const string &fname )
+{
+    this->function_name = fname;
+}
+
+void CallExpression::addArgument( IExpression *exp )
+{
+    this->args.push_back( exp );
+}
+
+void CallExpression::visit( Visitor *v )
+{
+    v->process( this );
+}
+
 /**********************************
  *  NewExpression Class Functions *
  **********************************/

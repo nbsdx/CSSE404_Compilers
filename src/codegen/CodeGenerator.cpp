@@ -255,6 +255,20 @@ void CodeGenerator::process( MathExpression *m )
     release_register();
 }
 
+void CodeGenerator::process( CallExpression *c )
+{
+    reserve_register();
+    c->getCaller()->visit( this );
+    function_body << "\tmov rdi, " << outreg.top() << endl;
+    release_register();
+    
+    // TODO: Setup arguments.
+    
+    // Call Function;
+    function_body << "\tcall " << c->getClass() << "_" << c->getFunction() << endl;
+    function_body << "\tmov " << outreg.top() << ", rax" << endl;
+}
+
 void CodeGenerator::process( NewExpression *n )
 {
     // Call the "classname" function.

@@ -108,6 +108,22 @@ void PrintVisitor::process( NewExpression *n )
     cout << "new " << n->getClass() << "()";
 }
 
+void PrintVisitor::process( CallExpression *c )
+{
+    bool first = true;
+    c->getCaller()->visit( this );
+    cout << "." << c->getFunction() << "( ";
+    for( auto a : c->getArgs() )
+    {
+        if( !first )
+            cout << ", ";
+
+        a->visit( this );
+        first = false; 
+    }
+    cout << " )";
+}
+
 void PrintVisitor::process( MathExpression *m )
 {
     cout << "( ";

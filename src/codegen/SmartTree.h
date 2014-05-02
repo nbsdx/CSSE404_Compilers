@@ -161,6 +161,27 @@ public:
     Operator getOperator(){ return op; }
 };
 
+class CallExpression : public IExpression
+{
+    IExpression *caller;
+    string class_name;
+    string function_name;
+    vector<IExpression*> args;
+
+public:
+    CallExpression();
+    void setCaller( IExpression * );
+    void setClass( const string& );
+    void setFunction( const string& );
+    void addArgument( IExpression * );
+    void visit( Visitor * );
+
+    IExpression *getCaller(){ return caller; }
+    string getClass(){ return class_name; }
+    string getFunction(){ return function_name; }
+    vector<IExpression*> getArgs(){ return args; }
+};
+
 class NewExpression : public IExpression
 {
     string class_name;

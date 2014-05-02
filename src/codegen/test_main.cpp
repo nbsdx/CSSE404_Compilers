@@ -18,7 +18,11 @@ int main( int argc, char **argv )
     MainClass *m = new MainClass( "Test" );
     p->setMainClass( m );
   
-    PrintStatement *print = new PrintStatement( new NewExpression( "Test2" ) );
+    CallExpression *call = new CallExpression();
+    call->setCaller( new NewExpression( "Test2" ) );
+    call->setClass( "Test2" );
+    call->setFunction( "func" );
+    PrintStatement *print = new PrintStatement( call );
     m->addStatement( print );
 /*
     FinalExpression *five = new FinalExpression( "5" );
@@ -48,8 +52,8 @@ int main( int argc, char **argv )
     Function *f = new Function( "func" );
     f->setRetType( "int" );
     f->setRet( new FinalExpression( "10" ) );
-    f->addArg( new Formal( "int", "myarg" ) );
-    f->addArg( new Formal( "int", "myarg2" ) );
+//    f->addArg( new Formal( "int", "myarg" ) );
+//    f->addArg( new Formal( "int", "myarg2" ) );
     print = new PrintStatement( new FinalExpression( "25" ) );
     f->addStatement( print );
 
