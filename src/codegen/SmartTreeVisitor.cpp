@@ -103,6 +103,11 @@ void PrintVisitor::process( FinalExpression *f )
     cout << f->getLiteral();
 }
 
+void PrintVisitor::process( NewExpression *n )
+{
+    cout << "new " << n->getClass() << "()";
+}
+
 void PrintVisitor::process( MathExpression *m )
 {
     cout << "( ";

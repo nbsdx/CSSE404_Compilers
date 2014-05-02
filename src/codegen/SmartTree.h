@@ -161,6 +161,17 @@ public:
     Operator getOperator(){ return op; }
 };
 
+class NewExpression : public IExpression
+{
+    string class_name;
+
+public:
+    NewExpression( const string& );
+    void visit( Visitor * );
+
+    string getClass(){ return class_name; }
+};
+
 class FinalExpression : public IExpression
 {
     string literal;

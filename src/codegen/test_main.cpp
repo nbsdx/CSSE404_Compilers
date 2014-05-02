@@ -17,6 +17,10 @@ int main( int argc, char **argv )
     Program *p = new Program();
     MainClass *m = new MainClass( "Test" );
     p->setMainClass( m );
+  
+    PrintStatement *print = new PrintStatement( new NewExpression( "Test2" ) );
+    m->addStatement( print );
+/*
     FinalExpression *five = new FinalExpression( "5" );
     PrintStatement *print = new PrintStatement( five );
     m->addStatement( print );
@@ -36,8 +40,7 @@ int main( int argc, char **argv )
     m2->setOperator( MathExpression::Div );
 
     m->addStatement( new PrintStatement( m2 ) );
-
-/*
+*/
     Class *c = new Class( "Test2" );
     c->addMember( new Formal( "int", "number" ) );
     c->addMember( new Formal( "Test2", "hue" ) );
@@ -53,7 +56,7 @@ int main( int argc, char **argv )
     c->addFunction( f );
 
     p->addClass( c );
-*/
+
     PrintVisitor *visitor = new PrintVisitor();
     CodeGenerator *gen = new CodeGenerator( argv[1] );
 

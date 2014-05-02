@@ -82,6 +82,8 @@ void CodeGenerator::process( Program *p )
 
     text_header << "section .text" << endl;
     text_header << "\textern printf" << endl;
+    text_header << "\textern malloc" << endl;
+    text_header << "\textern free" << endl;
     text_header << "\textern exit" << endl;
     text_header << "\tglobal main" << endl;
 
@@ -117,6 +119,29 @@ void CodeGenerator::process( Class *c )
     // Not much to do. Just write the functions.
     current_class = c->getName();
     
+    // Write a "Constructor" function that's just the class name.
+    // TODO: We need the Global Context so we have the size of the vars.
+    text_header << "\tglobal " << current_class << endl;
+    function_header << current_class << ":" << endl;
+    function_header << "\tpush rbp" << endl;
+    function_header << "\tmov rbp, rsp" << endl;
+    // TODO: Replace 16 with the size of the struct gen'd from the Global Context.
+    function_body << "\tmov rdi, " << 16 << endl;
+    function_body << "\tcall malloc" << endl;
+    // TODO: Error checking... [hahahahaha]
+    function_footer << "\tleave" << endl << "\tret" << endl;
+    finalize_function();
+
+    // Write a "Deconstructor" function that's just "delete_classname".
+    text_header << "\tglobal delete_" << current_class << endl;
+    function_header << "delete_" << current_class << ":" << endl;
+    function_header << "\tpush rbp" << endl;
+    function_header << "\tmov rbp, rsp" << endl;
+    function_body << "\tcall free" << endl;
+    // TODO: Error checking... [hahahahaha]
+    function_footer << "\tleave" << endl << "\tret" << endl;
+    finalize_function();
+
     for( auto a : c->getFunctions() )
         a->visit( this );
 
@@ -228,6 +253,13 @@ void CodeGenerator::process( MathExpression *m )
     }
 
     release_register();
+}
+
+void CodeGenerator::process( NewExpression *n )
+{
+    // Call the "classname" function.
+    function_body << "\tcall " << n->getClass() << endl;
+    function_body << "\tmov " << outreg.top() << ", rax" << endl;
 }
 
 /*

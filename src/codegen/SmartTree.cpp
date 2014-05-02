@@ -158,6 +158,19 @@ void MathExpression::visit( Visitor *v )
     v->process( this );
 }
 
+/**********************************
+ *  NewExpression Class Functions *
+ **********************************/
+NewExpression::NewExpression( const string &cname )
+{
+    this->class_name = cname;
+}
+
+void NewExpression::visit( Visitor *v )
+{
+    v->process( this );
+}
+
 /************************************
  *  FinalExpression Class Functions *
  ************************************/

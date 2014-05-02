@@ -23,6 +23,7 @@ public:
     virtual void process( Formal * ) = 0;
     virtual void process( PrintStatement * ) = 0;
     virtual void process( FinalExpression * ) = 0;
+    virtual void process( NewExpression * ) = 0;
     virtual void process( MathExpression * ) = 0;
 
     void visitIStatement( IStatement * );
@@ -39,6 +40,7 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( FinalExpression * );
+    void process( NewExpression * );
     void process( MathExpression * );
 };
 
@@ -60,6 +62,7 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( FinalExpression * );
+    void process( NewExpression * );
     void process( MathExpression * );
 
 private:
