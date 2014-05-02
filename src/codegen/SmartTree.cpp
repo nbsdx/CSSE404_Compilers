@@ -130,6 +130,34 @@ void PrintStatement::visit( Visitor *v )
     v->process( this );
 }
 
+/***********************************
+ *  MathExpression Class Functions *
+ ***********************************/
+MathExpression::MathExpression()
+{
+
+}
+
+void MathExpression::setLeft( IExpression *l )
+{
+    this->left = l;
+}
+
+void MathExpression::setRight( IExpression *r )
+{
+    this->right = r;
+}
+
+void MathExpression::setOperator( Operator o )
+{
+    this->op = o;
+}
+
+void MathExpression::visit( Visitor *v )
+{
+    v->process( this );
+}
+
 /************************************
  *  FinalExpression Class Functions *
  ************************************/

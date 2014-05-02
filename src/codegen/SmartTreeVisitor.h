@@ -23,6 +23,7 @@ public:
     virtual void process( Formal * ) = 0;
     virtual void process( PrintStatement * ) = 0;
     virtual void process( FinalExpression * ) = 0;
+    virtual void process( MathExpression * ) = 0;
 
     void visitIStatement( IStatement * );
     void visitIExpression( IExpression * );
@@ -38,6 +39,7 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( FinalExpression * );
+    void process( MathExpression * );
 };
 
 class CodeGenerator : public Visitor
@@ -58,16 +60,22 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( FinalExpression * );
+    void process( MathExpression * );
 
 private:
 
     void finalize_function();
     void finalize_program();
+    void reserve_register();
+    void release_register();
 
     fstream file;
     stack<string> outreg;
     stack<string> available_registers;
     map<string,RegisterState> register_state;
+
+    // Class marker.
+    string current_class;
 
     // Function parts.
     stringstream function_header;

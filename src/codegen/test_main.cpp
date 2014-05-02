@@ -17,9 +17,26 @@ int main( int argc, char **argv )
     Program *p = new Program();
     MainClass *m = new MainClass( "Test" );
     p->setMainClass( m );
-    FinalExpression *five = new FinalExpression( "100" );
+    FinalExpression *five = new FinalExpression( "5" );
     PrintStatement *print = new PrintStatement( five );
     m->addStatement( print );
+
+    MathExpression *math = new MathExpression();
+    math->setLeft( new FinalExpression( "10" ) );
+    MathExpression *inner = new MathExpression();
+    inner->setLeft( new FinalExpression( "15" ) );
+    inner->setRight( new FinalExpression( "8" ) );
+    inner->setOperator( MathExpression::Sub );
+    math->setRight( inner );
+    math->setOperator( MathExpression::Mul );
+
+    MathExpression *m2 = new MathExpression();
+    m2->setLeft( math );
+    m2->setRight( new FinalExpression( "10" ) );
+    m2->setOperator( MathExpression::Div );
+
+    m->addStatement( new PrintStatement( m2 ) );
+
 /*
     Class *c = new Class( "Test2" );
     c->addMember( new Formal( "int", "number" ) );

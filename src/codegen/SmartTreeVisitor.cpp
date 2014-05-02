@@ -20,6 +20,8 @@ void Visitor::visitIExpression( IExpression *e )
 {
     if( dynamic_cast<FinalExpression*>( e ) )
         dynamic_cast<FinalExpression*>( e )->visit( this );
+    else if( dynamic_cast<MathExpression*>( e ) )
+        dynamic_cast<MathExpression*>( e )->visit( this );
     else
         cerr << "Unsupported Expression type..." << endl;
 }
@@ -99,6 +101,21 @@ void PrintVisitor::process( PrintStatement *p )
 void PrintVisitor::process( FinalExpression *f )
 {
     cout << f->getLiteral();
+}
+
+void PrintVisitor::process( MathExpression *m )
+{
+    cout << "( ";
+    m->getLeft()->visit( this );
+    switch( m->getOperator() )
+    {
+    case MathExpression::Add: cout << " + "; break;
+    case MathExpression::Sub: cout << " - "; break;
+    case MathExpression::Mul: cout << " * "; break;
+    case MathExpression::Div: cout << " / "; break;
+    }
+    m->getRight()->visit( this );
+    cout << " )";
 }
 
 void PrintVisitor::process( Formal *f )

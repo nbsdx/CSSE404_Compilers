@@ -133,6 +133,33 @@ public:
     IExpression *getValue(){ return value; }
 };
 
+class MathExpression : public IExpression
+{
+public:
+    enum Operator
+    {
+        Add,
+        Sub,
+        Mul,
+        Div
+    };
+
+private:
+    IExpression *left;
+    IExpression *right;
+    Operator op;
+
+public:
+    MathExpression();
+    void setLeft( IExpression * );
+    void setRight( IExpression * );
+    void setOperator( Operator );
+    void visit( Visitor * );
+
+    IExpression *getLeft(){ return left; }
+    IExpression *getRight(){ return right; }
+    Operator getOperator(){ return op; }
+};
 
 class FinalExpression : public IExpression
 {

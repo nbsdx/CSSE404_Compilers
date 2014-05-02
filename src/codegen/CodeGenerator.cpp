@@ -18,7 +18,7 @@ CodeGenerator::CodeGenerator( const string &filename )
 //    register_state[ "rax" ] = Clean;  // For simplicity, reserve RAX for ret value.
     register_state[ "rbx" ] = Clean;
     register_state[ "rcx" ] = Clean;
-    register_state[ "rdx" ] = Clean;
+//    register_state[ "rdx" ] = Clean;
 //    register_state[ "rdi" ] = Clean;  // For simplicity, don't use these as GP 
 //    register_state[ "rsi" ] = Clean;  // registers. Then they are "always" safe
     register_state[ "r8" ] = Clean;
@@ -37,11 +37,26 @@ CodeGenerator::CodeGenerator( const string &filename )
     }
 }
 
+void CodeGenerator::reserve_register()
+{
+    outreg.push( available_registers.top() );
+    register_state[ available_registers.top() ] = InUse;
+    available_registers.pop();
+}
+
+void CodeGenerator::release_register()
+{
+    available_registers.push( outreg.top() );
+    register_state[ outreg.top() ] = Clean;
+    outreg.pop();
+}
+
 void CodeGenerator::finalize_function()
 {
     text_body << function_header.str();
     text_body << function_body.str();
     text_body << function_footer.str();
+    text_body << endl;
 
     function_header.str( "" );
     function_body.str( "" );
@@ -53,6 +68,7 @@ void CodeGenerator::finalize_program()
     file << section_data.str();
     file << endl; 
     file << text_header.str();
+    file << endl;
     file << text_body.str();
 
     file.close();
@@ -65,9 +81,9 @@ void CodeGenerator::process( Program *p )
     section_data << "\tprint_format_string db \"%d\", 10, 0" << endl;
 
     text_header << "section .text" << endl;
-    text_header << "\tglobal main" << endl;
     text_header << "\textern printf" << endl;
     text_header << "\textern exit" << endl;
+    text_header << "\tglobal main" << endl;
 
     function_header << "main:" << endl;
 
@@ -82,8 +98,8 @@ void CodeGenerator::process( Program *p )
     finalize_function();
 
     // Write other classes.
-//    for( auto a : p->getClasses() )
-//        a->visit( this );
+    for( auto a : p->getClasses() )
+        a->visit( this );
 
     finalize_program();
 }
@@ -96,8 +112,59 @@ void CodeGenerator::process( MainClass *mc )
         this->visitIStatement( a );
 }
 
-void CodeGenerator::process( Class *c ){}
-void CodeGenerator::process( Function *f ){}
+void CodeGenerator::process( Class *c )
+{
+    // Not much to do. Just write the functions.
+    current_class = c->getName();
+    
+    for( auto a : c->getFunctions() )
+        a->visit( this );
+
+    current_class = "";
+}
+
+void CodeGenerator::process( Function *f )
+{
+    /**
+     *  Function Example:
+     *      class Foo {
+     *      public int foo( int arg1, int arg2 ) {
+     *          // ...
+     *      } }
+     *
+     *      Becomes:
+     *      int Foo_foo( Foo *f, int arg1, int arg2 ) {...}
+     */
+
+    function_header << current_class << "_" << f->getName() << ":" << endl;
+    text_header << "\tglobal " << current_class << "_" << f->getName() << endl;
+ 
+    // Function prologue
+    function_header << "\tpush rbp" << endl;
+    function_header << "\tmov rbp, rsp" << endl;
+
+    // At this point, we need to subtract from ESP when 
+    // we want to add a new local variable. We can do this
+    // from within the process( IStatement ) function as needed.
+
+
+    // Write statements
+    for( auto a : f->getBody() )
+    {
+        this->visitIStatement( a );
+    }
+
+    // Get the result from the return:
+    reserve_register();
+    
+    this->visitIExpression( f->getRet() );
+    function_footer << "\tmov rax, " << outreg.top() << endl;
+    function_footer << "\tleave" << endl << "\tret" << endl;
+
+    release_register();
+
+    finalize_function();
+}
 
 // Depends on if we're in a class or a function declaration
 // Note that this is ONLY used for representing class vars
@@ -106,9 +173,7 @@ void CodeGenerator::process( Formal *f ){}
 
 void CodeGenerator::process( PrintStatement *p )
 {
-    outreg.push( available_registers.top() );
-    register_state[ available_registers.top() ] = InUse;
-    available_registers.pop();
+    reserve_register();
 
     this->visitIExpression( p->getValue() );
     function_body << "\tmov rdi, print_format_string" << endl;
@@ -116,9 +181,52 @@ void CodeGenerator::process( PrintStatement *p )
     function_body << "\txor rax, rax" << endl;
     function_body << "\tcall printf" << endl;
 
-    available_registers.push( outreg.top() );
-    register_state[ outreg.top() ] = Clean;
-    outreg.pop();
+    release_register();
+}
+
+void CodeGenerator::process( MathExpression *m )
+{
+    string dest = outreg.top();
+    string right_result;
+
+    reserve_register();
+    this->visitIExpression( m->getLeft() );
+    function_body << "\tmov " << dest << ", " << outreg.top() << endl;
+
+    // Not necessecary:
+    // release_register();
+    // reserve_register();
+    
+    this->visitIExpression( m->getRight() );
+    
+    switch( m->getOperator() )
+    {
+    case MathExpression::Add:
+        function_body << "\tadd " << dest << ", " << outreg.top() << endl;
+        break;
+    case MathExpression::Sub:
+        function_body << "\tsub " << dest << ", " << outreg.top() << endl;
+        break;
+    case MathExpression::Mul:
+        function_body << "\timul " << dest << ", " << outreg.top() << endl;
+        break;
+    case MathExpression::Div:
+        right_result = outreg.top();
+        
+        // Store the contents of RDX
+        reserve_register();
+        function_body << "\tmov " << outreg.top() << ", " << "rdx" << endl;
+        function_body << "\tmov rdx, 0" << endl;
+        function_body << "\tmov rax, " << dest << endl;
+        function_body << "\tidiv " << right_result << endl;
+        function_body << "\tmov " << dest << ", rax" << endl;
+        // restore RDX
+        function_body << "\tmov rdx, " << outreg.top() << endl;
+        release_register();
+        break;
+    }
+
+    release_register();
 }
 
 /*
