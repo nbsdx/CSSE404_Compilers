@@ -10,7 +10,7 @@ using namespace std;
 namespace ir
 {
 
-CodeGenerator::CodeGenerator( const string &filename )
+CodeGenerator::CodeGenerator( const string &filename, Context *context )
 {
     file.open( filename, fstream::binary | fstream::out | fstream::trunc );
 
@@ -35,6 +35,8 @@ CodeGenerator::CodeGenerator( const string &filename )
     {
         available_registers.push( i.first );
     }
+
+    this->context = context;
 }
 
 void CodeGenerator::reserve_register()
@@ -51,16 +53,32 @@ void CodeGenerator::release_register()
     outreg.pop();
 }
 
-void CodeGenerator::finalize_function()
+void CodeGenerator::finalize_function( const string &fname )
 {
-    text_body << function_header.str();
-    text_body << function_body.str();
-    text_body << function_footer.str();
-    text_body << endl;
+    stringstream s;
+    s << function_header.str();
+    s << function_body.str();
+    s << function_footer.str();
+    s << endl;
 
     function_header.str( "" );
     function_body.str( "" );
     function_footer.str( "" );
+
+    functions[ fname ] = s.str();
+    
+    text_header << "\tglobal " << current_class << "_" << fname << endl;
+}
+
+void CodeGenerator::finalize_class()
+{
+    for( auto f : functions )
+    {
+        text_body << f.second;
+    }
+
+    current_class = "";
+    functions.clear();
 }
 
 void CodeGenerator::finalize_program()
@@ -97,7 +115,13 @@ void CodeGenerator::process( Program *p )
     function_body << "\txor rax, rax" << endl;
     function_body << "\tcall exit" << endl;
 
-    finalize_function();
+    text_body << function_header.str() << endl;
+    text_body << function_body.str() << endl;
+    text_body << function_footer.str() << endl;
+
+    function_header.str( "" );
+    function_body.str( "" );
+    function_footer.str( "" );
 
     // Write other classes.
     for( auto a : p->getClasses() )
@@ -130,7 +154,7 @@ void CodeGenerator::process( Class *c )
     function_body << "\tcall malloc" << endl;
     // TODO: Error checking... [hahahahaha]
     function_footer << "\tleave" << endl << "\tret" << endl;
-    finalize_function();
+    finalize_function( current_class );
 
     // Write a "Deconstructor" function that's just "delete_classname".
     text_header << "\tglobal delete_" << current_class << endl;
@@ -140,12 +164,35 @@ void CodeGenerator::process( Class *c )
     function_body << "\tcall free" << endl;
     // TODO: Error checking... [hahahahaha]
     function_footer << "\tleave" << endl << "\tret" << endl;
-    finalize_function();
+    finalize_function( "delete_" + current_class );
 
+    // Simple soultion. Jumps to previous definition by deafult
+    // Note that this will work even if they have args on the 
+    // stack since the stack point isn't being modified. Its
+    // only inelegence is the lack of the old call being inlined.
+
+    // Get the list of functions that the parent class has.
+    if( c->getParent() )
+    {
+        for( string fname : context->getNamespace( c->getParentName() )->getEntryNames() )
+        {
+            stringstream s;
+
+            s << c->getName() << "_" << fname << ":" << endl;
+            s << "\tjmp " << c->getParentName() << "_" << fname;
+
+            // Add them to this list. 
+            functions[ fname ] = s.str();
+        }
+    }
+    // Note that this shits on our stack for large sets of inheritence,
+    // but for now this should be fine.
     for( auto a : c->getFunctions() )
+    {
         a->visit( this );
+    }
 
-    current_class = "";
+    finalize_class();
 }
 
 void CodeGenerator::process( Function *f )
@@ -162,7 +209,6 @@ void CodeGenerator::process( Function *f )
      */
 
     function_header << current_class << "_" << f->getName() << ":" << endl;
-    text_header << "\tglobal " << current_class << "_" << f->getName() << endl;
  
     // Function prologue
     function_header << "\tpush rbp" << endl;
@@ -171,7 +217,8 @@ void CodeGenerator::process( Function *f )
     // At this point, we need to subtract from ESP when 
     // we want to add a new local variable. We can do this
     // from within the process( IStatement ) function as needed.
-
+    // It's a little bit sketch, and it doesn't look pretty,
+    // but it works.
 
     // Write statements
     for( auto a : f->getBody() )
@@ -189,7 +236,7 @@ void CodeGenerator::process( Function *f )
 
     release_register();
 
-    finalize_function();
+    finalize_function( current_class + "_" + f->getName() );
 }
 
 // Depends on if we're in a class or a function declaration
@@ -215,7 +262,6 @@ void CodeGenerator::process( MathExpression *m )
     string dest = outreg.top();
     string right_result;
 
-    reserve_register();
     m->getLeft()->visit( this );
     function_body << "\tmov " << dest << ", " << outreg.top() << endl;
 
@@ -223,6 +269,7 @@ void CodeGenerator::process( MathExpression *m )
     // release_register();
     // reserve_register();
     
+    reserve_register();
     m->getRight()->visit( this );
     
     switch( m->getOperator() )

@@ -38,7 +38,7 @@ obj/SmartTree.o: src/codegen/SmartTree.cpp src/codegen/SmartTree.h obj/SmartTree
 obj/SmartTreeVisitor.o: src/codegen/SmartTreeVisitor.cpp src/codegen/SmartTreeVisitor.h 
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/CodeGenerator.o: src/codegen/CodeGenerator.cpp obj/SmartTree.o obj/SmartTreeVisitor.o
+obj/CodeGenerator.o: src/codegen/CodeGenerator.cpp obj/SmartTree.o obj/SmartTreeVisitor.o obj/context.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

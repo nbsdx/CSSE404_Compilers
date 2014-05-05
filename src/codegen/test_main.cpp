@@ -1,6 +1,7 @@
 
 #include "SmartTree.h"
 #include "SmartTreeVisitor.h"
+#include "../parse/context.h"
 
 #include <iostream>
 
@@ -14,55 +15,42 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
+    Context *global = new Context();
+    Context *test = new Context();
+    test->enter();
+    test->add( "foo", "function int" );
+    Context *test2 = new Context();
+
+    global->add( "Test", test );
+    global->add( "Test2", test2 );
+
     Program *p = new Program();
-    MainClass *m = new MainClass( "Test" );
-    p->setMainClass( m );
-  
+    MainClass *m = new MainClass( "Main" );
+
     CallExpression *call = new CallExpression();
     call->setCaller( new NewExpression( "Test2" ) );
     call->setClass( "Test2" );
-    call->setFunction( "func" );
-    PrintStatement *print = new PrintStatement( call );
-    m->addStatement( print );
-/*
-    FinalExpression *five = new FinalExpression( "5" );
-    PrintStatement *print = new PrintStatement( five );
-    m->addStatement( print );
+    call->setFunction( "foo" );
 
-    MathExpression *math = new MathExpression();
-    math->setLeft( new FinalExpression( "10" ) );
-    MathExpression *inner = new MathExpression();
-    inner->setLeft( new FinalExpression( "15" ) );
-    inner->setRight( new FinalExpression( "8" ) );
-    inner->setOperator( MathExpression::Sub );
-    math->setRight( inner );
-    math->setOperator( MathExpression::Mul );
+    m->addStatement( new PrintStatement( call ) );
 
-    MathExpression *m2 = new MathExpression();
-    m2->setLeft( math );
-    m2->setRight( new FinalExpression( "10" ) );
-    m2->setOperator( MathExpression::Div );
-
-    m->addStatement( new PrintStatement( m2 ) );
-*/
-    Class *c = new Class( "Test2" );
-    c->addMember( new Formal( "int", "number" ) );
-    c->addMember( new Formal( "Test2", "hue" ) );
-
-    Function *f = new Function( "func" );
+    p->setMainClass( m );
+  
+    Class *c = new Class( "Test" );
+    Function *f = new Function( "foo" );
     f->setRetType( "int" );
-    f->setRet( new FinalExpression( "10" ) );
-//    f->addArg( new Formal( "int", "myarg" ) );
-//    f->addArg( new Formal( "int", "myarg2" ) );
-    print = new PrintStatement( new FinalExpression( "25" ) );
-    f->addStatement( print );
-
+    f->setRet( new FinalExpression( "0" ) );
     c->addFunction( f );
 
+    Class *c2 = new Class( "Test2" );
+    c2->setParent( c );
+    c2->setParentName( "Test" );
+
     p->addClass( c );
+    p->addClass( c2 );
 
     PrintVisitor *visitor = new PrintVisitor();
-    CodeGenerator *gen = new CodeGenerator( argv[1] );
+    CodeGenerator *gen = new CodeGenerator( argv[1], global );
 
     p->visit( visitor );
     p->visit( gen );

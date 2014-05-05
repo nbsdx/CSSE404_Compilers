@@ -3,6 +3,7 @@
 #define SMARTTREEVISITOR_H
 
 #include "SmartTree.h"
+#include "../parse/context.h"
 
 #include <fstream>
 #include <sstream>
@@ -56,7 +57,7 @@ public:
         Dirty
     };
 
-    CodeGenerator( const string& );
+    CodeGenerator( const string&, Context * );
     void process( Program * );
     void process( MainClass * );
     void process( Class * );
@@ -70,7 +71,8 @@ public:
 
 private:
 
-    void finalize_function();
+    void finalize_function( const string& );
+    void finalize_class();
     void finalize_program();
     void reserve_register();
     void release_register();
@@ -79,6 +81,10 @@ private:
     stack<string> outreg;
     stack<string> available_registers;
     map<string,RegisterState> register_state;
+
+    Context *context;
+
+    map<string, string> functions;
 
     // Class marker.
     string current_class;

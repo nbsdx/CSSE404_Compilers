@@ -26,8 +26,13 @@ class Formal;
 
 class IExpression : public INode
 {
+    string type;
+
 public:
     virtual void visit( Visitor * ) = 0;
+
+    void setType( const string &type ){ this->type = type; }
+    string getType(){ return this->type; }
 };
 
 class IStatement : public INode
@@ -68,6 +73,7 @@ public:
 class Class : public INode
 {
     string name;
+    string parent_name;
     Class *parent;
     vector<Formal*> members;
     vector<Function*> functions;
@@ -78,11 +84,13 @@ public:
     void addFunction( Function * );
     void visit( Visitor * );
     void setParent( Class *c );
+    void setParentName( const string& );
 
     string getName(){ return name; }
     vector<Formal*> getMembers(){ return members; }
     vector<Function*> getFunctions(){ return functions; }
     Class *getParent(){ return parent; }
+    string getParentName(){ return parent_name; }
 };
 
 class Formal : public INode

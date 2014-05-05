@@ -53,6 +53,17 @@ Class::Class( const string &name )
 {
     this->name = name;
     this->parent = nullptr;
+    this->parent_name = "";
+}
+
+void Class::setParent( Class *p )
+{
+    this->parent = p;
+}
+
+void Class::setParentName( const string &n )
+{
+    this->parent_name = n;
 }
 
 void Class::addMember( Formal *f )
