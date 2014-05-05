@@ -20,9 +20,13 @@ int main( int argc, char **argv )
     test->enter();
     test->add( "foo", "function int" );
     Context *test2 = new Context();
+    Context *test3 = new Context();
+    test3->enter();
+    test3->add( "foo", "function int" );
 
     global->add( "Test", test );
     global->add( "Test2", test2 );
+    global->add( "Test3", test3 );
 
     Program *p = new Program();
     MainClass *m = new MainClass( "Main" );
@@ -30,6 +34,13 @@ int main( int argc, char **argv )
     CallExpression *call = new CallExpression();
     call->setCaller( new NewExpression( "Test2" ) );
     call->setClass( "Test2" );
+    call->setFunction( "foo" );
+
+    m->addStatement( new PrintStatement( call ) );
+    
+    call = new CallExpression();
+    call->setCaller( new NewExpression( "Test3" ) );
+    call->setClass( "Test3" );
     call->setFunction( "foo" );
 
     m->addStatement( new PrintStatement( call ) );
@@ -46,8 +57,17 @@ int main( int argc, char **argv )
     c2->setParent( c );
     c2->setParentName( "Test" );
 
+    Class *c3 = new Class( "Test3" );
+    c3->setParent( c );
+    c3->setParentName( "Test" );
+    f = new Function( "foo" );
+    f->setRetType( "int" );
+    f->setRet( new FinalExpression( "1" ) );
+    c3->addFunction( f );
+
     p->addClass( c );
     p->addClass( c2 );
+    p->addClass( c3 );
 
     PrintVisitor *visitor = new PrintVisitor();
     CodeGenerator *gen = new CodeGenerator( argv[1], global );

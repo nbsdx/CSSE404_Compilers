@@ -65,16 +65,32 @@ void CodeGenerator::finalize_function( const string &fname )
     function_body.str( "" );
     function_footer.str( "" );
 
-    functions[ fname ] = s.str();
-    
-    text_header << "\tglobal " << current_class << "_" << fname << endl;
+    if( !fname.empty() )
+    {
+        auto a = functions.find( fname );
+
+        if( a == functions.end() )
+        {
+            functions[ fname ] = s.str();
+        }
+        else
+        {
+            (*a).second = s.str();
+        }
+
+        text_header << "\tglobal " << fname << endl;
+    }
+    else
+    {
+        text_body << s.str() << endl;
+    }
 }
 
 void CodeGenerator::finalize_class()
 {
     for( auto f : functions )
     {
-        text_body << f.second;
+        text_body << f.second << endl;
     }
 
     current_class = "";
@@ -154,7 +170,7 @@ void CodeGenerator::process( Class *c )
     function_body << "\tcall malloc" << endl;
     // TODO: Error checking... [hahahahaha]
     function_footer << "\tleave" << endl << "\tret" << endl;
-    finalize_function( current_class );
+    finalize_function( "" );
 
     // Write a "Deconstructor" function that's just "delete_classname".
     text_header << "\tglobal delete_" << current_class << endl;
@@ -164,7 +180,7 @@ void CodeGenerator::process( Class *c )
     function_body << "\tcall free" << endl;
     // TODO: Error checking... [hahahahaha]
     function_footer << "\tleave" << endl << "\tret" << endl;
-    finalize_function( "delete_" + current_class );
+    finalize_function( "" );
 
     // Simple soultion. Jumps to previous definition by deafult
     // Note that this will work even if they have args on the 
@@ -179,10 +195,10 @@ void CodeGenerator::process( Class *c )
             stringstream s;
 
             s << c->getName() << "_" << fname << ":" << endl;
-            s << "\tjmp " << c->getParentName() << "_" << fname;
+            s << "\tjmp " << c->getParentName() << "_" << fname << endl;
 
             // Add them to this list. 
-            functions[ fname ] = s.str();
+            functions[ c->getName() + "_" + fname ] = s.str();
         }
     }
     // Note that this shits on our stack for large sets of inheritence,
