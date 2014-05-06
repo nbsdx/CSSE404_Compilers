@@ -13,8 +13,18 @@ using namespace std;
 class Visitor;
 class INode
 {
+protected:
+    string  p_type;
+    bool    p_force_type;
+
 public:
     virtual void visit( Visitor * ) = 0;
+
+    void setNodeType( const string &s ){ p_type = s; }
+    void enforceType( bool b ){ p_force_type = b; }
+
+    string getNodeType(){ return p_type; }
+    bool isTypeEnforced(){ return p_force_type; }
 };
 
 

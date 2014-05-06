@@ -49,7 +49,10 @@ void PrintVisitor::process( MainClass *mc )
 
 void PrintVisitor::process( Class *c )
 {
-    cout << "class " << c->getName() << endl << "{" << endl;
+    cout << "class " << c->getName();
+    if( !c->getParentName().empty() )
+        cout << " extends " << c->getParentName();
+    cout << endl << "{" << endl;
     for( auto a : c->getMembers() )
     {
         cout << "\t";

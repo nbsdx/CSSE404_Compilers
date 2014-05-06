@@ -10,7 +10,7 @@ namespace ir
  ****************************/
 Program::Program()
 {
-
+    enforceType( false );
 }
 
 void Program::addClass( Class *c )
@@ -34,6 +34,7 @@ void Program::visit( Visitor *v )
 MainClass::MainClass( const string &name )
 {
     this->name = name;
+    enforceType( false );
 }
 
 void MainClass::addStatement( IStatement *s )
@@ -54,6 +55,7 @@ Class::Class( const string &name )
     this->name = name;
     this->parent = nullptr;
     this->parent_name = "";
+    enforceType( false );
 }
 
 void Class::setParent( Class *p )
@@ -88,6 +90,7 @@ Formal::Formal( const string &type, const string &name )
 {
     this->type = type;
     this->name = name;
+    enforceType( false );
 }
 
 void Formal::visit( Visitor *v )
@@ -101,6 +104,7 @@ void Formal::visit( Visitor *v )
 Function::Function( const string &name )
 {
     this->name = name;
+    enforceType( false );
 }
 
 void Function::setRetType( const string &type )
@@ -134,6 +138,7 @@ void Function::visit( Visitor *v )
 PrintStatement::PrintStatement( IExpression *e ) 
 {
     this->value = e;
+    enforceType( false );
 }
 
 void PrintStatement::visit( Visitor *v )
@@ -146,7 +151,7 @@ void PrintStatement::visit( Visitor *v )
  ***********************************/
 MathExpression::MathExpression()
 {
-
+    
 }
 
 void MathExpression::setLeft( IExpression *l )
