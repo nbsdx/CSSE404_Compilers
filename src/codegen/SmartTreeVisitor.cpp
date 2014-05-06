@@ -101,6 +101,18 @@ void PrintVisitor::process( PrintStatement *p )
     cout << " );";
 }
 
+void PrintVisitor::process( AssignmentStatement *a )
+{
+    if( a->getNew() )
+    {
+        cout << "\t\t" << a->getType() << " ";
+    }
+
+    cout << a->getDest() << " = ";
+
+    a->getValue()->visit( this );
+}
+
 void PrintVisitor::process( FinalExpression *f )
 {
     cout << f->getLiteral();

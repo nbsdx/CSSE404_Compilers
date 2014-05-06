@@ -151,6 +151,27 @@ public:
     IExpression *getValue(){ return value; }
 };
 
+class AssignmentStatement : public IStatement
+{
+    string dest;
+    string type;
+    bool   is_new;
+    IExpression *value;
+
+public:
+    AssignmentStatement();
+    void setDest( const string& );
+    void setType( const string& );
+    void setValue( IExpression * );
+    void setNew( bool );
+    void visit( Visitor * );
+
+    string getDest(){ return dest; }
+    string getType(){ return type; }
+    bool getNew(){ return is_new; }
+    IExpression *getValue(){ return value; }
+};
+
 class MathExpression : public IExpression
 {
 public:

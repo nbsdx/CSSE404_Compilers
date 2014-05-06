@@ -146,6 +146,42 @@ void PrintStatement::visit( Visitor *v )
     v->process( this );
 }
 
+/****************************************
+ *  AssignmentStatement Class Functions *
+ ****************************************/
+AssignmentStatement::AssignmentStatement()
+{
+    this->dest = "";
+    this->type = "";
+    this->is_new = false;
+    this->value = nullptr;
+}
+
+void AssignmentStatement::setType( const string &t )
+{
+    this->type = t;
+}
+
+void AssignmentStatement::setDest( const string &d )
+{
+    this->dest = d;
+}
+
+void AssignmentStatement::setValue( IExpression *v )
+{
+    this->value = v;
+}
+
+void AssignmentStatement::setNew( bool b )
+{
+    this->is_new = b;
+}
+
+void AssignmentStatement::visit( Visitor *v )
+{
+    v->process( this );
+}
+
 /***********************************
  *  MathExpression Class Functions *
  ***********************************/
