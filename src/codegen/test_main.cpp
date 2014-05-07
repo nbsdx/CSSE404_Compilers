@@ -7,7 +7,48 @@
 
 using namespace ir;
 
+
+
 int main( int argc, char **argv )
+{
+    if( argc != 2 )
+    {
+        std::cerr << "Error: Please supply a filename to write to." << endl;
+        exit( 1 );
+    }
+
+    Context *global = new Context();
+
+    Program *p = new Program();
+    MainClass *m = new MainClass( "Main" );
+
+    p->setMainClass( m );
+
+    IfStatement *if_test;
+    IfStatement *if_test2;
+    
+    if_test2 = new IfStatement();
+    if_test2->setCondition( new FinalExpression( "false" ) );
+    if_test2->addTrueStatement( new PrintStatement( new FinalExpression( "1" ) ) );
+    if_test2->addFalseStatement( new PrintStatement( new FinalExpression( "0" ) ) );
+    
+    if_test = new IfStatement();
+    if_test->setCondition( new FinalExpression( "true" ) );
+    if_test->addTrueStatement( new PrintStatement( new FinalExpression( "1" ) ) );
+    if_test->addTrueStatement( if_test2 );
+    if_test->addFalseStatement( new PrintStatement( new FinalExpression( "0" ) ) );
+
+    m->addStatement( if_test );
+    
+    PrintVisitor *visitor = new PrintVisitor();
+    CodeGenerator *gen = new CodeGenerator( argv[1], global );
+
+    p->visit( visitor );
+    p->visit( gen );
+}
+
+
+int main2( int argc, char **argv )
 {
     if( argc != 2 )
     {

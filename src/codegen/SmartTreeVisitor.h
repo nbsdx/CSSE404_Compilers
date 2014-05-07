@@ -25,6 +25,8 @@ public:
     virtual void process( Formal * ) = 0;
     virtual void process( PrintStatement * ) = 0;
     virtual void process( AssignmentStatement * ) = 0;
+    virtual void process( IfStatement * ) = 0;
+    virtual void process( WhileStatement * ) = 0;
     virtual void process( FinalExpression * ) = 0;
     virtual void process( NewExpression * ) = 0;
     virtual void process( CallExpression * ) = 0;
@@ -44,6 +46,8 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( AssignmentStatement * );
+    void process( IfStatement * );
+    void process( WhileStatement * );
     void process( FinalExpression * );
     void process( NewExpression * );
     void process( CallExpression * );
@@ -68,6 +72,8 @@ public:
     void process( Formal * );
     void process( PrintStatement * );
     void process( AssignmentStatement * );
+    void process( IfStatement * );
+    void process( WhileStatement * );
     void process( FinalExpression * );
     void process( NewExpression * );
     void process( CallExpression * );

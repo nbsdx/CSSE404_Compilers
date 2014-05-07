@@ -400,6 +400,75 @@ void CodeGenerator::process( AssignmentStatement *a )
     release_register();
 }
 
+void CodeGenerator::process( IfStatement *s )
+{
+    // ID used to track branch count to generate unique names.
+    static int branch_count = 0;
+    int branch_id = 0;
+
+    // Need incase of nested if's.
+    branch_id = branch_count++;
+    
+    reserve_register();
+
+    s->getCondition()->visit( this );
+
+    // jmp to on_true if [outreg.top()] neq 0 
+    //     ...
+    //     jmp end
+    // on_true:
+    //     ...
+    // end:
+    //     ...
+    //     
+    
+    function_body << "\tcmp " << outreg.top() << ", 0" << endl;
+    function_body << "\tjne on_true_" << branch_id << endl;
+    
+    release_register();
+
+    for( auto a : s->getOnFalse() )
+    {
+        a->visit( this );
+    }
+    
+    function_body << "\tjmp end_branch_" << branch_id << endl;
+    function_body << "on_true_" << branch_id << ":" << endl;
+
+    for( auto a : s->getOnTrue() )
+    {
+        a->visit( this );
+    }
+
+    function_body << "end_branch_" << branch_id << ":" << endl;
+}
+
+void CodeGenerator::process( WhileStatement *w )
+{
+    static int loop_count = 0;
+    int loop_id = 0;
+
+    loop_id = loop_count++;
+
+    reserve_register();
+
+    w->getCondition()->visit( this );
+    
+    function_body << "\tloop" << loop_id << ":" << endl;
+    function_body << "\tcmp " << outreg.top() << ", 0" << endl;
+    function_body << "\tjeq exit_loop" << loop_id << endl;
+
+    release_register();
+
+    for( auto a : w->getBody() )
+    {
+        a->visit( this );
+    }
+
+    function_body << "\tjmp loop" << loop_id << endl;
+    function_body << "exit_loop" << loop_id << ":" << endl;
+}
+
 void CodeGenerator::process( MathExpression *m )
 {
     string dest = outreg.top();

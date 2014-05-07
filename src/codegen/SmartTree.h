@@ -172,6 +172,39 @@ public:
     IExpression *getValue(){ return value; }
 };
 
+class IfStatement : public IStatement
+{
+    vector<IStatement*> on_true;
+    vector<IStatement*> on_false;
+    IExpression *condition;
+
+public:
+    IfStatement();
+    void addTrueStatement( IStatement * );
+    void addFalseStatement( IStatement * );
+    void setCondition( IExpression * );
+    void visit( Visitor * );
+
+    vector<IStatement*> getOnTrue(){ return on_true; }
+    vector<IStatement*> getOnFalse(){ return on_false; }
+    IExpression *getCondition(){ return condition; }
+};
+
+class WhileStatement : public IStatement
+{
+    vector<IStatement*> body;
+    IExpression *condition;
+
+public:
+    WhileStatement();
+    void setCondition( IExpression * );
+    void addStatement( IStatement * );
+    void visit( Visitor * );
+
+    IExpression *getCondition(){ return condition; }
+    vector<IStatement*>getBody(){ return body; }
+};
+
 class MathExpression : public IExpression
 {
 public:

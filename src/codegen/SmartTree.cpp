@@ -182,6 +182,57 @@ void AssignmentStatement::visit( Visitor *v )
     v->process( this );
 }
 
+/********************************
+ *  IfStatement Class Functions *
+ ********************************/
+IfStatement::IfStatement()
+{
+    condition = nullptr;
+}
+
+void IfStatement::addTrueStatement( IStatement *s )
+{
+    this->on_true.push_back( s );
+}
+
+void IfStatement::addFalseStatement( IStatement *s )
+{
+    this->on_false.push_back( s );
+}
+
+void IfStatement::setCondition( IExpression *c )
+{
+    this->condition = c;
+}
+
+void IfStatement::visit( Visitor *v )
+{
+    v->process( this );
+}
+
+/***********************************
+ *  WhileStatement Class Functions *
+ ***********************************/
+WhileStatement::WhileStatement()
+{
+    this->condition = nullptr;
+}
+
+void WhileStatement::setCondition( IExpression *c )
+{
+    this->condition = c;
+}
+
+void WhileStatement::addStatement( IStatement *s )
+{
+    this->body.push_back( s );
+}
+
+void WhileStatement::visit( Visitor *v )
+{
+    v->process( this );
+}
+
 /***********************************
  *  MathExpression Class Functions *
  ***********************************/
