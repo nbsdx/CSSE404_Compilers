@@ -8,6 +8,7 @@
 #include "../codegen/SmartTreeVisitor.h"
 
 using namespace std;
+using namespace ir;
 
 ir::MainClass *mc = NULL;
 ir::PrintStatement *ps = NULL;
@@ -26,7 +27,7 @@ TypeCheck::TypeCheck()
     this->errs = 0;
 }
 
-RTree* TypeCheck::check( RTree *raw )
+INode* TypeCheck::check( RTree *raw )
 {
     global->enter();
 
@@ -38,12 +39,14 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
+    INode *third = buildIR( cleaned );
+
     //cout << "Global Namespace: " << endl;
     //global->print( 0 );
 
-    cout << endl << endl;
+    //cout << endl << endl;
 
-    return cleaned;
+    return third;
 }
 
 RTree *TypeCheck::postOrder( RTree *tree, 
@@ -68,6 +71,96 @@ RTree *TypeCheck::postOrder( RTree *tree,
         return tree;
     }
 }
+
+INode *ppostOrder( RTree *tree,
+                 function<INode* (RTree*)> make_inode,
+                 function<INode* (INode*)> leave )
+{
+     INode *me = make_inode( tree );
+     if (!tree->isLeaf()) {
+        vector< RTree* > branches = tree->getBranches();
+
+        for( RTree *branch : branches )
+        {
+            INode *processed = ppostOrder( branch, make_inode, leave );
+
+            MainClass *mc = dynamic_cast<MainClass*>(processed);
+            string tval = branch->printVal();
+            if (mc) cout << "MainClass merged in from " << tval << endl;
+
+            // Unwanted keywords will return null
+            if (me && processed) me->addChild(processed);
+            else if (!me && processed) me = processed;
+        }
+        return me;
+        //return leave( me );
+    } else {
+        //me = leave( me );
+        
+        return me;
+    }
+   
+}
+
+INode *newVisit(RTree *tree) {
+    string tval = tree->printVal();
+    vector<RTree*> branches = tree->getBranches();
+    int deg = branches.size();
+
+    BasicToken* rep = tree->getVal();
+
+    // Not sure how much of this we'll use right now
+    //string match = matchAll(branches);
+    //bool matching = !match.empty();
+
+    INode *ret = NULL;
+
+    cout << "Processing "  << tval << endl;
+
+    if (tval.compare("MainClassDecl") == 0) {
+        // Need to pull classs ID out here
+        RTree *classname = branches[0]->getBranches()[1];
+        string namestr = classname->printVal();
+        cout << "MainClass name: " << namestr << endl;
+        ret = new MainClass(namestr);
+    } else if (tval.compare ("Program") == 0) {
+        ret = new Program();
+    } else if (tval.compare ("Stmt") == 0) {
+        // Check if print statement
+        string stmt_type = branches[0]->printVal();
+        if (stmt_type.compare ("System.out.println") == 0) {
+            ret = new PrintStatement();
+        }
+        //TODO: Many statement variants here!
+    } else if ( dynamic_cast<Number*>( rep )) {
+        ret = new FinalExpression(tval);
+    } 
+  
+    MainClass *mc = dynamic_cast<MainClass*>(ret);
+    if (mc) cout << "MainClass detected from " << tval << endl;
+    return ret;
+}
+
+INode *newLeave(INode *n) {
+    /*
+    string tval = tree->printVal();
+    vector<RTree*> branches = tree->getBranches();
+    int deg = branches.size();
+
+    BasicToken* rep = tree->getVal();
+
+    if (tval.compare(
+    */
+
+    return n;
+}
+
+INode *TypeCheck::buildIR (RTree *t) {
+    return ppostOrder(t, [](RTree *input) { return newVisit(input); },
+                         [](INode *node) { return newLeave(node); });
+}
+
+
 
 void TypeCheck::typeError (string excuse, RTree *node) {
     node->setErr();

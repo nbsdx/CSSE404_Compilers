@@ -18,6 +18,7 @@
 
 
 using namespace std;
+using namespace ir;
 
 int main( int argc, char **argv )
 {
@@ -43,10 +44,9 @@ int main( int argc, char **argv )
 
     RTree *raw = p.parse( pgm );
 
-
     TypeCheck *tc = new TypeCheck();
 
-    RTree *checked = tc->check( raw );
+    INode *checked = tc->check( raw );
 
     if (tc->clean) {
         cerr << "Passed type checking. Compilation can proceed.\n";
@@ -54,29 +54,47 @@ int main( int argc, char **argv )
         cerr << tc->errs << " type error(s) detected. Compilation must halt.\n";
     }
 
+
+
+
+
     // holy duplication
     if( ( argc > 2 ) && ( string( "--print" ).compare( argv[2] ) == 0 ) )
     {
-        checked->printT();
-        cout << endl;
+        //checked->printT();
+        PrintVisitor *visitor = new PrintVisitor();
+        checked->visit( visitor );
+        Context *gc = tc->global;
+        CodeGenerator *gen = new CodeGenerator( "out", gc );
+        Program *prgm = dynamic_cast<Program*>( checked  );
+        if (prgm) cout << "IS A PROGRAM" << endl;
+        MainClass *mc = dynamic_cast<MainClass*>( checked  );
+        if (mc) { cout << "IS A MAIINCLASS" << endl;
+                  // How is this happening exactly
+                  // should probably figure it out soon because we don't get code without Program
+                  prgm = new Program();
+                  prgm->addChild(mc); 
+                };
+        prgm->visit( gen );
+
+        //cout << endl;
     } else cerr << "Run with --print to see AST.\n";
 
 
     if (tc->clean) {
         if ( ( argc > 2 ) && ( string( "--asm" ).compare( argv[2] ) == 0) ) {
-            using namespace ir;
-            Program *p = tc->getIR();
+            Context *gc = tc->global;
             if (argc != 4) {
                 cerr << "Please supply a file to write to." << endl;
                 return EXIT_FAILURE;
             } else {
-                PrintVisitor *visitor = new PrintVisitor();
-                p->visit( visitor );
-                CodeGenerator *gen = new CodeGenerator( argv[3] );
-                p->visit( gen );
+                ///CodeGenerator *gen = new CodeGenerator( argv[3], gc );
+                //CodeGenerator *gen = new CodeGenerator( argv[3], gc );
+                //checked->visit( gen );
             }
+        } else {
+            return EXIT_SUCCESS;
         }
-        else return EXIT_SUCCESS;
     } else {
         return EXIT_FAILURE;
     }

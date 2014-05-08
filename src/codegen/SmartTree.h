@@ -18,6 +18,7 @@ protected:
     bool    p_force_type;
 
 public:
+    virtual void addChild( INode *n ) = 0;
     virtual void visit( Visitor * ) = 0;
 
     void setNodeType( const string &s ){ p_type = s; }
@@ -40,6 +41,7 @@ class IExpression : public INode
 
 public:
     virtual void visit( Visitor * ) = 0;
+    void addChild( INode *n ) = 0;
 
     void setType( const string &type ){ this->type = type; }
     string getType(){ return this->type; }
@@ -49,6 +51,7 @@ class IStatement : public INode
 {
 public:
     virtual void visit( Visitor * ) = 0;
+    void addChild( INode *n ) = 0;
 };
 
 class Program : public INode
@@ -58,6 +61,7 @@ class Program : public INode
 
 public:
     Program();
+    void addChild( INode *n );
     void addClass( Class * );
     void setMainClass( MainClass * );
     void visit( Visitor * );
@@ -75,6 +79,7 @@ public:
     MainClass( const string& );
     void addStatement( IStatement * );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     string getName(){ return name; }
     vector<IStatement*> getBody(){ return body; }
@@ -95,6 +100,7 @@ public:
     void visit( Visitor * );
     void setParent( Class *c );
     void setParentName( const string& );
+    void addChild( INode *n );
 
     string getName(){ return name; }
     vector<Formal*> getMembers(){ return members; }
@@ -114,6 +120,7 @@ public:
     string getName(){ return name; }
     string getType(){ return type; }
     void visit( Visitor * );
+    void addChild( INode *n );
 };
 
 class Function : public INode
@@ -131,6 +138,7 @@ public:
     void addStatement( IStatement * );
     void setRet( IExpression * );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     string getName(){ return name; }
     string getRetType(){ return type; }
@@ -145,8 +153,11 @@ class PrintStatement : public IStatement
     IExpression *value;
 
 public:
+    PrintStatement( );
     PrintStatement( IExpression * );
     void visit( Visitor * );
+    void addChild( INode *n );
+    void addExpression( IExpression *e );
 
     IExpression *getValue(){ return value; }
 };
@@ -173,6 +184,7 @@ public:
     void setRight( IExpression * );
     void setOperator( Operator );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     IExpression *getLeft(){ return left; }
     IExpression *getRight(){ return right; }
@@ -193,6 +205,7 @@ public:
     void setFunction( const string& );
     void addArgument( IExpression * );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     IExpression *getCaller(){ return caller; }
     string getClass(){ return class_name; }
@@ -207,6 +220,7 @@ class NewExpression : public IExpression
 public:
     NewExpression( const string& );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     string getClass(){ return class_name; }
 };
@@ -218,6 +232,7 @@ class FinalExpression : public IExpression
 public:
     FinalExpression( const string& );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     string getLiteral(){ return literal; }
 };
