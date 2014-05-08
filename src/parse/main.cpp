@@ -64,8 +64,10 @@ int main( int argc, char **argv )
         //checked->printT();
         PrintVisitor *visitor = new PrintVisitor();
         checked->visit( visitor );
+
         Context *gc = tc->global;
         CodeGenerator *gen = new CodeGenerator( "out", gc );
+        //cout << "CANARY" << endl;
         Program *prgm = dynamic_cast<Program*>( checked  );
         if (prgm) cout << "IS A PROGRAM" << endl;
         MainClass *mc = dynamic_cast<MainClass*>( checked  );
@@ -76,6 +78,11 @@ int main( int argc, char **argv )
                   prgm->addChild(mc); 
                 };
         prgm->visit( gen );
+
+        cout << "Assembling..." << endl;
+        system("nasm -f elf64 out");
+        cout << "Linking..." << endl;
+        system("gcc -o a.out out.o");
 
         //cout << endl;
     } else cerr << "Run with --print to see AST.\n";
