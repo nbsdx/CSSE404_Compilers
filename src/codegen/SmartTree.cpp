@@ -1,6 +1,4 @@
 
-#include <iostream>
-
 #include "SmartTree.h"
 #include "SmartTreeVisitor.h"
 
@@ -12,7 +10,6 @@ namespace ir
  ****************************/
 Program::Program()
 {
-    this->main_class = NULL;
     enforceType( false );
 }
 
@@ -29,33 +26,6 @@ void Program::setMainClass( MainClass *mc )
 void Program::visit( Visitor *v )
 {
     v->process( this );
-}
-
-void Program::addChild( INode *n )
-{
-    MainClass *mc = dynamic_cast<MainClass*>( n );
-    if (mc) {
-        if (this->main_class) {
-            // Program starts with something that isn't MainClass
-            // Probably a parser error
-            // fatalError( ); TODO: Need interface
-            cerr << "FATAL: Program received two main classes." << endl;;
-        } else {
-            this->setMainClass(mc);
-        }
-    } else {
-        Class *c = dynamic_cast<Class*>( n );
-        if (!c) {
-            // Something arbitrary got too high in the tree
-            // Parser error
-            // fatalError( );
-            cerr << "Program can't add null pointer." << endl;
-        } else {
-            this->addClass(c);
-        }
-    }
-
-    return;
 }
 
 /******************************
@@ -75,18 +45,6 @@ void MainClass::addStatement( IStatement *s )
 void MainClass::visit( Visitor *v )
 {
     v->process( this );
-}
-
-void MainClass::addChild( INode *n )
-{
-    IStatement *s = dynamic_cast<IStatement*>( n );
-    if (s) {
-        this->addStatement(s);
-    } else {
-        // This error could probably have come from anywhere
-        // fatalError( );
-    }
-    return;
 }
 
 /**************************
@@ -125,23 +83,6 @@ void Class::visit( Visitor *v )
     v->process( this );
 }
 
-void Class::addChild( INode *n )
-{
-    // Classes only accept members and functions
-    Formal *fo = dynamic_cast<Formal*>( n );
-    Function *fn = dynamic_cast<Function*>( n );
-    if (fo) {
-        this->addMember(fo);
-    } else if (fn) {
-        this->addFunction(fn);
-    } else {
-        // Fatal parser or decision error
-        // fatalError( );
-    }
-    return;
-}
-
-
 /***************************
  *  Formal Class Functions *
  ***************************/
@@ -155,14 +96,6 @@ Formal::Formal( const string &type, const string &name )
 void Formal::visit( Visitor *v )
 {
     v->process( this );
-}
-
-void Formal::addChild( INode *n )
-{
-    // This should not be receiving children.
-    // This is an ambiguous fatal error.
-    // fatalError( );
-    return;
 }
 
 /*****************************
@@ -191,8 +124,6 @@ void Function::addStatement( IStatement *s )
 
 void Function::setRet( IExpression *s )
 {
-    // Should be something seriously wrong if two returns make it
-    //if (this->ret) fatalError(  );
     this->ret = s;
 }
 
@@ -201,42 +132,13 @@ void Function::visit( Visitor *v )
     v->process( this );
 }
 
-
-void Function::addChild( INode *n )
-{
-    // Args and return type taken care of by creation procedure
-    IStatement *st = dynamic_cast<IStatement*>( n );
-    IExpression *ex = dynamic_cast<IExpression*>( n );
-    
-    if (st) {
-        this->addStatement(st);
-    } else if (ex) {
-        this->setRet(ex);
-    } else {
-        // fatalError( );
-    }
-    return;
-}
-
-
 /***********************************
  *  PrintStatement Class Functions *
  ***********************************/
-PrintStatement::PrintStatement( )
-{
-    enforceType( false );
-}
-
 PrintStatement::PrintStatement( IExpression *e ) 
 {
     this->value = e;
     enforceType( false );
-}
-
-void PrintStatement::addExpression( IExpression *e )
-{
-    //if (this->value) fatalError();
-    this->value = e;
 }
 
 void PrintStatement::visit( Visitor *v )
@@ -255,6 +157,42 @@ void PrintStatement::addChild( INode *n )
         //  fatalError(  );
     }
     return;
+}
+
+/****************************************
+ *  AssignmentStatement Class Functions *
+ ****************************************/
+AssignmentStatement::AssignmentStatement()
+{
+    this->dest = "";
+    this->type = "";
+    this->is_new = false;
+    this->value = nullptr;
+}
+
+void AssignmentStatement::setType( const string &t )
+{
+    this->type = t;
+}
+
+void AssignmentStatement::setDest( const string &d )
+{
+    this->dest = d;
+}
+
+void AssignmentStatement::setValue( IExpression *v )
+{
+    this->value = v;
+}
+
+void AssignmentStatement::setNew( bool b )
+{
+    this->is_new = b;
+}
+
+void AssignmentStatement::visit( Visitor *v )
+{
+    v->process( this );
 }
 
 
@@ -284,11 +222,6 @@ void MathExpression::setOperator( Operator o )
 void MathExpression::visit( Visitor *v )
 {
     v->process( this );
-}
-
-void MathExpression::addChild( INode *n )
-{
-    return;
 }
 
 /***********************************
@@ -324,11 +257,6 @@ void CallExpression::visit( Visitor *v )
     v->process( this );
 }
 
-void CallExpression::addChild( INode *n )
-{
-    return;
-}
-
 /**********************************
  *  NewExpression Class Functions *
  **********************************/
@@ -342,13 +270,6 @@ void NewExpression::visit( Visitor *v )
     v->process( this );
 }
 
-
-void NewExpression::addChild( INode *n )
-{
-    return;
-}
-
-
 /************************************
  *  FinalExpression Class Functions *
  ************************************/
@@ -360,11 +281,6 @@ FinalExpression::FinalExpression( const string &lit )
 void FinalExpression::visit( Visitor *v )
 {
     v->process( this );
-}
-
-void FinalExpression::addChild( INode *n )
-{
-    return;
 }
 
 } // End Namespace <ir>

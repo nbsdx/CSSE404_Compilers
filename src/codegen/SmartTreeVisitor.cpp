@@ -101,6 +101,59 @@ void PrintVisitor::process( PrintStatement *p )
     cout << " );";
 }
 
+void PrintVisitor::process( AssignmentStatement *a )
+{
+    if( a->getNew() )
+    {
+        cout << "\t\t" << a->getType() << " ";
+    }
+
+    cout << a->getDest() << " = ";
+
+    a->getValue()->visit( this );
+}
+
+void PrintVisitor::process( IfStatement *s )
+{
+    cout << "\t\tif( ";
+    s->getCondition()->visit( this );
+    cout << " )" << endl << "\t\t{" << endl;
+    
+    for( auto a : s->getOnTrue() )
+    {
+        cout << "\t";
+        a->visit( this );
+        cout << endl;
+    }
+
+    cout << "\t\t}" << endl << "\t\telse" << endl << "\t\t{" << endl;
+
+    for( auto a : s->getOnFalse() )
+    {
+        cout << "\t";
+        a->visit( this );
+        cout << endl;
+    }
+
+    cout << "\t\t}" << endl;
+}
+
+void PrintVisitor::process( WhileStatement *w )
+{
+    cout << "\t\twhile( ";
+    w->getCondition()->visit( this );
+    cout << " )" << endl << "\t\t{" << endl;
+
+    for( auto a : w->getBody() )
+    {
+        cout << "\t";
+        a->visit( this );
+        cout << endl;
+    }
+
+    cout << "\t\t}" << endl;
+}
+
 void PrintVisitor::process( FinalExpression *f )
 {
     cout << f->getLiteral();
