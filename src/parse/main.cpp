@@ -79,10 +79,12 @@ int main( int argc, char **argv )
                 };
         prgm->visit( gen );
 
-        cout << "Assembling..." << endl;
-        system("nasm -f elf64 out");
-        cout << "Linking..." << endl;
-        system("gcc -o a.out out.o");
+        if (tc->clean) {
+            cout << "Assembling..." << endl;
+            system("nasm -f elf64 out");
+            cout << "Linking..." << endl;
+            system("gcc -o a.out out.o");
+        }
 
         //cout << endl;
     } else cerr << "Run with --print to see AST.\n";

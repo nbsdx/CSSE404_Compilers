@@ -79,11 +79,15 @@ INode *ppostOrder( RTree *tree,
      INode *me = make_inode( tree );
      if (!tree->isLeaf()) {
         vector< RTree* > branches = tree->getBranches();
+        vector< INode* > children;
 
         for( RTree *branch : branches )
         {
             INode *processed = ppostOrder( branch, make_inode, leave );
 
+            // We want to get rid of this in favour of leave() processing
+            // |
+            // V
             MainClass *mc = dynamic_cast<MainClass*>(processed);
             string tval = branch->printVal();
             if (mc) cout << "MainClass merged in from " << tval << endl;
@@ -91,6 +95,9 @@ INode *ppostOrder( RTree *tree,
             // Unwanted keywords will return null
             if (me && processed) me->addChild(processed);
             else if (!me && processed) me = processed;
+            // ^
+            // |
+            // (because it's completely dumb, doesn't check shit)
         }
         return me;
         //return leave( me );
@@ -132,6 +139,34 @@ INode *newVisit(RTree *tree) {
             ret = new PrintStatement();
         }
         //TODO: Many statement variants here!
+    }  else if (tval.compare("AddExpr") == 0) {
+        if (deg == 1) {
+            // return null and keep child
+        } else if (deg == 2) {
+            // We haven't got a clue what the operation is
+            // (Until we have processed the AddExpr_)
+            cout << "MATHEXPRESSION HA H AH AH" << endl;
+            ret = new MathExpression();
+        } else {
+            // horrible error here
+        }
+    } else if (tval.compare("AddExpr_") == 0) {
+        // There's no Operator INode, so we need to pull that info here.
+        if (deg > 1) { // non-epsilon
+            MathExpression *mx = new MathExpression();
+            BasicToken *bop = branches[0]->getVal();
+            Operator *op = dynamic_cast<Operator*>( bop );
+            MathExpression::Operator myop;
+            switch (op->token()) {
+                case Plus: myop = MathExpression::Add;  break;
+                case Minus: myop = MathExpression::Sub; break;
+                default: break; // Throw error here
+            }
+            mx->setOperator( myop );
+            ret = mx;
+        } else {
+            // Return null; epsilon
+        }
     } else if ( dynamic_cast<Number*>( rep )) {
         ret = new FinalExpression(tval);
     } 
@@ -142,15 +177,38 @@ INode *newVisit(RTree *tree) {
 }
 
 INode *newLeave(INode *n) {
+    // Would be a good candidate to turn into some kind of interface
+    // and do away with all thesse fucking dynamic casts
+    Program *p;
+    MainClass *mc;
+    ir::Class *cl;
+    Function *fn;
+    Formal *fl;
+    PrintStatement *pr;
+    AssignmentStatement *ass;
+    IfStatement *ifs;
+    WhileStatement *wh;
+    MathExpression *ma;
+    CallExpression *ce;
+    NewExpression *nw;
+    
+    // Not sure about handling these guys
+    FinalExpression *fi;
+    IExpression *ie;
+    IStatement *ist;
+
     /*
-    string tval = tree->printVal();
-    vector<RTree*> branches = tree->getBranches();
-    int deg = branches.size();
+    if ( (ma = dynamic_cast<MathExpression*>( n ); ) ) {
+        IExpression *rhs = ma->getRight();
+        MathExpression *nested = dynamic_cast<MathExpression*>( nested );
+        if (!nested) {
 
-    BasicToken* rep = tree->getVal();
-
-    if (tval.compare(
+        } else {
+            // The original IExpr is complete
+        }
+    }
     */
+
 
     return n;
 }

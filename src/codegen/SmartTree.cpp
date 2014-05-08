@@ -1,4 +1,6 @@
-#include <iostream>
+#include <iostream> // Temporary includes for debugging
+#include <assert.h> // during CodeGen phase
+
 #include "SmartTree.h"
 #include "SmartTreeVisitor.h"
 
@@ -10,6 +12,7 @@ namespace ir
  ****************************/
 Program::Program()
 {
+    this->main_class = NULL;
     enforceType( false );
 }
 
@@ -289,13 +292,19 @@ void AssignmentStatement::visit( Visitor *v )
     v->process( this );
 }
 
+void AssignmentStatement::addChild( INode *n )
+{
+    cerr << "FATAL: Assignment not yet supported." << endl;
+    assert(false);
+}
 
 /***********************************
  *  MathExpression Class Functions *
  ***********************************/
 MathExpression::MathExpression()
 {
-    
+    this->left = NULL;
+    this->right = NULL;
 }
 
 void MathExpression::setLeft( IExpression *l )
@@ -320,6 +329,30 @@ void MathExpression::visit( Visitor *v )
 
 void MathExpression::addChild( INode *n )
 {
+    MathExpression *ma = dynamic_cast<MathExpression*>( n );
+    IExpression *ie = dynamic_cast<IExpression*>( n );
+
+    
+    // Should  revise this when I have a better idea
+    // of what expressions are possible
+    if (!this->left) {
+        if (ma) this->left = ma;
+        else if (ie) this->left = ie;
+    } else if (!this->right) {
+        // When adding the RHS we find out the real operation
+        if (ma) {
+            // Check if it's a terminating or continuing MathExpression
+            IExpression *rhs = ma->getRight();
+            if (!rhs) { // Terminating
+                // Get the lhs and just use that
+                ie = rhs->getLeft();
+                ma = NULL;
+            }
+            this->right = ma;
+        } else if (ie) this->right = ie;
+    } else {
+        // fatalError( );
+    }
     return;
 }
 

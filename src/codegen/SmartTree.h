@@ -176,6 +176,7 @@ public:
     void setValue( IExpression * );
     void setNew( bool );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     string getDest(){ return dest; }
     string getType(){ return type; }
@@ -195,6 +196,7 @@ public:
     void addFalseStatement( IStatement * );
     void setCondition( IExpression * );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     vector<IStatement*> getOnTrue(){ return on_true; }
     vector<IStatement*> getOnFalse(){ return on_false; }
@@ -211,6 +213,7 @@ public:
     void setCondition( IExpression * );
     void addStatement( IStatement * );
     void visit( Visitor * );
+    void addChild( INode *n );
 
     IExpression *getCondition(){ return condition; }
     vector<IStatement*>getBody(){ return body; }
