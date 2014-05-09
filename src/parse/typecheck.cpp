@@ -128,7 +128,8 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             ret = new PrintStatement();
         }
         //TODO: Many statement variants here!
-    }  else if (tval.compare("AddExpr") == 0) {
+    }  else if (  tval.compare("AddExpr") == 0
+               || tval.compare("MultExpr") == 0) {
         if (subs == 1) {
             // return null and keep child
         } else if (subs == 2) {
@@ -146,7 +147,8 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         } else {
             // horrible error here
         }
-    } else if (tval.compare("AddExpr_") == 0) {
+    } else if (  tval.compare("AddExpr_") == 0
+              || tval.compare("MultExpr_") == 0) {
         // If there's no further AddExpr' coming, choose my own operation.
         // If there is, take my child's operation manually (from the RTree)
 
@@ -168,6 +170,8 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         switch (op->token()) {
             case Plus: myop = MathExpression::Add;  break;
             case Minus: myop = MathExpression::Sub; break;
+            case Mult: myop = MathExpression::Mul; break;
+            case Div: myop = MathExpression::Div; break;
             default: break; // Throw error here
         }
         mx->setOperator( myop );
