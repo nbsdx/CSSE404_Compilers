@@ -305,6 +305,7 @@ MathExpression::MathExpression()
 {
     this->left = NULL;
     this->right = NULL;
+    this->op = UNSET;
 }
 
 void MathExpression::setLeft( IExpression *l )
@@ -329,29 +330,19 @@ void MathExpression::visit( Visitor *v )
 
 void MathExpression::addChild( INode *n )
 {
-    MathExpression *ma = dynamic_cast<MathExpression*>( n );
+    // Set the op FIRST when  on AddExpr',
+    // set the op LASST when on AddExpr
     IExpression *ie = dynamic_cast<IExpression*>( n );
-
-    
-    // Should  revise this when I have a better idea
-    // of what expressions are possible
-    if (!this->left) {
-        if (ma) this->left = ma;
-        else if (ie) this->left = ie;
-    } else if (!this->right) {
-        // When adding the RHS we find out the real operation
-        if (ma) {
-            // Check if it's a terminating or continuing MathExpression
-            IExpression *rhs = ma->getRight();
-            if (!rhs) { // Terminating
-                // Get the lhs and just use that
-                ie = rhs->getLeft();
-                ma = NULL;
-            }
-            this->right = ma;
-        } else if (ie) this->right = ie;
+    if (!ie) {
+        // Horrible error
+        return;
+    }
+    if (this->op == UNSET && !this->left) {
+        this->left = ie;
+    } else if (this->op != UNSET && !this->right) {
+        this->right = ie;
     } else {
-        // fatalError( );
+        // Horrible error
     }
     return;
 }

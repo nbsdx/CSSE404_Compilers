@@ -227,7 +227,8 @@ public:
         Add,
         Sub,
         Mul,
-        Div
+        Div,
+        UNSET
     };
 
 private:

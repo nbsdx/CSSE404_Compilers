@@ -72,47 +72,36 @@ RTree *TypeCheck::postOrder( RTree *tree,
     }
 }
 
+/**************************************************
+ *
+ * Third Pass starts here
+ * Hopefully can merge First and Third pass, rewriting second
+ * (external interface is buildIR)
+ *
+ *************************************************/
 INode *ppostOrder( RTree *tree,
-                 function<INode* (RTree*)> make_inode,
-                 function<INode* (INode*)> leave )
+                 function<INode* (RTree*, vector<INode*>)> make_inode)
 {
-     INode *me = make_inode( tree );
+     vector< INode* > children;
      if (!tree->isLeaf()) {
         vector< RTree* > branches = tree->getBranches();
-        vector< INode* > children;
 
         for( RTree *branch : branches )
         {
-            INode *processed = ppostOrder( branch, make_inode, leave );
-
-            // We want to get rid of this in favour of leave() processing
-            // |
-            // V
-            MainClass *mc = dynamic_cast<MainClass*>(processed);
-            string tval = branch->printVal();
-            if (mc) cout << "MainClass merged in from " << tval << endl;
-
-            // Unwanted keywords will return null
-            if (me && processed) me->addChild(processed);
-            else if (!me && processed) me = processed;
-            // ^
-            // |
-            // (because it's completely dumb, doesn't check shit)
+            INode *processed = ppostOrder( branch, make_inode );
+            if (processed) children.push_back( processed );
         }
-        return me;
-        //return leave( me );
-    } else {
-        //me = leave( me );
-        
+        INode *me = make_inode( tree, children );
         return me;
     }
-   
+    return make_inode( tree, children );
 }
 
-INode *newVisit(RTree *tree) {
+INode *newVisit(RTree *tree, vector<INode*> children) {
     string tval = tree->printVal();
     vector<RTree*> branches = tree->getBranches();
     int deg = branches.size();
+    int subs = children.size();
 
     BasicToken* rep = tree->getVal();
 
@@ -140,82 +129,71 @@ INode *newVisit(RTree *tree) {
         }
         //TODO: Many statement variants here!
     }  else if (tval.compare("AddExpr") == 0) {
-        if (deg == 1) {
+        if (subs == 1) {
             // return null and keep child
-        } else if (deg == 2) {
-            // We haven't got a clue what the operation is
-            // (Until we have processed the AddExpr_)
+        } else if (subs == 2) {
+            // Need to pull the sign info from the child
             cout << "MATHEXPRESSION HA H AH AH" << endl;
-            ret = new MathExpression();
+            MathExpression *mx = dynamic_cast<MathExpression*>( children[1] );
+            if (!mx) {
+                // Throw horrible fatal error here
+            } else {
+                // Add the LHS to this thing
+                mx->addChild( children[0] );
+                // Break out early so we don't merge incorrectly
+                return mx;
+            }
         } else {
             // horrible error here
         }
     } else if (tval.compare("AddExpr_") == 0) {
-        // There's no Operator INode, so we need to pull that info here.
-        if (deg > 1) { // non-epsilon
-            MathExpression *mx = new MathExpression();
-            BasicToken *bop = branches[0]->getVal();
-            Operator *op = dynamic_cast<Operator*>( bop );
-            MathExpression::Operator myop;
-            switch (op->token()) {
-                case Plus: myop = MathExpression::Add;  break;
-                case Minus: myop = MathExpression::Sub; break;
-                default: break; // Throw error here
-            }
-            mx->setOperator( myop );
-            ret = mx;
-        } else {
-            // Return null; epsilon
+        // If there's no further AddExpr' coming, choose my own operation.
+        // If there is, take my child's operation manually (from the RTree)
+
+        MathExpression *mx = new MathExpression();
+        BasicToken *bop;
+        MathExpression::Operator myop;
+
+        if (subs == 1) { // end of the line
+            bop = branches[0]->getVal();
+        } else if (subs == 2) {
+            // Need to fish up the next AddExpr's operator
+            RTree *nextadd = branches[2]->getBranches()[0];
+            bop =  nextadd->getVal();
         }
+
+        if (!bop) cerr << "FATAL MISTAKE in AddExpr_" << endl;
+
+        Operator *op = dynamic_cast<Operator*>( bop );
+        switch (op->token()) {
+            case Plus: myop = MathExpression::Add;  break;
+            case Minus: myop = MathExpression::Sub; break;
+            default: break; // Throw error here
+        }
+        mx->setOperator( myop );
+        ret = mx;
     } else if ( dynamic_cast<Number*>( rep )) {
         ret = new FinalExpression(tval);
     } 
   
     MainClass *mc = dynamic_cast<MainClass*>(ret);
     if (mc) cout << "MainClass detected from " << tval << endl;
+
+    // Drop the null'd (ignored) AST nodes,
+    // merge the children into the parent for the wanted nodes.
+    if (ret) {
+        for (INode *kid : children) {
+            ret->addChild(kid);
+        }
+    }
+
+
     return ret;
 }
 
-INode *newLeave(INode *n) {
-    // Would be a good candidate to turn into some kind of interface
-    // and do away with all thesse fucking dynamic casts
-    Program *p;
-    MainClass *mc;
-    ir::Class *cl;
-    Function *fn;
-    Formal *fl;
-    PrintStatement *pr;
-    AssignmentStatement *ass;
-    IfStatement *ifs;
-    WhileStatement *wh;
-    MathExpression *ma;
-    CallExpression *ce;
-    NewExpression *nw;
-    
-    // Not sure about handling these guys
-    FinalExpression *fi;
-    IExpression *ie;
-    IStatement *ist;
-
-    /*
-    if ( (ma = dynamic_cast<MathExpression*>( n ); ) ) {
-        IExpression *rhs = ma->getRight();
-        MathExpression *nested = dynamic_cast<MathExpression*>( nested );
-        if (!nested) {
-
-        } else {
-            // The original IExpr is complete
-        }
-    }
-    */
-
-
-    return n;
-}
-
 INode *TypeCheck::buildIR (RTree *t) {
-    return ppostOrder(t, [](RTree *input) { return newVisit(input); },
-                         [](INode *node) { return newLeave(node); });
+    return ppostOrder(t, [](RTree *input, vector <INode*> children) 
+             { return newVisit(input, children); });
 }
 
 
