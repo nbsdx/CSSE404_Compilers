@@ -337,10 +337,10 @@ void MathExpression::addChild( INode *n )
         // Horrible error
         return;
     }
-    if (this->op == UNSET && !this->left) {
-        this->left = ie;
-    } else if (this->op != UNSET && !this->right) {
+    if (!this->right) {
         this->right = ie;
+    } else if (!this->left) {
+        this->left = ie;
     } else {
         // Horrible error
     }
