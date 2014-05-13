@@ -117,7 +117,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         ret = new MainClass(namestr);
     } else if (tval.compare ("Program") == 0) {
         ret = new Program();
-    } else if (tval.compare ("StmtList") == 0) {
+    } else if (tval.compare ("StmtLst") == 0) {
         // Stmt StmtLst <- RHS guaranteed not to be lexical
         // Stmt Stmt    <- either could be lexical blocks
         BlockStatement *bs = new BlockStatement();

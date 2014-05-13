@@ -31,7 +31,7 @@ public:
     virtual void process( NewExpression * ) = 0;
     virtual void process( CallExpression * ) = 0;
     virtual void process( MathExpression * ) = 0;
-    virtual void process( BlockExpression * ) = 0;
+    virtual void process( BlockStatement * ) = 0;
 
     void visitIStatement( IStatement * );
     void visitIExpression( IExpression * );
@@ -53,7 +53,7 @@ public:
     void process( NewExpression * );
     void process( CallExpression * );
     void process( MathExpression * );
-    void process( BlockExpression * );
+    void process( BlockStatement * );
 };
 
 class CodeGenerator : public Visitor
@@ -80,7 +80,7 @@ public:
     void process( NewExpression * );
     void process( CallExpression * );
     void process( MathExpression * );
-    void process( BlockExpression * );
+    void process( BlockStatement * );
 
 private:
 

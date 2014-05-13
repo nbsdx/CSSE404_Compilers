@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <assert.h>
 
 using namespace std;
 
@@ -601,7 +602,7 @@ void CodeGenerator::process( FinalExpression *f )
     }
 }
 
-void CodeGenerator::process( BlockExpression *p ) {
+void CodeGenerator::process( BlockStatement *p ) {
     cerr << "FATAL: BlockExpression survived all the way to CodeGenerator." << endl;
     assert(false);
 }

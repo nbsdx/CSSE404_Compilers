@@ -2,6 +2,7 @@
 #include "SmartTreeVisitor.h"
 
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -201,9 +202,9 @@ void PrintVisitor::process( Formal *f )
 }
 
 
-void PrintVisitor::process( BlockExpression *b )
+void PrintVisitor::process( BlockStatement *b )
 {
-    cerr << "FATAL: Tried to visit BlockExpresssion." << endl;
+    cerr << "FATAL: Tried to visit BlockStatement." << endl;
     assert(false);
 }
 
