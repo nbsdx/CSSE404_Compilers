@@ -289,7 +289,7 @@ class NewExpression : public IExpression
     string class_name;
 
 public:
-    NewExpression( const string& );
+    NewExpression( );
     void visit( Visitor * );
     void addChild( INode *n );
 

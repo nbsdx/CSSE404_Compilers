@@ -432,9 +432,8 @@ void CallExpression::addChild( INode *n )
 /**********************************
  *  NewExpression Class Functions *
  **********************************/
-NewExpression::NewExpression( const string &cname )
+NewExpression::NewExpression( )
 {
-    this->class_name = cname;
 }
 
 void NewExpression::visit( Visitor *v )
@@ -444,6 +443,14 @@ void NewExpression::visit( Visitor *v )
 
 void NewExpression::addChild( INode *n )
 {
+    FinalExpression *fx = dynamic_cast<FinalExpression*>( n );
+    if (fx) {
+        string cn = fx->getLiteral();
+        this->class_name = cn;
+    } else {
+        cerr << "FATAL: NewExpression did not receive a classname." << endl;
+        assert(false);
+    }
     return;
 }
 

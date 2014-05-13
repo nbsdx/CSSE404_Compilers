@@ -230,7 +230,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
     } else if (  tval.compare("AddExpr_") == 0
               || tval.compare("MultExpr_") == 0) {
         // If there's no further AddExpr' coming, choose my own operation.
-        // If there is, take my child's operation manually (from the RTree)
+        // If there is, take my child's operation manually from the RTree)
 
         MathExpression *mx = new MathExpression();
         BasicToken *bop;
@@ -269,12 +269,28 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
     } else if ( tval.compare("Literal") == 0) {
         // Literal -> ID | this | Integer | null | true | false | ( Expr )
         //          | new ID ( )
-        ret = children[0]; // Only for Expr case
-        // Other caseess yet to be handled
+
+        // Only need to handle ( Expr ) and new ID ( ) here.
+        ret = children[0]; 
+        if (subs == 2) {
+            // NewExpression
+            ret->addChild(children[1]);
+        }
+        return ret;
     } else if ( dynamic_cast<Number*>( rep )) {
         ret = new FinalExpression(tval);
     } else if ( dynamic_cast<Identifier*>( rep )) {
         ret = new FinalExpression(tval);
+    } else if ( dynamic_cast<ReservedWord*>( rep )) {
+        ReservedWord* rw = dynamic_cast<ReservedWord*>( rep );
+        switch (rw->token()) {
+            case True:
+            case False:
+            case Null:
+            case This: return new FinalExpression(tval); break;
+            case New: return new NewExpression(); break;
+            default: break;
+        }
     }
   
     MainClass *mc = dynamic_cast<MainClass*>(ret);
