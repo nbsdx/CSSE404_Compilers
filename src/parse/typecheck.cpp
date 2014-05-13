@@ -197,26 +197,35 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
                 ass->setType(type);
                 ass->setNew(true);
                 ret =  ass;
+
+
+                ret->addChild(children[1]);
+                return ret;
             }
         }
     }  else if (  tval.compare("AddExpr") == 0
                || tval.compare("MultExpr") == 0) {
         if (subs == 1) {
-            // return null and keep child
+            // keep child - it's a multexpr, no +- involved
+            ret = children[0];
+            return ret;
         } else if (subs == 2) {
             // Need to pull the sign info from the child
             cout << "MATHEXPRESSION HA H AH AH" << endl;
             MathExpression *mx = dynamic_cast<MathExpression*>( children[1] );
             if (!mx) {
                 // Throw horrible fatal error here
+                cout << "FATAL - RHS IS NOT A MATHEXPR" << endl;
             } else {
                 // Add the LHS to this thing
+                cout << "Atttempting to terminate MathExpr chain.." << endl;
                 mx->addChild( children[0] );
                 // Break out early so we don't merge incorrectly
                 return mx;
             }
         } else {
             // horrible error here
+            cout << "FUCK- mishandling math" << endl;
         }
     } else if (  tval.compare("AddExpr_") == 0
               || tval.compare("MultExpr_") == 0) {
@@ -229,10 +238,14 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
 
         if (subs == 1) { // end of the line
             bop = branches[0]->getVal();
+            mx->addChild(children[0]);
         } else if (subs == 2) {
             // Need to fish up the next AddExpr's operator
             RTree *nextadd = branches[2]->getBranches()[0];
             bop =  nextadd->getVal();
+            IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
+            rhs->addChild(children[0]);
+            mx->addChild(rhs);
         }
 
         if (!bop) { 
@@ -251,7 +264,8 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             default: break; // Throw error here
         }
         mx->setOperator( myop );
-        ret = mx;
+
+        return mx;
     } else if ( tval.compare("Literal") == 0) {
         // Literal -> ID | this | Integer | null | true | false | ( Expr )
         //          | new ID ( )
@@ -259,7 +273,9 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         // Other caseess yet to be handled
     } else if ( dynamic_cast<Number*>( rep )) {
         ret = new FinalExpression(tval);
-    } 
+    } else if ( dynamic_cast<Identifier*>( rep )) {
+        ret = new FinalExpression(tval);
+    }
   
     MainClass *mc = dynamic_cast<MainClass*>(ret);
     if (mc) cout << "MainClass detected from " << tval << endl;

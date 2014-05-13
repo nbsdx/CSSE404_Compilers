@@ -330,8 +330,10 @@ void AssignmentStatement::addChild( INode *n )
 {
     IExpression *ie = dynamic_cast<IExpression*>( n );
 
-    if (!ie || this->value) {
-        cerr << "FATAL - ASSIGNMENT GIVEN TWO OR ZERO EXPRS" << endl;
+    if (!ie) {
+        cerr << "FATAL - Invalid value at assignment" <<  endl;
+    } else if (this->value) {
+        cerr << "FATAL - ASSIGNMENT GIVEN TWO EXPRS" << endl;
     }
 
     this->value = ie;
@@ -374,6 +376,7 @@ void MathExpression::addChild( INode *n )
     IExpression *ie = dynamic_cast<IExpression*>( n );
     if (!ie) {
         // Horrible error
+        cerr << "MathExpression  received a non-expression" << endl;
         return;
     }
     if (!this->right) {
@@ -382,6 +385,7 @@ void MathExpression::addChild( INode *n )
         this->left = ie;
     } else {
         // Horrible error
+        cerr << "MathExpr received more than two  branches..." << endl;
     }
     return;
 }
