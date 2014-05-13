@@ -601,5 +601,9 @@ void CodeGenerator::process( FinalExpression *f )
     }
 }
 
+void CodeGenerator::process( BlockExpression *p ) {
+    cerr << "FATAL: BlockExpression survived all the way to CodeGenerator." << endl;
+    assert(false);
+}
 
 } // End Namespace <ir>

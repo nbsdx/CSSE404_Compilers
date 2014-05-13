@@ -162,6 +162,19 @@ public:
     IExpression *getValue(){ return value; }
 };
 
+class BlockStatement : public IStatement
+{
+    vector<IStatement*> body;
+
+public:
+    BlockStatement( );
+    void addChild( INode *n );
+    vector<IStatement*> getBody( );
+    void visit( Visitor *v );
+};
+
+
+
 class AssignmentStatement : public IStatement
 {
     string dest;

@@ -39,6 +39,8 @@ INode* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
+    cleaned->printT();
+
     INode *third = buildIR( cleaned );
 
     //cout << "Global Namespace: " << endl;
@@ -105,13 +107,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
 
     BasicToken* rep = tree->getVal();
 
-    // Not sure how much of this we'll use right now
-    //string match = matchAll(branches);
-    //bool matching = !match.empty();
-
     INode *ret = NULL;
-
-    cout << "Processing "  << tval << endl;
 
     if (tval.compare("MainClassDecl") == 0) {
         // Need to pull classs ID out here
@@ -121,13 +117,88 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         ret = new MainClass(namestr);
     } else if (tval.compare ("Program") == 0) {
         ret = new Program();
+    } else if (tval.compare ("StmtList") == 0) {
+        // Stmt StmtLst <- RHS guaranteed not to be lexical
+        // Stmt Stmt    <- either could be lexical blocks
+        BlockStatement *bs = new BlockStatement();
+        ret = bs;
     } else if (tval.compare ("Stmt") == 0) {
-        // Check if print statement
         string stmt_type = branches[0]->printVal();
-        if (stmt_type.compare ("System.out.println") == 0) {
+        string pform = branches[0]->printVal();
+
+        if (pform.compare("while") == 0) 
+        {
+            // Stmt -> while ( Expr ) Stmt
+            cerr << "While statement not supported." << endl;
+            assert(false);
+        } 
+        else if (pform.compare("if") == 0) 
+        {
+            // Stmt -> if ( Expr ) Stmt else Stmt
+            cerr << "If statement not yet supported." << endl;
+            assert(false);
+           
+        } 
+        else if (pform.compare("{") == 0) 
+        {
+            // Input: { StmtLst } 
+            // Output: Some kind of Block type
+            cerr << "Statement block not yet supported." << endl;
+            assert(false);
+        } 
+        else if (pform.compare("System.out.println") == 0) 
+        {
             ret = new PrintStatement();
+        } 
+        else 
+        {
+            // Assignments and method calls
+     
+            if (deg == 3) {
+                // ID StmtRHS ;
+                cerr << "FATAL: Statement variant nnot yet implemented." << endl;
+                assert(false);
+            /*
+                string type = branches[0]->getType();
+                string myname;
+                BasicToken* one = branches[1]->getBranches()[0]->getVal();
+                if ( dynamic_cast<Operator*>( one )) {
+                    assert(0);
+                } else if ( dynamic_cast<Identifier*>( one )) {
+                    // ID (ID = Expr) ; <-- DeclInit  
+                    myname = branches[1]->getBranches()[0]->printVal();
+                    global->add(myname, type);
+                    ///cout << "Declared " << myname << "::" << type << endl;
+                } else if ( dynamic_cast<Delimiter*>( one )) {
+                    // ID (= Expr) ; <-- Assign
+                    Delimiter *del = dynamic_cast<Delimiter*>( one );
+                    if (del->token() == Equal) {
+                        myname = branches[0]->printVal();
+                        global->add(myname, type);
+                        //cout << "Decl/assed " << myname << "::" << type << endl;
+                    } else if (del->token() == Period) {
+                    // ID (. DotExprChain...) ; <-- method lookup
+                        //cout << "<<--- Method lookup here\n";
+                        resolveDexPrime(type, branches[1]);
+
+                    }
+                }
+                // else fatal compiler error
+            */
+
+            } else if (deg == 5) {
+                // BasicType ID = Expr ; 
+
+                string type = branches[0]->printVal();
+                string myname = branches[1]->printVal();
+
+                AssignmentStatement *ass = new AssignmentStatement();
+                ass->setDest(myname);
+                ass->setType(type);
+                ass->setNew(true);
+                ret =  ass;
+            }
         }
-        //TODO: Many statement variants here!
     }  else if (  tval.compare("AddExpr") == 0
                || tval.compare("MultExpr") == 0) {
         if (subs == 1) {
@@ -164,7 +235,12 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             bop =  nextadd->getVal();
         }
 
-        if (!bop) cerr << "FATAL MISTAKE in AddExpr_" << endl;
+        if (!bop) { 
+            cerr << "FATAL MISTAKE in mmath expressionn" << endl;
+            cerr << "Subtrees: " << subs << endl;
+            tree->printT();
+        }
+        
 
         Operator *op = dynamic_cast<Operator*>( bop );
         switch (op->token()) {
@@ -176,6 +252,11 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         }
         mx->setOperator( myop );
         ret = mx;
+    } else if ( tval.compare("Literal") == 0) {
+        // Literal -> ID | this | Integer | null | true | false | ( Expr )
+        //          | new ID ( )
+        ret = children[0]; // Only for Expr case
+        // Other caseess yet to be handled
     } else if ( dynamic_cast<Number*>( rep )) {
         ret = new FinalExpression(tval);
     } 

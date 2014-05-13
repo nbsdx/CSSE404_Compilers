@@ -200,4 +200,11 @@ void PrintVisitor::process( Formal *f )
     cout << f->getType() << " " << f->getName();
 }
 
+
+void PrintVisitor::process( BlockExpression *b )
+{
+    cerr << "FATAL: Tried to visit BlockExpresssion." << endl;
+    assert(false);
+}
+
 } // End Namespace <ir>

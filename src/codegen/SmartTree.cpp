@@ -79,11 +79,19 @@ void MainClass::visit( Visitor *v )
 
 void MainClass::addChild( INode *n )
 {
+    BlockStatement *bs = dynamic_cast<BlockStatement*>( n );
     IStatement *s = dynamic_cast<IStatement*>( n );
-    if (s) {
+    
+    if (bs) {
+        cerr << "Visiting a BlockStatement."  << endl;
+        vector<IStatement*> sts = bs->getBody();
+        for (IStatement *st : sts) {
+            this->addChild(st);
+        }
+    } else if (s) {
         this->addStatement(s);
     } else {
-        // This error could probably have come from anywhere
+        cerr << "FATAL: MainClass received non-statement." << endl;
         // fatalError( );
     }
     return;
@@ -255,6 +263,32 @@ void PrintStatement::addChild( INode *n )
     }
     return;
 }
+/****************************************
+ *  BlockStatement Class Functions *
+ ****************************************/
+BlockStatement::BlockStatement( )
+{
+
+}
+
+void BlockStatement::visit( Visitor *v )
+{
+    v->process( this );
+}
+
+void BlockStatement::addChild( INode *n )
+{
+    IStatement *ist = dynamic_cast<IStatement*>( n );
+    if (!ist) {
+        cerr << "INVALID STATEMENT ENTERED BLOCK" << endl;
+    }
+    this->body.push_back(ist);
+}
+
+vector<IStatement*> BlockStatement::getBody( )
+{
+    return this->body;
+}
 
 /****************************************
  *  AssignmentStatement Class Functions *
@@ -264,7 +298,7 @@ AssignmentStatement::AssignmentStatement()
     this->dest = "";
     this->type = "";
     this->is_new = false;
-    this->value = nullptr;
+    this->value = NULL;
 }
 
 void AssignmentStatement::setType( const string &t )
@@ -294,8 +328,13 @@ void AssignmentStatement::visit( Visitor *v )
 
 void AssignmentStatement::addChild( INode *n )
 {
-    cerr << "FATAL: Assignment not yet supported." << endl;
-    assert(false);
+    IExpression *ie = dynamic_cast<IExpression*>( n );
+
+    if (!ie || this->value) {
+        cerr << "FATAL - ASSIGNMENT GIVEN TWO OR ZERO EXPRS" << endl;
+    }
+
+    this->value = ie;
 }
 
 /***********************************
