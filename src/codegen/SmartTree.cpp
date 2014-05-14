@@ -339,6 +339,120 @@ void AssignmentStatement::addChild( INode *n )
     this->value = ie;
 }
 
+/********************************
+* IfStatement Class Functions *
+********************************/
+IfStatement::IfStatement()
+{
+    condition = nullptr;
+    has_true = false;
+    has_false = false;
+}
+
+void IfStatement::addTrueStatement( IStatement *s )
+{
+    this->on_true.push_back( s );
+    has_true = true;
+}
+
+void IfStatement::addFalseStatement( IStatement *s )
+{
+    this->on_false.push_back( s );
+    has_false = true;
+}
+
+void IfStatement::setCondition( IExpression *c )
+{
+    this->condition = c;
+}
+
+void IfStatement::visit( Visitor *v )
+{
+    v->process( this );
+}
+
+void IfStatement::addChild( INode *n )
+{
+    IExpression *ie = dynamic_cast<IExpression*>( n );    
+    BlockStatement *bs = dynamic_cast<BlockStatement*>( n );
+    IStatement *st = dynamic_cast<IStatement*>( n );
+    if (!condition) {
+        if (ie) {
+            this->setCondition( ie );
+        } else {
+            cerr << "If statement has bad condition." << endl;
+            assert(false);
+        }
+    } else if (!has_true) {
+        if (bs) {
+            vector<IStatement*> body = bs->getBody();
+            this->on_true = body;
+            this->has_true = true;
+        } else if (st) {
+            this->addTrueStatement(st);
+        } else {
+            cerr << "If statement got bad true branch." << endl;
+        }
+    } else if (!has_false) {
+        if (bs) {
+            vector<IStatement*> body = bs->getBody();
+            this->on_false = body;
+            this->has_false = true;
+        } else if (st) {
+            this->addFalseStatement(st);
+        } else {
+            cerr << "If statement got bad true branch." << endl;
+        }
+    } else {
+        cerr << "If statement received invalid input." << endl;
+    }
+}
+
+/***********************************
+* WhileStatement Class Functions *
+***********************************/
+WhileStatement::WhileStatement()
+{
+    this->condition = nullptr;
+}
+
+void WhileStatement::setCondition( IExpression *c )
+{
+    this->condition = c;
+}
+
+void WhileStatement::addStatement( IStatement *s )
+{
+    this->body.push_back( s );
+}
+
+void WhileStatement::visit( Visitor *v )
+{
+    v->process( this );
+}
+
+void WhileStatement::addChild( INode *n )
+{
+    IExpression *ie = dynamic_cast<IExpression*>( n );    
+    BlockStatement *bs = dynamic_cast<BlockStatement*>( n );
+    IStatement *st = dynamic_cast<IStatement*>( n );
+    if (!this->condition) {
+        if (ie) {
+            this->setCondition(ie);
+        } else {
+            cerr << "While statement received bad condition." << endl;
+        }
+    } else {
+        if (bs) {
+            this->body = bs->getBody();
+        } else if (st) {
+            this->addStatement(st);
+        }  else {
+            cerr << "While statement received bad body." << endl;
+        }
+    }
+}
+
 /***********************************
  *  MathExpression Class Functions *
  ***********************************/

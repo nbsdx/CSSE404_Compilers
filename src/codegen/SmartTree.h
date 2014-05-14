@@ -202,6 +202,8 @@ class IfStatement : public IStatement
     vector<IStatement*> on_true;
     vector<IStatement*> on_false;
     IExpression *condition;
+    bool has_true;
+    bool has_false;
 
 public:
     IfStatement();

@@ -210,8 +210,6 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             ret = children[0];
             return ret;
         } else if (subs == 2) {
-            // Need to pull the sign info from the child
-            cout << "MATHEXPRESSION HA H AH AH" << endl;
             MathExpression *mx = dynamic_cast<MathExpression*>( children[1] );
             if (!mx) {
                 // Throw horrible fatal error here
@@ -236,19 +234,16 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         BasicToken *bop;
         MathExpression::Operator myop;
 
+        bop = branches[0]->getVal();
+
         if (subs == 1) { // end of the line
-            bop = branches[0]->getVal();
             mx->addChild(children[0]);
         } else if (subs == 2) {
-            // Need to fish up the next AddExpr's operator
             RTree *nextadd = branches[2]->getBranches()[0];
-            bop =  nextadd->getVal();
             IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
             rhs->addChild(children[0]);
             mx->addChild(rhs);
-        }
-
-        if (!bop) { 
+        } else {
             cerr << "FATAL MISTAKE in mmath expressionn" << endl;
             cerr << "Subtrees: " << subs << endl;
             tree->printT();
