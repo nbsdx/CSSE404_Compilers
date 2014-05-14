@@ -281,6 +281,7 @@ public:
     void setRight( IExpression * );
     void visit( Visitor * );
     void addChild( INode *n );
+    void setOperator(Operator o);
     IExpression *getLeft(){ return left; }
     IExpression *getRight(){ return right; }
     Operator getOperator(){ return op; }
