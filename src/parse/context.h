@@ -5,6 +5,7 @@
 #include <map>
 #include <stack>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -105,6 +106,19 @@ public:
      *  Get the context for a Namespace
      */
     Context *getNamespace( const string& ns );
+
+    /** 
+     *  Get the entries
+     */
+    vector<string> getEntryNames()
+    {
+        vector<string> r;
+        for( auto a : entries )
+        {
+            r.push_back( a.first );
+        }
+        return r;
+    }
 
     /**
      * Print out all entries.

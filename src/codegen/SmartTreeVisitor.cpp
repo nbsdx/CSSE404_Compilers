@@ -2,6 +2,7 @@
 #include "SmartTreeVisitor.h"
 
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -49,7 +50,10 @@ void PrintVisitor::process( MainClass *mc )
 
 void PrintVisitor::process( Class *c )
 {
-    cout << "class " << c->getName() << endl << "{" << endl;
+    cout << "class " << c->getName();
+    if( !c->getParentName().empty() )
+        cout << " extends " << c->getParentName();
+    cout << endl << "{" << endl;
     for( auto a : c->getMembers() )
     {
         cout << "\t";
@@ -98,6 +102,59 @@ void PrintVisitor::process( PrintStatement *p )
     cout << " );";
 }
 
+void PrintVisitor::process( AssignmentStatement *a )
+{
+    if( a->getNew() )
+    {
+        cout << "\t\t" << a->getType() << " ";
+    }
+
+    cout << a->getDest() << " = ";
+
+    a->getValue()->visit( this );
+}
+
+void PrintVisitor::process( IfStatement *s )
+{
+    cout << "\t\tif( ";
+    s->getCondition()->visit( this );
+    cout << " )" << endl << "\t\t{" << endl;
+    
+    for( auto a : s->getOnTrue() )
+    {
+        cout << "\t";
+        a->visit( this );
+        cout << endl;
+    }
+
+    cout << "\t\t}" << endl << "\t\telse" << endl << "\t\t{" << endl;
+
+    for( auto a : s->getOnFalse() )
+    {
+        cout << "\t";
+        a->visit( this );
+        cout << endl;
+    }
+
+    cout << "\t\t}" << endl;
+}
+
+void PrintVisitor::process( WhileStatement *w )
+{
+    cout << "\t\twhile( ";
+    w->getCondition()->visit( this );
+    cout << " )" << endl << "\t\t{" << endl;
+
+    for( auto a : w->getBody() )
+    {
+        cout << "\t";
+        a->visit( this );
+        cout << endl;
+    }
+
+    cout << "\t\t}" << endl;
+}
+
 void PrintVisitor::process( FinalExpression *f )
 {
     cout << f->getLiteral();
@@ -139,9 +196,35 @@ void PrintVisitor::process( MathExpression *m )
     cout << " )";
 }
 
+void PrintVisitor::process( BooleanExpression *m )
+{
+    cout << "( ";
+    m->getLeft()->visit( this );
+    switch( m->getOperator() )
+    {
+    case BooleanExpression::Eq: cout << " == "; break;
+    case BooleanExpression::NEq: cout << " != "; break;
+    case BooleanExpression::LEq: cout << " <= "; break;
+    case BooleanExpression::GEq: cout << " >= "; break;
+    case BooleanExpression::GT: cout << " > "; break;
+    case BooleanExpression::LT: cout << " < "; break;
+    case BooleanExpression::And: cout << " && "; break;
+    case BooleanExpression::Or: cout << " || "; break;
+    }
+    m->getRight()->visit( this );
+    cout << " )";
+}
+
 void PrintVisitor::process( Formal *f )
 {
     cout << f->getType() << " " << f->getName();
+}
+
+
+void PrintVisitor::process( BlockStatement *b )
+{
+    cerr << "FATAL: Tried to visit BlockStatement." << endl;
+    assert(false);
 }
 
 } // End Namespace <ir>

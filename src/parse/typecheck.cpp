@@ -8,6 +8,7 @@
 #include "../codegen/SmartTreeVisitor.h"
 
 using namespace std;
+using namespace ir;
 
 ir::MainClass *mc = NULL;
 ir::PrintStatement *ps = NULL;
@@ -26,7 +27,7 @@ TypeCheck::TypeCheck()
     this->errs = 0;
 }
 
-RTree* TypeCheck::check( RTree *raw )
+INode* TypeCheck::check( RTree *raw )
 {
     global->enter();
 
@@ -38,12 +39,16 @@ RTree* TypeCheck::check( RTree *raw )
                                 [this](RTree* t) { return this->visit2( t ); },
                                 [this](RTree* t) { return this->leave2( t ); } );
 
+    cleaned->printT();
+
+    INode *third = buildIR( cleaned );
+
     //cout << "Global Namespace: " << endl;
     //global->print( 0 );
 
-    cout << endl << endl;
+    //cout << endl << endl;
 
-    return cleaned;
+    return third;
 }
 
 RTree *TypeCheck::postOrder( RTree *tree, 
@@ -68,6 +73,350 @@ RTree *TypeCheck::postOrder( RTree *tree,
         return tree;
     }
 }
+
+/**************************************************
+ *
+ * Third Pass starts here
+ * Hopefully can merge First and Third pass, rewriting second
+ * (external interface is buildIR)
+ *
+ *************************************************/
+INode *ppostOrder( RTree *tree,
+                 function<INode* (RTree*, vector<INode*>)> make_inode)
+{
+     vector< INode* > children;
+     if (!tree->isLeaf()) {
+        vector< RTree* > branches = tree->getBranches();
+
+        for( RTree *branch : branches )
+        {
+            INode *processed = ppostOrder( branch, make_inode );
+            if (processed) children.push_back( processed );
+        }
+        INode *me = make_inode( tree, children );
+        return me;
+    }
+    return make_inode( tree, children );
+}
+
+INode *newVisit(RTree *tree, vector<INode*> children) {
+    string tval = tree->printVal();
+    vector<RTree*> branches = tree->getBranches();
+    int deg = branches.size();
+    int subs = children.size();
+
+    BasicToken* rep = tree->getVal();
+
+    INode *ret = NULL;
+
+    if (tval.compare("MainClassDecl") == 0) {
+        // Need to pull classs ID out here
+        RTree *classname = branches[0]->getBranches()[1];
+        string namestr = classname->printVal();
+        cout << "MainClass name: " << namestr << endl;
+        ret = new MainClass(namestr);
+    } else if (tval.compare ("Program") == 0) {
+        ret = new Program();
+    } else if (tval.compare("ClassDecl") == 0) {
+        RTree *classname = branches[0]->getBranches()[1];
+        string namestr = classname->printVal();
+       
+        // Unfinished - make ClassDeclRHS pass up a Class type
+        ir::Class *cl = dynamic_cast<ir::Class*>( children[0] );
+        cl->setName(namestr);
+
+        return cl;
+
+    }  else if (tval.compare("ClassHeader") == 0) {
+        // Just discard this
+        return ret;
+    } else if (tval.compare("ClassDeclRHS") == 0) {
+        // Should receive a Class as a child
+        // Here, we just set 'parent'
+
+        ret = children[0];
+
+        ir::Class *cl = dynamic_cast<ir::Class*>( ret );
+        
+        string extends = branches[1]->printVal();
+        cl->setParentName(extends);
+
+        return ret;
+    } else if (tval.compare ("ClassBody") == 0) {
+        ir::Class *cl = new ir::Class();
+        ret =  cl;
+        // addChild should handle the rest
+    } else if (tval.compare ("ClassVarDecls") == 0) {
+        
+
+    } else if (tval.compare ("StmtLst") == 0) {
+        // Stmt StmtLst <- RHS guaranteed not to be lexical
+        // Stmt Stmt    <- either could be lexical blocks
+        BlockStatement *bs = new BlockStatement();
+        ret = bs;
+    } else if (tval.compare ("Stmt") == 0) {
+        string stmt_type = branches[0]->printVal();
+        string pform = branches[0]->printVal();
+
+        if (pform.compare("while") == 0) 
+        {
+            // Stmt -> while ( Expr ) Stmt
+            ret = new WhileStatement();
+        } 
+        else if (pform.compare("if") == 0) 
+        {
+            // Stmt -> if ( Expr ) Stmt else Stmt
+            ret = new IfStatement();           
+        } 
+        else if (pform.compare("{") == 0) 
+        {
+            // Input: { StmtLst } 
+            return children[0];
+        } 
+        else if (pform.compare("System.out.println") == 0) 
+        {
+            ret = new PrintStatement();
+        } 
+        else 
+        {
+            // Assignments and method calls
+            if (deg == 3) {
+                // ID StmtRHS ;
+                ret = children[1]; 
+                AssignmentStatement *ass = dynamic_cast<AssignmentStatement*>( children[1] );
+                FinalExpression *fx = dynamic_cast<FinalExpression*>(children[0]);
+                if (ass && ass->isNew()) {
+                    // We have the type here, but the assignment is complete
+                    ass->setType(fx->getLiteral());
+                } else if (ass && !ass->isNew()) {
+                    // We cannot know the type, and we have the LHS here.
+                    ass->setDest(fx->getLiteral());
+                } else {
+                    cerr << "FATAL: Problem in StmtRHS" << endl;
+                }
+                return  ret;
+            } else if (deg == 5) {
+                // BasicType ID = Expr ; 
+
+                string type = branches[0]->printVal();
+                string myname = branches[1]->printVal();
+
+                AssignmentStatement *ass = new AssignmentStatement();
+                ass->setDest(myname);
+                ass->setType(type);
+                ass->setNew(true);
+                ret =  ass;
+
+
+                ret->addChild(children[1]);
+                return ret;
+            }
+        }
+    } else if ( tval.compare("StmtRHS") == 0) {
+        if (deg == 1) {
+            // DotExpr
+            return children[0];
+        } else if (deg == 2){
+            // We rely on the is_new flag in Stmt to figure out the variant
+            // and supplly the LHS
+            // Assignment. "= Expr"
+            //  Cannot know the type
+            AssignmentStatement *ass = new AssignmentStatement();
+            ass->setNew(false);
+            ass->addChild(children[0]);
+            return ass;
+        } else {
+            // ID = Expr
+            // Don't know the type! (We could if we checked the Context)
+            // -> The Stmt branch will take care of it
+            AssignmentStatement *ass = new AssignmentStatement();
+            FinalExpression *fx = dynamic_cast<FinalExpression*>( children[0] );
+            string myname = fx->getLiteral();
+            ass->setDest(myname);
+            ass->setNew(true);
+            ass->addChild(children[1]);
+            ass->addChild(children[0]);
+            return ass;
+        }
+    } else if ( tval.compare("BoolExpr") == 0)  {
+        if (subs == 1) {
+            // Keep the child - this should have been trimmed earlier
+            ret = children[0];
+            return ret;
+        } else if (subs == 2) {
+            BooleanExpression *bx = dynamic_cast<BooleanExpression*>( children[1] );
+            if (!bx) {
+                cerr << "Fatal - Boolean expressiion received non-boolean rhs." << endl;
+            } else {
+                bx->addChild( children[0] );
+                return bx;
+            }
+        } else {
+            cerr << "Fatal - serious compiler error at BoolExpr clause." << endl;
+        }
+    } else if ( tval.compare("BoolExpr_") == 0) {
+        BooleanExpression *bx = new BooleanExpression();
+        BasicToken *bop;
+        BooleanExpression::Operator myop;
+
+        bop = branches[0]->getVal();
+
+        if (subs == 1) { // end of the line
+            bx->addChild(children[0]);
+        } else if (subs == 2) {
+            //RTree *nextadd = branches[2]->getBranches()[0];
+            IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
+            rhs->addChild(children[0]);
+            bx->addChild(rhs);
+        } else {
+            cerr << "FATAL MISTAKE in boolean expressionn" << endl;
+            cerr << "Subtrees: " << subs << endl;
+            tree->printT();
+        }
+        
+        Operator *op = dynamic_cast<Operator*>( bop );
+
+        switch (op->token()) {
+            case And: myop = BooleanExpression::And; break;
+            case Or: myop = BooleanExpression::Or; break;
+            default: break; // Throw error here
+        }
+        bx->setOperator( myop );
+
+        return bx;
+
+    } else if (tval.compare("CompExpr_") == 0) {
+        if (subs == 1) {
+            ret = children[0];
+            return ret;
+        }
+        // Else, boolop with AddExpr chain
+        // (we only know RHS and operatioon)
+        BooleanExpression *bx = new BooleanExpression();
+        BasicToken *bop = branches[0]->getVal();
+        BooleanExpression::Operator myop;
+
+        Operator *op = dynamic_cast<Operator*>( bop ); 
+
+        switch (op->token()) {
+            case EqualEq: myop = BooleanExpression::Eq;  break;
+            case NEqual: myop = BooleanExpression::NEq; break;
+            case LT: myop = BooleanExpression::LT; break;
+            case GT: myop = BooleanExpression::GT; break;
+            case LEq: myop = BooleanExpression::LEq; break;
+            case GEq: myop = BooleanExpression::GEq; break;
+            default: break;
+        }
+        bx->setOperator( myop );
+
+        bx->addChild(children[0]);
+
+        return bx;
+
+    }  else if (  tval.compare("AddExpr") == 0
+               || tval.compare("MultExpr") == 0) {
+        if (subs == 1) {
+            // keep child - it's a multexpr, no +- involved
+            ret = children[0];
+            return ret;
+        } else if (subs == 2) {
+            MathExpression *mx = dynamic_cast<MathExpression*>( children[1] );
+            if (!mx) {
+                // Throw horrible fatal error here
+                cout << "FATAL - RHS IS NOT A MATHEXPR" << endl;
+            } else {
+                // Add the LHS to this thing
+                cout << "Atttempting to terminate MathExpr chain.." << endl;
+                mx->addChild( children[0] );
+                // Break out early so we don't merge incorrectly
+                return mx;
+            }
+        } else {
+            // horrible error here
+            cout << "FUCK- mishandling math" << endl;
+        }
+    } else if (  tval.compare("AddExpr_") == 0
+              || tval.compare("MultExpr_") == 0) {
+
+        MathExpression *mx = new MathExpression();
+        BasicToken *bop;
+        MathExpression::Operator myop;
+
+        bop = branches[0]->getVal();
+
+        if (subs == 1) { // end of the line
+            mx->addChild(children[0]);
+        } else if (subs == 2) {
+            //RTree *nextadd = branches[2]->getBranches()[0];
+            IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
+            rhs->addChild(children[0]);
+            mx->addChild(rhs);
+        } else {
+            cerr << "FATAL MISTAKE in mmath expressionn" << endl;
+            cerr << "Subtrees: " << subs << endl;
+            tree->printT();
+        }
+        
+
+        Operator *op = dynamic_cast<Operator*>( bop );
+        switch (op->token()) {
+            case Plus: myop = MathExpression::Add;  break;
+            case Minus: myop = MathExpression::Sub; break;
+            case Mult: myop = MathExpression::Mul; break;
+            case Div: myop = MathExpression::Div; break;
+            default: break; // Throw error here
+        }
+        mx->setOperator( myop );
+
+        return mx;
+    } else if ( tval.compare("Literal") == 0) {
+        // Literal -> ID | this | Integer | null | true | false | ( Expr )
+        //          | new ID ( )
+
+        // Only need to handle ( Expr ) and new ID ( ) here.
+        ret = children[0]; 
+        if (subs == 2) {
+            // NewExpression
+            ret->addChild(children[1]);
+        }
+        return ret;
+    } else if ( dynamic_cast<Number*>( rep )) {
+        ret = new FinalExpression(tval);
+    } else if ( dynamic_cast<Identifier*>( rep )) {
+        ret = new FinalExpression(tval);
+    } else if ( dynamic_cast<ReservedWord*>( rep )) {
+        ReservedWord* rw = dynamic_cast<ReservedWord*>( rep );
+        switch (rw->token()) {
+            case True:
+            case False:
+            case Null:
+            case This: return new FinalExpression(tval); break;
+            case New: return new NewExpression(); break;
+            default: break;
+        }
+    }
+  
+    MainClass *mc = dynamic_cast<MainClass*>(ret);
+    if (mc) cout << "MainClass detected from " << tval << endl;
+
+    // Drop the null'd (ignored) AST nodes,
+    // merge the children into the parent for the wanted nodes.
+    if (ret) {
+        for (INode *kid : children) {
+            ret->addChild(kid);
+        }
+    }
+
+
+    return ret;
+}
+
+INode *TypeCheck::buildIR (RTree *t) {
+    return ppostOrder(t, [](RTree *input, vector <INode*> children) 
+             { return newVisit(input, children); });
+}
+
+
 
 void TypeCheck::typeError (string excuse, RTree *node) {
     node->setErr();

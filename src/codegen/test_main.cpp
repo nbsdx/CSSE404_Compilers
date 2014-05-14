@@ -1,10 +1,13 @@
 
 #include "SmartTree.h"
 #include "SmartTreeVisitor.h"
+#include "../parse/context.h"
 
 #include <iostream>
 
 using namespace ir;
+
+
 
 int main( int argc, char **argv )
 {
@@ -14,55 +17,140 @@ int main( int argc, char **argv )
         exit( 1 );
     }
 
+    Context *global = new Context();
+
     Program *p = new Program();
-    MainClass *m = new MainClass( "Test" );
+    MainClass *m = new MainClass( "Main" );
+
+    p->setMainClass( m );
+
+    IfStatement *if_test;
+    IfStatement *if_test2;
+    
+    if_test2 = new IfStatement();
+    if_test2->setCondition( new FinalExpression( "false" ) );
+    if_test2->addTrueStatement( new PrintStatement( new FinalExpression( "1" ) ) );
+    if_test2->addFalseStatement( new PrintStatement( new FinalExpression( "0" ) ) );
+    
+    if_test = new IfStatement();
+    if_test->setCondition( new FinalExpression( "true" ) );
+    if_test->addTrueStatement( new PrintStatement( new FinalExpression( "1" ) ) );
+    if_test->addTrueStatement( if_test2 );
+    if_test->addFalseStatement( new PrintStatement( new FinalExpression( "0" ) ) );
+
+    m->addStatement( if_test );
+    
+    PrintVisitor *visitor = new PrintVisitor();
+    CodeGenerator *gen = new CodeGenerator( argv[1], global );
+
+    p->visit( visitor );
+    p->visit( gen );
+}
+
+
+int main2( int argc, char **argv )
+{
+    if( argc != 2 )
+    {
+        std::cerr << "Error: Please supply a filename to write to." << endl;
+        exit( 1 );
+    }
+
+    Context *global = new Context();
+    Context *test = new Context();
+    test->enter();
+    test->add( "foo", "function int" );
+    Context *test2 = new Context();
+    Context *test3 = new Context();
+    test3->enter();
+    test3->add( "foo", "function int" );
+
+    global->add( "Test", test );
+    global->add( "Test2", test2 );
+    global->add( "Test3", test3 );
+
+    Program *p = new Program();
+    MainClass *m = new MainClass( "Main" );
+
+    AssignmentStatement *local = new AssignmentStatement();
+    local->setNew( true );
+    local->setType( "int" );
+    local->setDest( "ret" );
+    local->setValue( new FinalExpression( "0" ) );
+
+    m->addStatement( local );
+
+    AssignmentStatement *aexp = new AssignmentStatement();
+    aexp->setNew( true );
+    aexp->setDest( "test_var" );
+    aexp->setType( "Test3" );
+    aexp->setValue( new NewExpression( "Test3" ) );
+
+    m->addStatement( aexp );
+
+    CallExpression *call = new CallExpression();
+    call->setCaller( new FinalExpression( "test_var" ) );
+    call->setClass( "Test3" );
+    call->setFunction( "foo" );
+
+    local = new AssignmentStatement();
+    local->setNew( false );
+    local->setDest( "ret" );
+    local->setValue( call );
+
+    m->addStatement( local );
+
+    call = new CallExpression();
+    call->setCaller( new FinalExpression( "test_var" ) );
+    call->setClass( "Test3" );
+    call->setFunction( "bar" );
+
+    local = new AssignmentStatement();
+    local->setNew( false );
+    local->setDest( "ret" );
+    local->setValue( call );
+
+    m->addStatement( local );
+
     p->setMainClass( m );
   
-    CallExpression *call = new CallExpression();
-    call->setCaller( new NewExpression( "Test2" ) );
-    call->setClass( "Test2" );
-    call->setFunction( "func" );
-    PrintStatement *print = new PrintStatement( call );
-    m->addStatement( print );
-/*
-    FinalExpression *five = new FinalExpression( "5" );
-    PrintStatement *print = new PrintStatement( five );
-    m->addStatement( print );
-
-    MathExpression *math = new MathExpression();
-    math->setLeft( new FinalExpression( "10" ) );
-    MathExpression *inner = new MathExpression();
-    inner->setLeft( new FinalExpression( "15" ) );
-    inner->setRight( new FinalExpression( "8" ) );
-    inner->setOperator( MathExpression::Sub );
-    math->setRight( inner );
-    math->setOperator( MathExpression::Mul );
-
-    MathExpression *m2 = new MathExpression();
-    m2->setLeft( math );
-    m2->setRight( new FinalExpression( "10" ) );
-    m2->setOperator( MathExpression::Div );
-
-    m->addStatement( new PrintStatement( m2 ) );
-*/
-    Class *c = new Class( "Test2" );
-    c->addMember( new Formal( "int", "number" ) );
-    c->addMember( new Formal( "Test2", "hue" ) );
-
-    Function *f = new Function( "func" );
+    Class *c = new Class( "Test" );
+    c->addMember( new Formal( "int", "member1" ) );
+    c->addMember( new Formal( "bool", "member2" ) );
+    Function *f = new Function( "foo" );
     f->setRetType( "int" );
-    f->setRet( new FinalExpression( "10" ) );
-//    f->addArg( new Formal( "int", "myarg" ) );
-//    f->addArg( new Formal( "int", "myarg2" ) );
-    print = new PrintStatement( new FinalExpression( "25" ) );
-    f->addStatement( print );
+    f->setRet( new FinalExpression( "0" ) );
+
+    AssignmentStatement *as = new AssignmentStatement();
+    as->setDest( "member1" );
+    as->setType( "int" );
+    as->setValue( new FinalExpression( "100" ) );
+
+    f->addStatement( as );
+    f->addStatement( new PrintStatement( new FinalExpression( "member1" ) ) );
 
     c->addFunction( f );
 
+    Class *c2 = new Class( "Test2" );
+    c2->setParent( c );
+    c2->setParentName( "Test" );
+
+    Class *c3 = new Class( "Test3" );
+    c3->addMember( new Formal( "Test2", "some_local_instance" ) );
+    c3->setParent( c );
+    c3->setParentName( "Test" );
+    f = new Function( "bar" );
+    f->setRetType( "int" );
+    f->setRet( new FinalExpression( "1" ) );
+    f->addStatement( new PrintStatement( new FinalExpression( "member1" ) ) );
+    c3->addFunction( f );
+
     p->addClass( c );
+    p->addClass( c2 );
+    p->addClass( c3 );
 
     PrintVisitor *visitor = new PrintVisitor();
-    CodeGenerator *gen = new CodeGenerator( argv[1] );
+    CodeGenerator *gen = new CodeGenerator( argv[1], global );
 
     p->visit( visitor );
     p->visit( gen );

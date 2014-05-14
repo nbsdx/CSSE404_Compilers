@@ -10,19 +10,21 @@
 #include "../codegen/SmartTree.h"
 
 using namespace std;
+using namespace ir;
 
 class TypeCheck
 {
+public:
     Context *global;
     Context *second;
     string  cur_namespace;
     string  cur_function;
 
-public:
+
     bool clean;
     int errs;
     TypeCheck();
-    RTree *check( RTree *raw );
+    INode *check( RTree *raw );
 
     RTree *postOrder( RTree *tree, 
                       function<RTree* (RTree*)> visit,
@@ -34,9 +36,10 @@ public:
     RTree *visit2( RTree *node );
     RTree *leave2( RTree *node );
 
-    ir::Program *getIR ();
+    INode *buildIR (RTree *t);
+    Program *getIR ();
 protected:
-    ir::Program *pgm;
+    Program *pgm;
     void typeError (string excuse, RTree *node);
     void dotExprResolve (RTree *t);
     void resolveDexPrime (string ltype, RTree *t);
@@ -44,4 +47,6 @@ protected:
     string matchAll (vector<RTree*> branches);
 };
 
+// Hacck during devel,  remove and refactor later
+ir::INode *buildIR (RTree *t);
 #endif
