@@ -117,6 +117,29 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         ret = new MainClass(namestr);
     } else if (tval.compare ("Program") == 0) {
         ret = new Program();
+    } else if (tval.compare("ClassDecl") == 0) {
+        RTree *classname = branches[0]->getBranches()[1];
+        string namestr = classname->printVal();
+       
+        // Unfinished - make ClassDeclRHS pass up a Class type
+        Class *cl = dynamic_cast<Class*>( children[0] );
+        cl->setName(namestr);
+
+        return cl;
+
+    }  else if (tval.compare("ClassHeader") == 0) {
+        // Just discard this
+        return ret;
+    } else if (tval.compare("ClassDeclRHS") == 0) {
+        // Should receive a Class as a child
+        // Here, we just set 'parent'
+
+        ret = children[0];
+
+        Class *cl = dynamic_cast<Class*>( ret );
+
+
+        return ret;
     } else if (tval.compare ("StmtLst") == 0) {
         // Stmt StmtLst <- RHS guaranteed not to be lexical
         // Stmt Stmt    <- either could be lexical blocks

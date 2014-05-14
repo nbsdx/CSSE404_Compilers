@@ -100,12 +100,15 @@ void MainClass::addChild( INode *n )
 /**************************
  *  Class Class Functions *
  **************************/
-Class::Class( const string &name )
+Class::Class( )
 {
-    this->name = name;
     this->parent = nullptr;
     this->parent_name = "";
     enforceType( false );
+}
+
+void Class::setName( const string& n )  {
+    this->name = n;
 }
 
 void Class::setParent( Class *p )
@@ -143,6 +146,8 @@ void Class::addChild( INode *n )
     } else if (fn) {
         this->addFunction(fn);
     } else {
+        cerr << "Class received something other than a member or function." << endl;
+        assert(false);
         // Fatal parser or decision error
         // fatalError( );
     }

@@ -94,7 +94,7 @@ class Class : public INode
     vector<Function*> functions;
 
 public:
-    Class( const string& );
+    Class(  );
     void addMember( Formal * );
     void addFunction( Function * );
     void visit( Visitor * );
