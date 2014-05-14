@@ -515,6 +515,76 @@ void CodeGenerator::process( MathExpression *m )
     release_register();
 }
 
+void CodeGenerator::process( BooleanExpression *b )
+{
+    static int b_count = 0;
+
+    ++b_count;
+
+    string dest = outreg.top();
+    
+    b->getLeft()->visit( this );
+
+    if( b->getOperator() == BooleanExpression::And )
+    {
+        function_body << "\ttest " << dest << ", " << dest << endl;
+        function_body << "\tjz boolean_exp_false_" << b_count << endl;
+        
+        b->getRight()->visit( this );
+        
+        function_body << "\ttest " << dest << ", " << dest << endl;
+        function_body << "\tjz boolean_exp_false_" << b_count << endl;
+        function_body << "\tmov " << dest << ", 1" << endl;
+        function_body << "\tjmp boolean_exp_done_" << b_count << endl;
+        
+        function_body << "boolean_exp_false_" << b_count << ":" << endl;
+        function_body << "\tmov " << dest << ", 0" << endl;
+        function_body << "boolean_exp_done_" << b_count << ":" << endl;
+    }
+    else if( b->getOperator() == BooleanExpression::Or )
+    {
+        function_body << "\ttest " << dest << ", " << dest << endl;
+        function_body << "\tjnz boolean_exp_true_" << b_count << endl;
+        
+        b->getRight()->visit( this );
+
+        function_body << "\ttest " << dest << ", " << dest << endl;
+        function_body << "\tjz boolean_exp_true_" << b_count << endl;
+        function_body << "\tmov " << dest << ", 0" << endl; 
+        function_body << "\tjmp boolean_exp_done_" << b_count << endl;
+        
+        function_body << "boolean_exp_true_" << b_count << ":" << endl;
+        function_body << "\tmov " << dest << ", 1" << endl;
+        function_body << "boolean_exp_done_" << b_count << ":" << endl;
+    }
+    else
+    {
+        reserve_register();
+
+        function_body << "\tcmp " << dest << ", " << outreg.top() << endl;
+
+        switch( b->getOperator() )
+        {        
+        case BooleanExpression::Eq:  function_body << "\tje " ; break;
+        case BooleanExpression::NEq: function_body << "\tjne "; break;
+        case BooleanExpression::LEq: function_body << "\tjle "; break;
+        case BooleanExpression::GEq: function_body << "\tjge "; break;
+        case BooleanExpression::LT:  function_body << "\tjl " ; break;
+        case BooleanExpression::GT:  function_body << "\tjg " ; break;
+        }
+
+        function_body << "boolean_exp_true_" << b_count << endl;
+
+        function_body << "\tmov " << dest << ", 0" << endl;
+        function_body << "\tjmp boolean_exp_cont_" << b_count << endl;
+        function_body << "boolean_exp_true_" << b_count << ":" << endl;
+        function_body << "\tmov " << dest << ", 1" << endl;
+        function_body << "boolean_exp_cont_" << b_count << ":" << endl;
+
+        release_register();
+    }
+}
+
 void CodeGenerator::process( CallExpression *c )
 {
     string dest = outreg.top();

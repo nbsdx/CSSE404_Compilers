@@ -269,6 +269,8 @@ class BooleanExpression : public IExpression
 public:
     enum Operator
     {
+        And,
+        Or,
         Eq,
         NEq,
         LEq,
