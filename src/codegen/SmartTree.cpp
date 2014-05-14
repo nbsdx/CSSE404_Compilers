@@ -460,7 +460,6 @@ MathExpression::MathExpression()
 {
     this->left = NULL;
     this->right = NULL;
-    this->op = UNSET;
 }
 
 void MathExpression::setLeft( IExpression *l )
@@ -485,8 +484,6 @@ void MathExpression::visit( Visitor *v )
 
 void MathExpression::addChild( INode *n )
 {
-    // Set the op FIRST when  on AddExpr',
-    // set the op LASST when on AddExpr
     IExpression *ie = dynamic_cast<IExpression*>( n );
     if (!ie) {
         // Horrible error
@@ -502,6 +499,55 @@ void MathExpression::addChild( INode *n )
         cerr << "MathExpr received more than two  branches..." << endl;
     }
     return;
+}
+
+/***********************************
+ *  BooleanExpression Class Functions *
+ ***********************************/
+BooleanExpression::BooleanExpression()
+{
+    this->left = NULL;
+    this->right = NULL;
+}
+
+void BooleanExpression::setLeft( IExpression *l )
+{
+    this->left = l;
+}
+
+void BooleanExpression::setRight( IExpression *r )
+{
+    this->right = r;
+}
+
+void BooleanExpression::setOperator( Operator o )
+{
+    this->op = o;
+}
+
+void BooleanExpression::visit( Visitor *v )
+{
+    v->process( this );
+}
+
+void BooleanExpression::addChild( INodee *n )
+{
+    IExpression *ie = dynamic_cast<IExpression*>( n );
+    if (!ie) {
+        // Horrible error
+        cerr << "BoolExpression  received a non-expression" << endl;
+        return;
+    }
+    if (!this->right) {
+        this->right = ie;
+    } else if (!this->left) {
+        this->left = ie;
+    } else {
+        // Horrible error
+        cerr << "BoolExpr received more than two  branches..." << endl;
+    }
+    return;
+
 }
 
 /***********************************

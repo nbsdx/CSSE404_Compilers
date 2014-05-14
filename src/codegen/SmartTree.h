@@ -242,8 +242,7 @@ public:
         Add,
         Sub,
         Mul,
-        Div,
-        UNSET
+        Div
     };
 
 private:
@@ -262,6 +261,34 @@ public:
     IExpression *getLeft(){ return left; }
     IExpression *getRight(){ return right; }
     Operator getOperator(){ return op; }
+};
+
+class BooleanExpression : public IExpression
+{
+public:
+    enum Operator
+    {
+        Eq,
+        NEq,
+        LEq,
+        GEq,
+        LT,
+        GT
+    };
+
+    BooleanExpression();
+    void setLeft( IExpression * );
+    void setRight( IExpression * );
+    void visit( Visitor * );
+    void addChild( INode *n );
+    IExpression *getLeft(){ return left; }
+    IExpression *getRight(){ return right; }
+    Operator getOperator(){ return op; }
+   
+private:
+    IExpression *left;
+    IExpression *right;
+    Operator op;
 };
 
 class CallExpression : public IExpression

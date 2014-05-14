@@ -203,6 +203,56 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
                 return ret;
             }
         }
+    } else if ( tval.compare("BoolExpr") == 0)  {
+        if (subs == 1) {
+            // Keep the child - this should have been trimmed earlier
+            ret = children[0];
+            return ret;
+        } else if (subs == 2) {
+            BooleanExpression *bx = dynamic_cast<BooleanExpression*>( children[1] );
+            if (!bx) {
+                cerr << "Fatal - Boolean expressiion received non-boolean rhs." << endl;
+            } else {
+                bx->addChild( children[1] );
+                return bx;
+            }
+        } else {
+            cerr << "Fatal - serious compiler error at BoolExpr clause." << endl;
+        }
+    } else if ( tval.compare("BoolExpr_") == 0) {
+        BooleanExpression *bx = new BooleanExpression();
+        BasicToken *bop;
+        BooleanExpression::Operator myop;
+
+        bop = branches[0]->getVal();
+
+        if (subs == 1) { // end of the line
+            bx->addChild(children[0]);
+        } else if (subs == 2) {
+            RTree *nextadd = branches[2]->getBranches()[0];
+            IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
+            rhs->addChild(children[0]);
+            bx->addChild(rhs);
+        } else {
+            cerr << "FATAL MISTAKE in boolean expressionn" << endl;
+            cerr << "Subtrees: " << subs << endl;
+            tree->printT();
+        }
+        
+        Operator *op = dynamic_cast<Operator*>( bop );
+        switch (op->token()) {
+            case EqualEq: myop = BooleanExpression::Eq;  break;
+            case NEqual: myop = BooleanExpression::NEq; break;
+            case LT: myop = BooleanExpression::LT; break;
+            case GT: myop = BooleanExpression::GT; break;
+            case LEq: myop = BooleanExpression::LEq; break;
+            case GEq: myop = BooleanExpression::GEq; break;
+            default: break; // Throw error here
+        }
+        bx->setOperator( myop );
+
+        return bx;
+
     }  else if (  tval.compare("AddExpr") == 0
                || tval.compare("MultExpr") == 0) {
         if (subs == 1) {
@@ -227,8 +277,6 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         }
     } else if (  tval.compare("AddExpr_") == 0
               || tval.compare("MultExpr_") == 0) {
-        // If there's no further AddExpr' coming, choose my own operation.
-        // If there is, take my child's operation manually from the RTree)
 
         MathExpression *mx = new MathExpression();
         BasicToken *bop;
