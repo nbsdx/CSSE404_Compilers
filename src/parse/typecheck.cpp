@@ -129,22 +129,17 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         if (pform.compare("while") == 0) 
         {
             // Stmt -> while ( Expr ) Stmt
-            cerr << "While statement not supported." << endl;
-            assert(false);
+            ret = new WhileStatement();
         } 
         else if (pform.compare("if") == 0) 
         {
             // Stmt -> if ( Expr ) Stmt else Stmt
-            cerr << "If statement not yet supported." << endl;
-            assert(false);
-           
+            ret = new IfStatement();           
         } 
         else if (pform.compare("{") == 0) 
         {
             // Input: { StmtLst } 
-            // Output: Some kind of Block type
-            cerr << "Statement block not yet supported." << endl;
-            assert(false);
+            return children[0];
         } 
         else if (pform.compare("System.out.println") == 0) 
         {
@@ -153,39 +148,19 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         else 
         {
             // Assignments and method calls
-     
             if (deg == 3) {
                 // ID StmtRHS ;
-                cerr << "FATAL: Statement variant nnot yet implemented." << endl;
-                assert(false);
-            /*
-                string type = branches[0]->getType();
-                string myname;
-                BasicToken* one = branches[1]->getBranches()[0]->getVal();
-                if ( dynamic_cast<Operator*>( one )) {
-                    assert(0);
-                } else if ( dynamic_cast<Identifier*>( one )) {
-                    // ID (ID = Expr) ; <-- DeclInit  
-                    myname = branches[1]->getBranches()[0]->printVal();
-                    global->add(myname, type);
-                    ///cout << "Declared " << myname << "::" << type << endl;
-                } else if ( dynamic_cast<Delimiter*>( one )) {
-                    // ID (= Expr) ; <-- Assign
-                    Delimiter *del = dynamic_cast<Delimiter*>( one );
-                    if (del->token() == Equal) {
-                        myname = branches[0]->printVal();
-                        global->add(myname, type);
-                        //cout << "Decl/assed " << myname << "::" << type << endl;
-                    } else if (del->token() == Period) {
-                    // ID (. DotExprChain...) ; <-- method lookup
-                        //cout << "<<--- Method lookup here\n";
-                        resolveDexPrime(type, branches[1]);
-
-                    }
-                }
-                // else fatal compiler error
-            */
-
+                ret = children[1]; 
+                AssignmentStatement *ass = dynamic_cast<AssignmentStatement*>( children[0] );
+                if (ass && ass->isNew()) {
+                    // We have the type here, but the assignment is complete
+                    FinalExpression *fx = dynamic_cast<FinalExpression*>(children[0]);
+                    ass->setType(fx->getLiteral());
+                } else if (ass && !ass->isNew()) {
+                    // We cannot know the type, and we have the LHS here.
+                    ass->addChild(children[0]);
+                } 
+                return ret;
             } else if (deg == 5) {
                 // BasicType ID = Expr ; 
 
@@ -202,6 +177,32 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
                 ret->addChild(children[1]);
                 return ret;
             }
+        }
+    } else if ( tval.compare("StmtRHS") == 0) {
+        if (deg == 1) {
+            // DotExpr
+            return children[0];
+        } else if (deg == 2){
+            // We rely on the is_new flag in Stmt to figure out the variant
+            // and supplly the LHS
+            // Assignment. "= Expr"
+            //  Cannot know the type
+            AssignmentStatement *ass = new AssignmentStatement();
+            ass->setNew(false);
+            ass->addChild(children[0]);
+            return ass;
+        } else {
+            // ID = Expr
+            // Don't know the type! (We could if we checked the Context)
+            // -> The Stmt branch will take care of it
+            AssignmentStatement *ass = new AssignmentStatement();
+            FinalExpression *fx = dynamic_cast<FinalExpression*>( children[0] );
+            string myname = fx->getLiteral();
+            ass->setDest(myname);
+            ass->setNew(true);
+            ass->addChild(children[1]);
+            ass->addChild(children[0]);
+            return ass;
         }
     } else if ( tval.compare("BoolExpr") == 0)  {
         if (subs == 1) {
@@ -229,7 +230,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         if (subs == 1) { // end of the line
             bx->addChild(children[0]);
         } else if (subs == 2) {
-            RTree *nextadd = branches[2]->getBranches()[0];
+            //RTree *nextadd = branches[2]->getBranches()[0];
             IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
             rhs->addChild(children[0]);
             bx->addChild(rhs);
@@ -240,6 +241,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         }
         
         Operator *op = dynamic_cast<Operator*>( bop );
+    void setOperator();
         switch (op->token()) {
             case EqualEq: myop = BooleanExpression::Eq;  break;
             case NEqual: myop = BooleanExpression::NEq; break;
@@ -287,7 +289,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         if (subs == 1) { // end of the line
             mx->addChild(children[0]);
         } else if (subs == 2) {
-            RTree *nextadd = branches[2]->getBranches()[0];
+            //RTree *nextadd = branches[2]->getBranches()[0];
             IExpression *rhs = dynamic_cast<IExpression*>(children[1]);
             rhs->addChild(children[0]);
             mx->addChild(rhs);

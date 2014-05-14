@@ -190,6 +190,7 @@ public:
     void setNew( bool );
     void visit( Visitor * );
     void addChild( INode *n );
+    bool isNew();
 
     string getDest(){ return dest; }
     string getType(){ return type; }

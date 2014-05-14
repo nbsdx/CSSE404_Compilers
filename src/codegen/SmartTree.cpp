@@ -339,6 +339,11 @@ void AssignmentStatement::addChild( INode *n )
     this->value = ie;
 }
 
+bool AssignmentStatement::isNew()
+{
+    return this->is_new;
+}
+
 /********************************
 * IfStatement Class Functions *
 ********************************/
