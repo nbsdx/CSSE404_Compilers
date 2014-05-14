@@ -535,7 +535,7 @@ void BooleanExpression::visit( Visitor *v )
     v->process( this );
 }
 
-void BooleanExpression::addChild( INodee *n )
+void BooleanExpression::addChild( INode *n )
 {
     IExpression *ie = dynamic_cast<IExpression*>( n );
     if (!ie) {
