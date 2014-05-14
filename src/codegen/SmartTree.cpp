@@ -102,7 +102,6 @@ void MainClass::addChild( INode *n )
  **************************/
 Class::Class( )
 {
-    this->parent = nullptr;
     this->parent_name = "";
     enforceType( false );
 }
