@@ -274,7 +274,9 @@ public:
         LEq,
         GEq,
         LT,
-        GT
+        GT,
+        And,
+        Or
     };
 
     BooleanExpression();

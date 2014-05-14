@@ -214,7 +214,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             if (!bx) {
                 cerr << "Fatal - Boolean expressiion received non-boolean rhs." << endl;
             } else {
-                bx->addChild( children[1] );
+                bx->addChild( children[0] );
                 return bx;
             }
         } else {
@@ -241,7 +241,29 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         }
         
         Operator *op = dynamic_cast<Operator*>( bop );
-    void setOperator();
+
+        switch (op->token()) {
+            case And: myop = BooleanExpression::And; break;
+            case Or: myop = BooleanExpression::Or; break;
+            default: break; // Throw error here
+        }
+        bx->setOperator( myop );
+
+        return bx;
+
+    } else if (tval.compare("CompExpr_") == 0) {
+        if (subs == 1) {
+            ret = children[0];
+            return ret;
+        }
+        // Else, boolop with AddExpr chain
+        // (we only know RHS and operatioon)
+        BooleanExpression *bx = new BooleanExpression();
+        BasicToken *bop = branches[0]->getVal();
+        BooleanExpression::Operator myop;
+
+        Operator *op = dynamic_cast<Operator*>( bop ); 
+
         switch (op->token()) {
             case EqualEq: myop = BooleanExpression::Eq;  break;
             case NEqual: myop = BooleanExpression::NEq; break;
@@ -249,9 +271,11 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             case GT: myop = BooleanExpression::GT; break;
             case LEq: myop = BooleanExpression::LEq; break;
             case GEq: myop = BooleanExpression::GEq; break;
-            default: break; // Throw error here
+            default: break;
         }
         bx->setOperator( myop );
+
+        bx->addChild(children[0]);
 
         return bx;
 
