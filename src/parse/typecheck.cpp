@@ -138,6 +138,8 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
 
         ir::Class *cl = dynamic_cast<ir::Class*>( ret );
         
+        string extends = branches[1]->printVal();
+        cl->setParentName(extends);
 
         return ret;
     } else if (tval.compare ("StmtLst") == 0) {
@@ -174,16 +176,18 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
             if (deg == 3) {
                 // ID StmtRHS ;
                 ret = children[1]; 
-                AssignmentStatement *ass = dynamic_cast<AssignmentStatement*>( children[0] );
+                AssignmentStatement *ass = dynamic_cast<AssignmentStatement*>( children[1] );
+                FinalExpression *fx = dynamic_cast<FinalExpression*>(children[0]);
                 if (ass && ass->isNew()) {
                     // We have the type here, but the assignment is complete
-                    FinalExpression *fx = dynamic_cast<FinalExpression*>(children[0]);
                     ass->setType(fx->getLiteral());
                 } else if (ass && !ass->isNew()) {
                     // We cannot know the type, and we have the LHS here.
-                    ass->addChild(children[0]);
-                } 
-                return ret;
+                    ass->setDest(fx->getLiteral());
+                } else {
+                    cerr << "FATAL: Problem in StmtRHS" << endl;
+                }
+                return  ret;
             } else if (deg == 5) {
                 // BasicType ID = Expr ; 
 
