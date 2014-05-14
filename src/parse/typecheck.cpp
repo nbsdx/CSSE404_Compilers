@@ -143,8 +143,12 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
 
         return ret;
     } else if (tval.compare ("ClassBody") == 0) {
-        ir::Class *cl = new Class();
+        ir::Class *cl = new ir::Class();
         ret =  cl;
+        // addChild should handle the rest
+    } else if (tval.compare ("ClassVarDecls") == 0) {
+        
+
     } else if (tval.compare ("StmtLst") == 0) {
         // Stmt StmtLst <- RHS guaranteed not to be lexical
         // Stmt Stmt    <- either could be lexical blocks
