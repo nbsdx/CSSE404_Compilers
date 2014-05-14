@@ -98,6 +98,7 @@ public:
     void addMember( Formal * );
     void addFunction( Function * );
     void visit( Visitor * );
+    void setName( const string& );
     void setParent( Class *c );
     void setParentName( const string& );
     void addChild( INode *n );
@@ -269,8 +270,6 @@ class BooleanExpression : public IExpression
 public:
     enum Operator
     {
-        And,
-        Or,
         Eq,
         NEq,
         LEq,

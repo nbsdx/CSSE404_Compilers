@@ -122,7 +122,7 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
         string namestr = classname->printVal();
        
         // Unfinished - make ClassDeclRHS pass up a Class type
-        Class *cl = dynamic_cast<Class*>( children[0] );
+        ir::Class *cl = dynamic_cast<ir::Class*>( children[0] );
         cl->setName(namestr);
 
         return cl;
@@ -136,8 +136,8 @@ INode *newVisit(RTree *tree, vector<INode*> children) {
 
         ret = children[0];
 
-        Class *cl = dynamic_cast<Class*>( ret );
-
+        ir::Class *cl = dynamic_cast<ir::Class*>( ret );
+        
 
         return ret;
     } else if (tval.compare ("StmtLst") == 0) {

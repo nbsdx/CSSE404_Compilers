@@ -196,6 +196,25 @@ void PrintVisitor::process( MathExpression *m )
     cout << " )";
 }
 
+void PrintVisitor::process( BooleanExpression *m )
+{
+    cout << "( ";
+    m->getLeft()->visit( this );
+    switch( m->getOperator() )
+    {
+    case BooleanExpression::Eq: cout << " == "; break;
+    case BooleanExpression::NEq: cout << " != "; break;
+    case BooleanExpression::LEq: cout << " <= "; break;
+    case BooleanExpression::GEq: cout << " >= "; break;
+    case BooleanExpression::GT: cout << " > "; break;
+    case BooleanExpression::LT: cout << " < "; break;
+    case BooleanExpression::And: cout << " && "; break;
+    case BooleanExpression::Or: cout << " || "; break;
+    }
+    m->getRight()->visit( this );
+    cout << " )";
+}
+
 void PrintVisitor::process( Formal *f )
 {
     cout << f->getType() << " " << f->getName();
