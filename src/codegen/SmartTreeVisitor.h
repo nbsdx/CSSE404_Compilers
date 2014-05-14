@@ -31,6 +31,7 @@ public:
     virtual void process( NewExpression * ) = 0;
     virtual void process( CallExpression * ) = 0;
     virtual void process( MathExpression * ) = 0;
+    virtual void process( BooleanExpression * ) = 0;
     virtual void process( BlockStatement * ) = 0;
 
     void visitIStatement( IStatement * );
@@ -53,6 +54,7 @@ public:
     void process( NewExpression * );
     void process( CallExpression * );
     void process( MathExpression * );
+    void process( BooleanExpression * );
     void process( BlockStatement * );
 };
 
@@ -80,6 +82,7 @@ public:
     void process( NewExpression * );
     void process( CallExpression * );
     void process( MathExpression * );
+    void process( BooleanExpression * );
     void process( BlockStatement * );
 
 private:
